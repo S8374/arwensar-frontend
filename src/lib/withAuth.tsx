@@ -3,7 +3,6 @@ import type { TRole } from "@/types";
 import { useEffect, type ComponentType } from "react";
 import toast from "react-hot-toast";
 import { Navigate, useLocation } from "react-router-dom";
-const ASSESSMENT_ID = "5501d843-b718-4b4a-a3e5-40c57b62fe51";
 
 export const withAuth = (Component: ComponentType, requiredRole?: TRole) => {
   return function AuthWrapper() {
@@ -28,31 +27,20 @@ export const withAuth = (Component: ComponentType, requiredRole?: TRole) => {
 
     const user = data?.data;
     const userRole = user?.role;
+    console.log("User Role:", userRole)
     const userEmail = user?.email;
     const isVerified = user?.isVerified;
 
     // Safe access: only check submission if supplier exists
     const supplier = user?.supplier;
 
-    // Get submission status for the specific assessment
-    const assessmentSubmission = supplier?.assessmentSubmissions?.find(
-      (sub: any) => sub.assessmentId === ASSESSMENT_ID
-    );
-
-    const submissionStatus = assessmentSubmission?.status; // "SUBMITTED", "DRAFT", or undefined
-    const hasSubmission = !!assessmentSubmission;
-    const isSubmitted = submissionStatus === "SUBMITTED";
-    const isDraft = submissionStatus === "DRAFT";
 
     console.log("Auth Debug:", {
       userRole,
       requiredRole,
       hasEmail: !!userEmail,
       isVerified,
-      hasSubmission,
-      submissionStatus,
-      isSubmitted,
-      isDraft,
+    
       currentPath: location.pathname
     });
 
@@ -73,46 +61,46 @@ export const withAuth = (Component: ComponentType, requiredRole?: TRole) => {
       return <Navigate to="/unauthorized" replace />;
     }
 
-    // Supplier assignment rule
-    if (requiredRole === "SUPPLYER") {
-      // If supplier has no submission at all → force to assignment
-      if (!hasSubmission) {
-        if (location.pathname !== "/assignment") {
-          return <Navigate to="/assignment" replace />;
-        }
-      }
+    // // Supplier assignment rule
+    // if (requiredRole === "SUPPLIER") {
+    //   // If supplier has no submission at all → force to assignment
+    //   if (!hasSubmission) {
+    //     if (location.pathname !== "/assignment") {
+    //       return <Navigate to="/assignment" replace />;
+    //     }
+    //   }
 
     
 
-      // If submission is SUBMITTED
-      if (isSubmitted) {
-        // If user tries to access assignment page, redirect to analytics
-        if (location.pathname === "/assignment") {
-          toast.error("Assessment already submitted!");
-          return <Navigate to="/supplier/analytics" replace />;
-        }
+    //   // If submission is SUBMITTED
+    //   if (isSubmitted) {
+    //     // If user tries to access assignment page, redirect to analytics
+    //     if (location.pathname === "/assignment") {
+    //       toast.error("Assessment already submitted!");
+    //       return <Navigate to="/supplier/analytics" replace />;
+    //     }
 
-        // Allow access to all other supplier pages
-        return <Component />;
-      }
+    //     // Allow access to all other supplier pages
+    //     return <Component />;
+    //   }
 
-      // For DRAFT status, allow access to assignment page only
-      if (isDraft && location.pathname === "/assignment") {
-        return <Component />;
-      }
+    //   // For DRAFT status, allow access to assignment page only
+    //   if (isDraft && location.pathname === "/assignment") {
+    //     return <Component />;
+    //   }
 
-      // Default: if user has any submission (even draft) and tries to access analytics,
-      // but draft should block analytics access
-      if (hasSubmission && location.pathname === "/supplier/analytics" && isDraft) {
-        //toast.error("Please complete your draft assessment first!");
-        return <Navigate to="/assignment" replace />;
-      }
+    //   // Default: if user has any submission (even draft) and tries to access analytics,
+    //   // but draft should block analytics access
+    //   if (hasSubmission && location.pathname === "/supplier/analytics" && isDraft) {
+    //     //toast.error("Please complete your draft assessment first!");
+    //     return <Navigate to="/assignment" replace />;
+    //   }
 
-      // For new users with no submission, only allow assignment page
-      if (!hasSubmission && location.pathname !== "/assignment") {
-        return <Navigate to="/assignment" replace />;
-      }
-    }
+    //   // For new users with no submission, only allow assignment page
+    //   if (!hasSubmission && location.pathname !== "/assignment") {
+    //     return <Navigate to="/assignment" replace />;
+    //   }
+    // }
 
     // ✅ SUCCESS
     return <Component />;

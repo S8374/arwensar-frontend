@@ -1,6 +1,7 @@
+// src/components/NotificationSetting.tsx
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Bell, Mail, AlertTriangle, FileText, CheckCircle2, Loader2 } from "lucide-react";
+import { Bell, Mail, AlertTriangle, FileText, CheckCircle2, Loader2, MessageSquare } from "lucide-react";
 import { Controller } from "react-hook-form";
 import { useNotification } from "@/hooks/useNotification";
 
@@ -12,7 +13,6 @@ export default function NotificationSetting() {
     isLoading,
     isSuccess,
     isError,
-    preferences,
   } = useNotification();
 
   return (
@@ -57,7 +57,7 @@ export default function NotificationSetting() {
             </div>
           </div>
           <Controller
-            name="emailNotification"
+            name="emailNotifications"
             control={control}
             render={({ field }) => (
               <Switch
@@ -69,7 +69,7 @@ export default function NotificationSetting() {
           />
         </div>
 
-        {/* High Risk Alerts */}
+        {/* High Risk Alerts - CHANGED from highRiskAlert to riskAlerts */}
         <div className="flex items-start justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
           <div className="flex items-start gap-4">
             <div className="p-2 bg-background rounded-lg">
@@ -83,7 +83,7 @@ export default function NotificationSetting() {
             </div>
           </div>
           <Controller
-            name="highRiskAlert"
+            name="riskAlerts" // CHANGED from highRiskAlert to riskAlerts
             control={control}
             render={({ field }) => (
               <Switch
@@ -121,7 +121,7 @@ export default function NotificationSetting() {
           />
         </div>
 
-        {/* Compliance Updates */}
+        {/* Compliance Updates - CHANGED from complianceUpdate to complianceUpdates */}
         <div className="flex items-start justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
           <div className="flex items-start gap-4">
             <div className="p-2 bg-green/20 rounded-lg">
@@ -135,7 +135,7 @@ export default function NotificationSetting() {
             </div>
           </div>
           <Controller
-            name="complianceUpdate"
+            name="complianceUpdates" // CHANGED from complianceUpdate to complianceUpdates
             control={control}
             render={({ field }) => (
               <Switch
@@ -173,11 +173,11 @@ export default function NotificationSetting() {
           />
         </div>
 
-        {/* New Message Alerts */}
+        {/* New Message Alerts - CHANGED from newMessageAlert to messageAlerts */}
         <div className="flex items-start justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
           <div className="flex items-start gap-4">
             <div className="p-2 bg-purple/10 rounded-lg">
-              <Mail className="w-5 h-5 text-purple-500" />
+              <MessageSquare className="w-5 h-5 text-purple-500" />
             </div>
             <div>
               <h3 className="font-medium text-foreground">New Message Alerts</h3>
@@ -187,7 +187,7 @@ export default function NotificationSetting() {
             </div>
           </div>
           <Controller
-            name="newMessageAlert"
+            name="messageAlerts" // CHANGED from newMessageAlert to messageAlerts
             control={control}
             render={({ field }) => (
               <Switch

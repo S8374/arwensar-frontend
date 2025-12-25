@@ -61,7 +61,7 @@ export const authApi = baseApi.injectEndpoints({
         method: "POST",
         data: loginData,
       }),
-      invalidatesTags: ["vendor", "supplyer"],
+      invalidatesTags: ["vendor"],
     }),
     // Verify Email with OTP
     verifyEmail: builder.mutation({

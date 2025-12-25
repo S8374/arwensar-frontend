@@ -1,6 +1,6 @@
 export const role = {
   vendor: "VENDOR",
-  suplier: "SUPPLYER"
+  suplier: "SUPPLIER"
 };
 
 export const mockUserData = {

@@ -1,277 +1,342 @@
+// src/components/pages/dashboard/supplier/components/overviewComponent/ComplianceTable.tsx
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Eye, ArrowRight } from "lucide-react";
+import { Eye, ArrowRight, Clock, CheckCircle2, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
-import { useUserInfoQuery } from "@/redux/features/auth/auth.api";
-import { useGetAllAssainmentQuery, useGetSubmissionByIdQuery } from "@/redux/features/vendor/vendor.api";
-
-interface Assessment {
-  id: string;
-  examId: string;
-  title: string;
-  description: string;
-  isActive: boolean;
-  _count: { submissions: number };
-  updatedAt: string;
-}
+import { formatDistanceToNow } from "date-fns";
+import { useGetAssessmentsQuery, useGetMySubmissionsQuery } from "@/redux/features/assainment/assainment.api";
 
 export default function ComplianceTable() {
-  const { data: userData } = useUserInfoQuery(undefined);
-  const { data: assainmentData, isLoading: isLoadingAss } = useGetAllAssainmentQuery(undefined);
-
-  // Use supplierId from userData to fetch submissions
-  const supplierId = userData?.data?.supplier?.id;
-  const { data: mySubmissions, isLoading: isLoadingSub } = useGetSubmissionByIdQuery(
-    supplierId || "",
-    {
-      refetchOnMountOrArgChange: true,
-      refetchOnFocus: true,
-      refetchOnReconnect: true,
-    }
-  );
-
   const navigate = useNavigate();
 
-  if (isLoadingAss || isLoadingSub) return <p>Loading assessments...</p>;
+  const { data: assessmentsResponse, isLoading: loadingAssessments } = useGetAssessmentsQuery();
+  const { data: submissionsResponse, isLoading: loadingSubmissions } = useGetMySubmissionsQuery();
 
-  // Helper to get the user’s submission for a given assessment
-  const getUserSubmission = (assessmentId: string) => {
-    return mySubmissions?.data?.find((sub: any) => sub.assessmentId === assessmentId);
-  };
+  const assessments = assessmentsResponse?.data || [];
+  const submissions = submissionsResponse?.data || [];
+
+  // Map submissions by assessmentId
+  const submissionMap = new Map<string, any>();
+  submissions.forEach((sub: any) => {
+    submissionMap.set(sub.assessmentId, sub);
+  });
+
+  // Merge assessments with their submission (if exists)
+  const mergedData = assessments.map((assessment: any) => ({
+    ...assessment,
+    submission: submissionMap.get(assessment.id) || null,
+  }));
+
+  // Sort: In Progress → Submitted → Not Started → Approved
+  const sortedData = [...mergedData].sort((a, b) => {
+    const getPriority = (item: any) => {
+      if (!item.submission) return 4; // Not started
+      switch (item.submission.status) {
+        case "DRAFT": return 1;
+        case "SUBMITTED": return 2;
+        case "UNDER_REVIEW": return 3;
+        case "REQUIRES_ACTION": return 0;
+        case "APPROVED": return 5;
+        case "REJECTED": return 6;
+        default: return 4;
+      }
+    };
+    return getPriority(a) - getPriority(b);
+  });
 
   const getStatusBadge = (submission: any) => {
-    if (!submission) return <Badge variant="secondary" className="bg-muted border-2 text-foreground">Not Started</Badge>;
-    if (submission.progress > 0 && submission.progress < 100) return <Badge className="border">In Progress</Badge>;
-    if (submission.progress === 100) return <Badge className="text-background border bg-green/80">Completed</Badge>;
-    return <Badge variant="secondary" className="bg-muted border-2 text-foreground">Not Started</Badge>;
+    if (!submission) {
+      return (
+        <Badge variant="secondary" className="bg-gray-100 text-gray-800">
+          Not Started
+        </Badge>
+      );
+    }
+
+    switch (submission.status) {
+      case "DRAFT":
+        return submission.progress > 0 ? (
+          <Badge className="bg-blue-100 text-blue-800">
+            <Clock className="w-3 h-3 mr-1" />
+            In Progress ({submission.progress}%)
+          </Badge>
+        ) : (
+          <Badge variant="secondary">Started</Badge>
+        );
+      case "SUBMITTED":
+        return (
+          <Badge className="bg-yellow-100 text-yellow-800">
+            <Clock className="w-3 h-3 mr-1" />
+            Submitted
+          </Badge>
+        );
+      case "UNDER_REVIEW":
+        return (
+          <Badge className="bg-purple-100 text-purple-800">
+            <Clock className="w-3 h-3 mr-1" />
+            Under Review
+          </Badge>
+        );
+      case "APPROVED":
+        return (
+          <Badge className="bg-green-100 text-green-800">
+            <CheckCircle2 className="w-3 h-3 mr-1" />
+            Approved
+          </Badge>
+        );
+      case "REJECTED":
+        return (
+          <Badge className="bg-red-100 text-red-800">
+            <AlertCircle className="w-3 h-3 mr-1" />
+            Rejected
+          </Badge>
+        );
+      case "REQUIRES_ACTION":
+        return (
+          <Badge className="bg-orange-100 text-orange-800">
+            <AlertCircle className="w-3 h-3 mr-1" />
+            Action Required
+          </Badge>
+        );
+      default:
+        return <Badge variant="secondary">{submission.status}</Badge>;
+    }
   };
 
-  const getProgressValue = (submission: any) => {
-    if (!submission) return 0;
-    return Math.floor((submission.answeredQuestions / submission.totalQuestions) * 100);
+  const getProgressColor = (progress: number, status?: string) => {
+    if (status === "APPROVED") return "bg-green-600";
+    if (status === "REJECTED") return "bg-red-600";
+    if (status === "REQUIRES_ACTION") return "bg-orange-600";
+    if (progress === 100) return "bg-blue-600";
+    if (progress > 0) return "bg-blue-500";
+    return "bg-gray-300";
   };
-  console.log("assainmentData", assainmentData)
+
+  const getScoreDisplay = (score: string | null) => {
+    if (!score) return <span className="text-muted-foreground">—</span>;
+
+    const numScore = parseFloat(score);
+    const colorClass =
+      numScore >= 80 ? "bg-green-100 text-green-800" :
+        numScore >= 60 ? "bg-yellow-100 text-yellow-800" :
+          numScore >= 40 ? "bg-orange-100 text-orange-800" :
+            "bg-red-100 text-red-800";
+
+    return (
+      <span className={cn(
+        "inline-flex items-center justify-center w-16 h-10 rounded-full font-bold text-lg",
+        colorClass
+      )}>
+        {numScore}%
+      </span>
+    );
+  };
+
+  const getLastActivity = (submission: any) => {
+    if (!submission) return "Never";
+
+    const date = submission.submittedAt || submission.updatedAt || submission.startedAt;
+    if (!date) return "Never";
+
+    return formatDistanceToNow(new Date(date), { addSuffix: true });
+  };
+
+  const handlePrimaryAction = (assessment: any) => {
+    const submission = assessment.submission;
+
+    if (!submission) {
+      // No submission → Start new assessment
+      navigate(`/supplier/assessments/${assessment.id}`);
+    } else if (submission.status === "DRAFT") {
+      // Draft → Continue answering
+      navigate(`/supplier/assessments/${assessment.id}`);
+    } else {
+      // Submitted or reviewed → View submission
+      navigate(`/supplier/assessments/${assessment.id}`);
+    }
+  };
+
+  const getPrimaryButtonText = (assessment: any) => {
+    const submission = assessment.submission;
+
+    if (!submission) return "Start Assessment";
+    if (submission.status === "DRAFT") return "Continue";
+    if (submission.status === "SUBMITTED" || submission.status === "UNDER_REVIEW") return "View Submission";
+    if (submission.status === "APPROVED") return "View Results";
+    if (submission.status === "REJECTED") return "View Feedback";
+    if (submission.status === "REQUIRES_ACTION") return "Take Action";
+    return "View";
+  };
+
+  const isLoading = loadingAssessments || loadingSubmissions;
+
+  if (isLoading) {
+    return (
+      <Card className="border-0 shadow-sm">
+        <CardHeader>
+          <h2 className="text-2xl font-bold">Compliance Progress</h2>
+        </CardHeader>
+        <CardContent className="py-12">
+          <div className="space-y-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-28 bg-gray-100 rounded-lg animate-pulse" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (sortedData.length === 0) {
+    return (
+      <Card className="border-0 shadow-sm text-center">
+        <CardHeader>
+          <h2 className="text-2xl font-bold">Compliance Progress</h2>
+        </CardHeader>
+        <CardContent className="py-16">
+          <div className="max-w-md mx-auto">
+            <div className="bg-gray-200 border-2 border-dashed rounded-xl w-32 h-32 mx-auto mb-6" />
+            <p className="text-xl font-medium text-muted-foreground">
+              No assessments assigned yet
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Your vendor will assign assessments when ready.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="border-0 shadow-sm">
-      <CardHeader className="pb-4">
-        <h2 className="text-xl font-semibold text-foreground">Compliance Progress</h2>
+      <CardHeader className="pb-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold">Compliance Progress</h2>
+            <p className="text-muted-foreground mt-1">
+              Complete assessments to maintain compliance
+            </p>
+          </div>
+          <Badge variant="outline" className="text-sm px-4 py-1">
+            {sortedData.length} Assessment{sortedData.length > 1 ? "s" : ""}
+          </Badge>
+        </div>
       </CardHeader>
-      <CardContent className="p-0">
-        <Table>
-          <TableHeader>
-            <TableRow className="border-0">
-              <TableHead className="text-muted-foreground text-xs font-medium">Assessment Name</TableHead>
-              <TableHead className="text-muted-foreground text-xs font-medium">Status</TableHead>
-              <TableHead className="text-muted-foreground text-xs font-medium">Progress</TableHead>
-              <TableHead className="text-muted-foreground text-xs font-medium">Last Updated</TableHead>
-              <TableHead className="text-right text-muted-foreground text-xs font-medium">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {assainmentData?.data?.data?.map((item: Assessment) => {
-              const submission = getUserSubmission(item.id);
-              const progress = getProgressValue(submission);
 
-              return (
-                <TableRow key={item.id} className="border-t border">
-                  <TableCell className="font-medium text-foreground py-5">{item.title}</TableCell>
-                  <TableCell>{getStatusBadge(submission)}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Progress
-                        value={progress}
-                        className={cn("w-20 h-4 bg-ring")}
-                      />
-                      <span className="text-sm font-medium text-muted-foreground">{progress}%</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">{submission ? new Date(submission.updatedAt).toLocaleDateString() : "—"}</TableCell>
-                  <TableCell className="text-right py-4">
-                    <div className="flex items-center justify-end gap-3">
-                      <Button
+      <CardContent className="p-0">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-gray-50/50">
+                <TableHead className="font-semibold">Assessment</TableHead>
+                <TableHead className="font-semibold">Type</TableHead>
+                <TableHead className="font-semibold">Status</TableHead>
+                <TableHead className="font-semibold">Progress</TableHead>
+                <TableHead className="font-semibold">Score</TableHead>
+                <TableHead className="font-semibold">Last Activity</TableHead>
+                <TableHead className="text-right font-semibold">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sortedData.map((assessment: any) => {
+                const submission = assessment.submission;
+                const progress = submission?.progress || 0;
+                const score = submission?.score;
+
+                return (
+                  <TableRow key={assessment.id} className="hover:bg-gray-50">
+                    <TableCell className="py-6">
+                      <div>
+                        <p className="font-semibold text-lg">{assessment.title}</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {assessment.description || "No description"}
+                        </p>
+                      </div>
+                    </TableCell>
+
+                    <TableCell>
+                      <Badge
                         variant="outline"
-                        size="sm"
-                        onClick={() => navigate(`/supplier/assessments/${item.examId}/review`)}
-                        className="text-chart-6 hover:bg-chart-6/20"
+                        className={cn(
+                          "text-xs",
+                          assessment.stage === "INITIAL"
+                            ? "border-blue-300 text-blue-700 bg-blue-50"
+                            : "border-purple-300 text-purple-700 bg-purple-50"
+                        )}
                       >
-                        <Eye className="w-4 h-4 mr-1" /> View
-                      </Button>
-                      <Button
-                        size="sm"
-                        className="bg-chart-6 hover:bg-chart-6/90 text-background"
-                        onClick={() => navigate(`/supplier/assessments/${item.id}`)}
-                      >
-                        {submission ? "Continue" : "Start"}
-                        <ArrowRight className="w-4 h-4 ml-1" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+                        {assessment.stage === "INITIAL" ? "Initial Scan" : "Full Assessment"}
+                      </Badge>
+                    </TableCell>
+
+                    <TableCell>
+                      {getStatusBadge(submission)}
+                    </TableCell>
+
+                    <TableCell>
+                      <div className="flex items-center gap-4">
+                        <Progress
+                          value={progress}
+                          className={cn("w-32 h-4", getProgressColor(progress, submission?.status))}
+                        />
+                        <span className="font-bold text-lg min-w-12 text-right">
+                          {progress}%
+                        </span>
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="text-center">
+                      {getScoreDisplay(score)}
+                    </TableCell>
+
+                    <TableCell className="text-sm text-muted-foreground">
+                      {getLastActivity(submission)}
+                    </TableCell>
+
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-3">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            if (submission?.id) {
+                              navigate(`/supplier/assessments/${assessment.id}`);
+                            } else {
+                              navigate(`/supplier/assessments/${assessment.id}`);
+                            }
+                          }}
+                        >
+                          <Eye className="w-4 h-4 mr-1" />
+                          View
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => handlePrimaryAction(assessment)}
+                          className={cn(
+                            "text-white",
+                            submission?.status === "APPROVED" && "bg-green-600 hover:bg-green-700",
+                            submission?.status === "REJECTED" && "bg-red-600 hover:bg-red-700",
+                            submission?.status === "REQUIRES_ACTION" && "bg-orange-600 hover:bg-orange-700",
+                            !submission && "bg-blue-600 hover:bg-blue-700"
+                          )}
+                        >
+                          {getPrimaryButtonText(assessment)}
+                          <ArrowRight className="w-4 h-4 ml-2" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// // src/components/pages/dashboard/supplier/ComplianceTable.tsx
-// import { Badge } from "@/components/ui/badge";
-// import { Progress } from "@/components/ui/progress";
-// import { Button } from "@/components/ui/button";
-// import { Card, CardContent, CardHeader } from "@/components/ui/card";
-// import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-// import { Eye, ArrowRight } from "lucide-react";
-// import { cn } from "@/lib/utils";
-// import { useNavigate } from "react-router-dom";
-// import { useUserInfoQuery } from "@/redux/features/auth/auth.api";
-// import { useGetAllAssainmentQuery } from "@/redux/features/vendor/vendor.api";
-
-// interface Assessment {
-//   name: string;
-//   type: "Full" | "Initial";
-//   status: "In Progress" | "Completed" | "Not Started";
-//   progress: number;
-//   score: number | null;
-//   lastUpdated: string;
-// }
-
-// const assessments: Assessment[] = [
-//   { name: "Data Security Assessment", type: "Full", status: "In Progress", progress: 65, score: null, lastUpdated: "2 days ago" },
-//   { name: "HR Policy Compliance", type: "Initial", status: "Completed", progress: 100, score: 92, lastUpdated: "1 week ago" },
-//   { name: "Risk Management Framework", type: "Full", status: "In Progress", progress: 40, score: 0, lastUpdated: "3 days ago" },
-//   { name: "Environmental Standards", type: "Initial", status: "Not Started", progress: 0, score: 30, lastUpdated: "Never" },
-// ];
-
-// export default function ComplianceTable() {
-
-//   const { data: userData, isLoading: userLoading } = useUserInfoQuery(undefined);
-//   const getStatusBadge = (status: string) => {
-//     switch (status) {
-//       case "In Progress":
-//         return <Badge className=" border ">In Progress</Badge>;
-//       case "Completed":
-//         return <Badge className="text-background border bg-green/80">Completed</Badge>;
-//       case "Not Started":
-//         return <Badge variant="secondary" className="bg-muted border-2 text-foreground">Not Started</Badge>;
-//       default:
-//         return null;
-//     }
-//   };
-
-//   const getProgressColor = (progress: number) => {
-//     if (progress === 100) return "bg-ring";
-//     if (progress > 0) return "bg-ring";
-//     return "bg-ring";
-//   };
-//   const navigate = useNavigate();
-//   const {data: assainmentData} = useGetAllAssainmentQuery(undefined) ;
-
-//   console.log("userData.....................", userData , assainmentData);
-//   return (
-//     <Card className="border-0 shadow-sm">
-//       <CardHeader className="pb-4">
-//         <h2 className="text-xl font-semibold text-foreground">Compliance Progress</h2>
-//       </CardHeader>
-//       <CardContent className="p-0">
-//         <Table>
-//           <TableHeader>
-//             <TableRow className="border-0">
-//               <TableHead className="text-muted-foreground text-xs font-medium">Assessment Name</TableHead>
-//               <TableHead className="text-muted-foreground text-xs font-medium">Type</TableHead>
-//               <TableHead className="text-muted-foreground text-xs font-medium">Status</TableHead>
-//               <TableHead className="text-muted-foreground text-xs font-medium">Progress</TableHead>
-//               <TableHead className="text-muted-foreground text-xs font-medium">Score</TableHead>
-//               <TableHead className="text-muted-foreground text-xs font-medium">Last Updated</TableHead>
-//               <TableHead className="text-right text-muted-foreground text-xs font-medium">Actions</TableHead>
-//             </TableRow>
-//           </TableHeader>
-//           <TableBody>
-//             {assessments.map((item) => (
-//               <TableRow key={item.name} className="border-t border">
-//                 <TableCell className="font-medium text-foreground py-5">
-//                   {item.name}
-//                 </TableCell>
-//                 <TableCell>
-//                   <Badge variant="outline" className="text-xs">
-//                     {item.type}
-//                   </Badge>
-//                 </TableCell>
-//                 <TableCell>{getStatusBadge(item.status)}</TableCell>
-//                 <TableCell>
-//                   <div className="flex items-center gap-3">
-//                     <Progress
-//                       value={item.progress}
-//                       className={cn("w-20 h-4", getProgressColor(item.progress))}
-//                     />
-//                     <span className={cn(
-//                       "text-sm font-medium",
-//                       item.progress === 100 ? "text-foreground" : "text-muted-foreground"
-//                     )}>
-//                       {item.progress}%
-//                     </span>
-//                   </div>
-//                 </TableCell>
-//                 <TableCell>
-//                   {item.score !== null ? (
-//                     <span className="inline-flex items-center justify-center w-12 h-8 rounded-full bg-background text-green font-bold text-sm">
-//                       {item.score}%
-//                     </span>
-//                   ) : (
-//                     <span className="text-muted-foreground">—</span>
-//                   )}
-//                 </TableCell>
-//                 <TableCell className="text-muted-foreground text-sm">
-//                   {item.lastUpdated}
-//                 </TableCell>
-//                 <TableCell className="text-right py-4">
-//                   <div className="flex items-center justify-end gap-3">
-//                     <Button
-//                       variant="outline"
-//                       size="sm"
-//                       onClick={() => navigate("/supplier/assessments/data-security/review")}
-//                       className="text-chart-6 hover:bg-chart-6/20"
-//                     >
-//                       <Eye className="w-4 h-4 mr-1" />
-//                       View
-//                     </Button>
-//                     <Button
-//                       size="sm"
-//                       className="bg-chart-6 hover:bg-chart-6/90 text-background"
-//                       onClick={() => navigate("/supplier/assessments/data-security")}  // Add this
-//                     >
-//                       {item.name === "Data Security Assessment" ? "Continue" : "Start"}
-//                       <ArrowRight className="w-4 h-4 ml-1" />
-//                     </Button>
-//                   </div>
-//                 </TableCell>
-//               </TableRow>
-//             ))}
-//           </TableBody>
-//         </Table>
-//       </CardContent>
-//     </Card>
-//   );
-// } 

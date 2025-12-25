@@ -11,7 +11,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { useCompleteSupplierRegistrationMutation, useVerifyInvitationMutation } from "@/redux/features/supplyer/supplyer.api";
+import { useCompleteSupplierRegistrationMutation, useVerifyInvitationQuery } from "@/redux/features/supplyer/supplyer.api";
 
 const supplierRegistrationSchema = z.object({
   password: z.string()
@@ -50,8 +50,12 @@ export default function SignInSupplyer() {
   const [isVerifying, setIsVerifying] = useState(true);
   const [verificationError, setVerificationError] = useState<string | null>(null);
 
+  // FIXED: Proper query hook usage
+  const { data: verificationResult, refetch, isLoading: isVerifyingQuery } = useVerifyInvitationQuery(token || '', {
+    skip: !token, // Skip query if no token
+  });
+
   const [completeRegistration, { isLoading, isSuccess, error }] = useCompleteSupplierRegistrationMutation();
-  const [verifyInvitation] = useVerifyInvitationMutation();
 
   const {
     register,
@@ -70,17 +74,27 @@ export default function SignInSupplyer() {
       }
 
       try {
-        const result = await verifyInvitation(token).unwrap();
-        
-        if (result.success && result.data) {
-          setInvitationData(result.data.supplier || result.data);
-        } else {
-          setVerificationError(result.message || "Invalid invitation link");
+        // Trigger the query manually if it hasn't run
+        if (!verificationResult && !isVerifyingQuery) {
+          const result = await refetch().unwrap();
+          
+          if (result.data?.success && result.data.data) {
+            setInvitationData(result.data.data.supplier || result.data.data);
+          } else {
+            setVerificationError(result.data?.message || "Invalid invitation link");
+          }
+        } else if (verificationResult) {
+          // Use existing query result
+          if (verificationResult.success && verificationResult.data) {
+            setInvitationData(verificationResult.data.supplier || verificationResult.data);
+          } else {
+            setVerificationError(verificationResult.message || "Invalid invitation link");
+          }
         }
         
         setIsVerifying(false);
       } catch (err: any) {
-        const errorMessage = err?.data?.message || "This invitation link is invalid or has expired";
+        const errorMessage = err?.data?.message || err?.message || "This invitation link is invalid or has expired";
         setVerificationError(errorMessage);
         toast.error(errorMessage);
         setIsVerifying(false);
@@ -88,7 +102,7 @@ export default function SignInSupplyer() {
     };
 
     verifyToken();
-  }, [token, verifyInvitation]);
+  }, [token, verificationResult, isVerifyingQuery, refetch]);
 
   const onSubmit = async (data: SupplierRegistrationFormData) => {
     if (!token) return;
@@ -116,7 +130,7 @@ export default function SignInSupplyer() {
   };
 
   // Loading State
-  if (isVerifying) {
+  if (isVerifying || isVerifyingQuery) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
         <Card className="w-full max-w-md shadow-xl">

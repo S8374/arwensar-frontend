@@ -76,14 +76,14 @@ export default function AddSupplierModal({ open, onOpenChange }: AddSupplierModa
   const onSubmit = async (data: SupplierFormData) => {
     // setIsUploading(true);
     try {
-      let documentUrl = undefined;
+      let contractDocument = undefined;
       let documentType = undefined;
 
       // Upload document if exists
       if (files.length > 0) {
         const file = files[0]; // support one for now, easy to extend
         const uploaded = await uploadToCloudinary(file);
-        documentUrl = uploaded.url;
+        contractDocument = uploaded.url;
         documentType = file.type; // or uploaded.format like "pdf"
       }
 
@@ -98,7 +98,8 @@ export default function AddSupplierModal({ open, onOpenChange }: AddSupplierModa
         criticality: data.criticality.toUpperCase() as "LOW" | "MEDIUM" | "HIGH",
         contractStartDate: data.contractStartDate.toISOString().split("T")[0], // YYYY-MM-DD
         contractEndDate: data.contractEndDate.toISOString().split("T")[0],
-        documentUrl,
+        
+        contractDocument,
         documentType,
         files: files.length > 0 ? files : undefined,    // ← send File[] if uploaded
       };

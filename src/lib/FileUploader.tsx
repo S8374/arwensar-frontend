@@ -1,6 +1,7 @@
+// src/lib/FileUploader.tsx
 import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
-import { Upload, X } from "lucide-react";
+import { Upload, X, FileText, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -14,40 +15,35 @@ export default function FileUploader({ onFilesUpload, className }: FileUploaderP
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     console.log("Files dropped/selected:", acceptedFiles);
-    
-    // Log detailed file information
+
     acceptedFiles.forEach((file, index) => {
       console.log(`File ${index + 1}:`, {
         name: file.name,
         type: file.type,
-        size: file.size,
-        sizeMB: (file.size / 1024 / 1024).toFixed(2) + ' MB',
-        lastModified: new Date(file.lastModified).toLocaleString(),
+        size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
       });
     });
 
-    setFiles(acceptedFiles);
+    setFiles(prev => [...prev, ...acceptedFiles]);
     if (onFilesUpload) {
-      onFilesUpload(acceptedFiles);
+      onFilesUpload([...files, ...acceptedFiles]);
     }
-  }, [onFilesUpload]);
+  }, [onFilesUpload, files]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+      'application/vnd.ms-excel': ['.xls'],
+      'text/csv': ['.csv'],
       'image/*': ['.png', '.jpg', '.jpeg', '.gif'],
       'application/pdf': ['.pdf'],
-      'application/msword': ['.doc'],
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
     },
-    maxFiles: 5,
-    maxSize: 10 * 1024 * 1024, // 10MB
+    maxFiles: 10,
+    maxSize: 20 * 1024 * 1024, // 20MB
   });
 
   const removeFile = (index: number) => {
-    const fileToRemove = files[index];
-    console.log("Removing file:", fileToRemove.name);
-    
     const newFiles = files.filter((_, i) => i !== index);
     setFiles(newFiles);
     if (onFilesUpload) {
@@ -55,43 +51,71 @@ export default function FileUploader({ onFilesUpload, className }: FileUploaderP
     }
   };
 
+  const getFileIcon = (file: File) => {
+    if (file.type.includes('spreadsheet') || file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+      return <FileSpreadsheet className="w-5 h-5 text-green-600" />;
+    }
+    if (file.type.includes('csv')) {
+      return <FileText className="w-5 h-5 text-blue-600" />;
+    }
+    return <FileText className="w-5 h-5 text-gray-600" />;
+  };
+
   return (
-    <div className={cn("p-6", className)}>
+    <div className={cn("space-y-4", className)}>
       <div
         {...getRootProps()}
         className={cn(
-          "border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors",
-          isDragActive ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:border-gray-400"
+          "border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all",
+          isDragActive 
+            ? "border-primary bg-primary/5" 
+            : "border-gray-300 hover:border-gray-400 hover:bg-gray-50"
         )}
       >
         <input {...getInputProps()} />
-        <Upload className="mx-auto h-12 w-12 text-gray-400" />
-        <p className="mt-2 text-sm text-gray-600">
-          {isDragActive ? "Drop files here..." : "Drag & drop files here, or click to select"}
+        <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+        <p className="text-lg font-medium text-foreground">
+          {isDragActive ? "Drop files here" : "Drag & drop files here"}
         </p>
-        <p className="text-xs text-gray-500 mt-1">
-          Supports images, PDF, Word documents (max 10MB)
+        <p className="text-sm text-muted-foreground mt-2">
+          or <span className="text-primary underline">click to browse</span>
+        </p>
+        <p className="text-xs text-muted-foreground mt-3">
+          Excel (.xlsx, .xls), CSV, PDF, Images • Max 20MB
         </p>
       </div>
 
       {files.length > 0 && (
-        <div className="mt-4 space-y-2">
-          <h4 className="text-sm font-medium text-gray-700">Selected Files:</h4>
-          {files.map((file, index) => (
-            <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-              <span className="text-sm text-gray-600 truncate flex-1">
-                {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => removeFile(index)}
-                className="h-8 w-8 p-0"
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-foreground">
+            {files.length} file{files.length > 1 ? 's' : ''} selected
+          </p>
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {files.map((file, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border"
               >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          ))}
+                <div className="flex items-center gap-3 min-w-0">
+                  {getFileIcon(file)}
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{file.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {(file.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeFile(index)}
+                  className="h-8 w-8 p-0"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

@@ -1,15 +1,21 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { alertSchema, type AlertData } from "@/validation/alert";
-import { useNotifyMyVendorMutation } from "@/redux/features/supplyer/supplyer.api";
 
 interface UseSendAlertProps {
   onSuccess?: () => void;
   supplierId?: string;
 }
 
-export const useSendAlert = ({ onSuccess, supplierId }: UseSendAlertProps = {}) => {
-  const [sendAlert, { isLoading, isSuccess, isError, data }] = useNotifyMyVendorMutation();
+export const useSendAlert = ({
+  onSuccess,
+  supplierId,
+}: UseSendAlertProps = {}) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [isError, setIsError] = useState(false);
+  const [data, setData] = useState<any>(null);
 
   const {
     register,
@@ -24,41 +30,38 @@ export const useSendAlert = ({ onSuccess, supplierId }: UseSendAlertProps = {}) 
     mode: "onChange",
     defaultValues: {
       title: "",
-      priority: "HIGH", // ✅ FIXED
+      priority: "HIGH",
       description: "",
     },
-
   });
 
-  const onSubmit = async (data: AlertData) => {
+  const onSubmit = async (formData: AlertData) => {
     try {
-      console.log("Alert data submitted:", {
-        ...data,
-        supplierId,
-        timestamp: new Date().toISOString(),
-      });
+      setIsLoading(true);
+      setIsError(false);
+      setIsSuccess(false);
 
-      // Prepare data for API
-      const alertData = {
-        ...data,
+      const payload = {
+        ...formData,
         ...(supplierId && { supplierId }),
+        createdAt: new Date().toISOString(),
       };
 
-      // Uncomment to actually call the API
-      const result = await sendAlert(alertData).unwrap();
+      // ✅ Simulate async behavior (no API)
+      await new Promise((resolve) => setTimeout(resolve, 800));
 
-      // For demo purposes, log success
-      console.log("Alert sent successfully:", alertData, result);
+      console.log("Alert submitted (local only):", payload);
 
-      // Reset form on success
+      setData(payload);
+      setIsSuccess(true);
       reset();
 
-      // Call success callback if provided
-      if (onSuccess) {
-        onSuccess();
-      }
+      onSuccess?.();
     } catch (error) {
-      console.error("Failed to send alert:", error);
+      console.error("Alert submit failed:", error);
+      setIsError(true);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -69,11 +72,16 @@ export const useSendAlert = ({ onSuccess, supplierId }: UseSendAlertProps = {}) 
     setValue,
     watch,
     errors,
+
+    // status flags
     isLoading,
     isSuccess,
     isError,
+
+    // form state
     isDirty,
     isValid,
+
     reset,
     alertResponse: data,
   };

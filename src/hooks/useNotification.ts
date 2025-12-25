@@ -1,73 +1,101 @@
 // src/hooks/useNotification.ts
-import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type ControllerProps, type UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useGetNotificationPreferencesQuery, useUpdateNotificationPreferencesMutation } from "@/redux/features/notification/notification.api";
+import {
+  useGetNotificationPreferencesQuery,
+  useUpdateNotificationPreferencesMutation,
+} from "@/redux/features/user/user.api";
+import toast from "react-hot-toast";
+import { useEffect } from "react";
 
+// Match EXACTLY with backend field names
 const notificationSchema = z.object({
-  emailNotification: z.boolean().default(true),
-  highRiskAlert: z.boolean().default(true),
-  contractReminders: z.boolean().default(true),
-  complianceUpdate: z.boolean().default(true),
-  assessmentReminders: z.boolean().default(true).optional(),
-  newMessageAlert: z.boolean().default(true).optional(),
+  emailNotifications: z.boolean(),
+  riskAlerts: z.boolean(),
+  contractReminders: z.boolean(),
+  complianceUpdates: z.boolean(),
+  assessmentReminders: z.boolean(),
+  messageAlerts: z.boolean(),
 });
 
-export type NotificationData = z.infer<typeof notificationSchema>;
+export type NotificationFormData = z.infer<typeof notificationSchema>;
 
-export const useNotification = () => {
-  // Fetch current preferences
-  const { data: notificationData, isLoading: isFetching } = useGetNotificationPreferencesQuery(undefined);
-  
-  // Update mutation
-  const [updatePreferences, { isLoading: isUpdating, isSuccess, isError }] = 
+export const useNotification = (): {
+  control: ControllerProps["control"];
+  handleSubmit: UseFormReturn<NotificationFormData>["handleSubmit"];
+  isDirty: boolean;
+  isLoading: boolean;
+  isSuccess: boolean;
+  isError: boolean;
+  preferences: NotificationFormData | undefined;
+  isFetching: boolean;
+  reset: () => void;
+} => {
+  const {
+    data: preferencesData,
+    isLoading: isFetching,
+    isError: fetchError,
+    refetch,
+  } = useGetNotificationPreferencesQuery(undefined);
+
+  const [updatePreferences, { isLoading: isUpdating, isSuccess, isError }] =
     useUpdateNotificationPreferencesMutation();
+   console.log("preferencesData:", preferencesData);
+  // Debug log
+  console.log("Preferences from API:", preferencesData);
 
-  const [initialValues, setInitialValues] = useState<NotificationData>({
-    emailNotification: true,
-    highRiskAlert: true,
-    contractReminders: true,
-    complianceUpdate: true,
-    assessmentReminders: true,
-    newMessageAlert: true,
-  });
+  const defaultValues: NotificationFormData = {
+    emailNotifications: preferencesData?.emailNotifications ?? true,
+    riskAlerts: preferencesData?.riskAlerts ?? true,
+    contractReminders: preferencesData?.contractReminders ?? true,
+    complianceUpdates: preferencesData?.complianceUpdates ?? true,
+    assessmentReminders: preferencesData?.assessmentReminders ?? true,
+    messageAlerts: preferencesData?.messageAlerts ?? true,
+  };
 
   const {
     control,
     handleSubmit,
-    reset,
     formState: { isDirty },
-  } = useForm<NotificationData>({
-    resolver: zodResolver(notificationSchema) as any,
-    defaultValues: initialValues,
-    mode: "onChange",
+    reset,
+    watch,
+  } = useForm<NotificationFormData>({
+    resolver: zodResolver(notificationSchema),
+    defaultValues,
   });
 
-  // Update form when data is fetched
+  // Reset form when data loads
   useEffect(() => {
-    if (notificationData?.data) {
-      const preferences = notificationData.data;
-      const newValues = {
-        emailNotification: preferences.emailNotification,
-        highRiskAlert: preferences.highRiskAlert,
-        contractReminders: preferences.contractReminders,
-        complianceUpdate: preferences.complianceUpdate,
-        assessmentReminders: preferences.assessmentReminders,
-        newMessageAlert: preferences.newMessageAlert,
-      };
-      setInitialValues(newValues);
-      reset(newValues);
+    if (preferencesData) {
+      console.log("Resetting form with:", preferencesData);
+      reset({
+        emailNotifications: preferencesData.emailNotifications ?? true,
+        riskAlerts: preferencesData.riskAlerts ?? true,
+        contractReminders: preferencesData.contractReminders ?? true,
+        complianceUpdates: preferencesData.complianceUpdates ?? true,
+        assessmentReminders: preferencesData.assessmentReminders ?? true,
+        messageAlerts: preferencesData.messageAlerts ?? true,
+      });
     }
-  }, [notificationData, reset]);
+  }, [preferencesData, reset]);
 
-  const onSubmit = async (data: NotificationData) => {
+  // Watch form values for debugging
+  const formValues = watch();
+  useEffect(() => {
+    console.log("Form values:", formValues);
+  }, [formValues]);
+
+  const onSubmit = async (data: NotificationFormData) => {
+    console.log("Submitting data:", data);
     try {
-      console.log("Updating notification preferences:", data);
-      await updatePreferences(data).unwrap();
-      console.log("Notification preferences updated successfully!");
-    } catch (error) {
-      console.error("Failed to update notification preferences:", error);
+      const result = await updatePreferences(data).unwrap();
+      console.log("Update successful:", result);
+      toast.success("Notification preferences updated successfully!");
+      refetch(); // Refresh the data
+    } catch (err: any) {
+      console.error("Update failed:", err);
+      toast.error(err?.data?.message || "Failed to update preferences. Please try again.");
     }
   };
 
@@ -77,7 +105,9 @@ export const useNotification = () => {
     isDirty,
     isLoading: isFetching || isUpdating,
     isSuccess,
-    isError,
-    preferences: notificationData?.data || initialValues,
+    isError: isError || fetchError,
+    preferences: preferencesData,
+    isFetching,
+    reset,
   };
 };

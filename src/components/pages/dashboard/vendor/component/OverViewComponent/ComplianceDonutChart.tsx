@@ -55,7 +55,7 @@ export default function ComplianceDonutChart({ data }: Props) {
                 x="50%" 
                 y="48%" 
                 textAnchor="middle" 
-                className="text-2xl sm:text-3xl md:text-4xl font-bold fill-foreground"
+                className="text-xl sm:text-xl md:text-4xl font-bold fill-foreground"
               >
                 {total}%
               </text>
@@ -63,7 +63,7 @@ export default function ComplianceDonutChart({ data }: Props) {
                 x="50%" 
                 y="58%" 
                 textAnchor="middle" 
-                className="text-xs sm:text-sm fill-muted-foreground"
+                className="text-[12px] fill-muted-foreground"
               >
                 Total Compliance
               </text>

@@ -1,3 +1,4 @@
+import ProblemsPage from "@/components/pages/dashboard/problem/ProblemList";
 import SupplierDashboard from "@/components/pages/dashboard/supplier/overview";
 import NotificationsPage from "@/components/pages/dashboard/supplier/pages/NotificationAlerts/NotificationAlerts";
 import ReportsPage from "@/components/pages/dashboard/supplier/pages/Reports/Report";
@@ -39,6 +40,12 @@ export const suppliersSidebarItems: ISidebarItem[] = [
         url: "/supplier/profileSetting",
         icon: "Settings",
         component: ProfileSettingOverview,
+      },
+      {
+        title: "Problems & Issues",
+        url: "/supplier/problem",
+        icon: "Settings",
+        component: ProblemsPage,
       }
     ]
   }

@@ -5,6 +5,7 @@ import type { ISidebarItem } from "@/types";
 import VendorSupplierManageSection from "@/components/pages/dashboard/vendor/pages/SupplierManagement/component/VendorSupplierManageSection";
 import ProfileSettingOverview from "@/components/pages/dashboard/vendor/pages/ProfileSetting/ProfileSettingOverview";
 import ReportsPage from "@/components/pages/dashboard/vendor/pages/Reports/overview";
+import ProblemsPage from "@/components/pages/dashboard/problem/ProblemList";
 
 export const vendorSidebarItems: ISidebarItem[] = [
   {
@@ -23,7 +24,7 @@ export const vendorSidebarItems: ISidebarItem[] = [
         component: VendorSupplierManageSection,
       },
       {
-        title: "Alerts",
+        title: "Alerts & Notifications ",
         url: "/vendor/alerts",
         icon: "AlertCircle",
         component: Alerts,
@@ -39,6 +40,12 @@ export const vendorSidebarItems: ISidebarItem[] = [
         url: "/vendor/profileSetting",
         icon: "Settings",
         component: ProfileSettingOverview,
+      },
+      {
+        title: "Problems & Issues",
+        url: "/vendor/problem",
+        icon: "Settings",
+        component: ProblemsPage,
       }
     ],
 

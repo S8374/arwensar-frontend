@@ -27,6 +27,8 @@ import AssessmentReview from "@/components/pages/dashboard/supplier/components/o
 import SignInSupplyer from "@/components/pages/auth/SignInSupplyer/SignInVendor";
 import VerifyEmail from "@/components/pages/auth/verifyOtp/VerifyEmail";
 import SupplierAssignmentForm from "@/components/pages/dashboard/supplier/components/QuickSecurityAssessment";
+import ProblemsList from "@/components/pages/dashboard/problem/ProblemList";
+import ProblemDetail from "@/components/pages/dashboard/problem/ProblemDetails";
 
 export const router = createBrowserRouter([
     {
@@ -75,7 +77,14 @@ export const router = createBrowserRouter([
             {
                 path: "/vendor/assainment/:supplierId/:assainmentId",
                 Component: SupplyerAssainmentDetails,
-            },
+            }
+
+            // ,
+            // {
+            //     path: "/vendor/assessments/:assessmentId",
+            //     Component: ReviewAssainment
+            // },
+
         ],
     },
     {
@@ -88,15 +97,33 @@ export const router = createBrowserRouter([
             },
             ...generateRoutes(suppliersSidebarItems),
             {
-                path: "/supplier/assessments/:assainmetId",
+                path: "/supplier/assessments/:assessmentId",
                 Component: DataSecurityAssessment
             },
             {
                 path: "/supplier/assessments/data-security/review",
                 Component: AssessmentReview,
             },
+            {
+                path: "/supplier/assessments/data-security/review",
+                Component: AssessmentReview,
+            },
+            {
+                path: "/supplier/assessments/data-security/review",
+                Component: AssessmentReview,
+            },
+            {
+                path: "/supplier/problems",
+                Component: ProblemsList,
+            },
+
         ]
     },
+    {
+        path: "/problems/:problemId",
+        Component: ProblemDetail,
+    }
+    ,
     {
         Component: SupplierAssignmentForm,
         path: "assignment"

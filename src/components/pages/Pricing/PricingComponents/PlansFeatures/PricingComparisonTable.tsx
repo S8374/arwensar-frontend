@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { useBuyNewPriceMutation } from "@/redux/features/supplyer/supplyer.api";
 import type { PlanData, PlanFeature, PricingTableProps } from "@/validation/pricing";
 import { Check, X } from "lucide-react";
 import { useState } from "react";
@@ -27,7 +26,7 @@ const planPrices = {
 export default function PricingComparisonTable({ onPlanSelect }: PricingTableProps) {
   const [isAnnual, setIsAnnual] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-  const [buyPlan, { isLoading }] = useBuyNewPriceMutation();
+  // const [buyPlan, { isLoading }] = useBuyNewPriceMutation(undefined);
    console.log(buyPlan)
   const handlePlanSelect = async (planName: "starter" | "pro" | "enterprise") => {
     const price = planPrices[planName];

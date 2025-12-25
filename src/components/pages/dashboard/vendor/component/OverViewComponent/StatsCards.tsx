@@ -1,7 +1,5 @@
-// src/components/pages/dashboard/vendor/component/OverViewComponent/StatsCards.tsx
 import { Card } from "@/components/ui/card";
 import { getIconComponent } from "@/lib/icon-maper";
-import { useGetNewDashboardDataQuery, useGetVendorStatsQuery } from "@/redux/features/vendor/vendor.api";
 import {
   TrendingUp,
   TrendingDown,
@@ -11,23 +9,50 @@ import {
   AlertTriangle,
   FileWarning,
   Clock,
-  ShieldCheck
+  ShieldCheck,
+  Calendar
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function StatsCards() {
-  const { data, isLoading, error } = useGetVendorStatsQuery(undefined);
- const { data:newData, isError, refetch } = useGetNewDashboardDataQuery(undefined);
-
-  if (isLoading) {
-    return <StatsCardsSkeleton />;
-  }
-
-  if (error || !data) {
-    return <ErrorState />;
-  }
-
-  const stats = data.data;
+  // MOCK DATA
+  const stats = {
+    quickStats: {
+      totalSuppliers: 24,
+      documentComplianceRate: 85,
+    },
+    nis2Compliance: {
+      currentScore: 92.5,
+      changePercentage: 1.2,
+      trend: "UP",
+      breakdown: {
+        documentCompliance: { score: 80 },
+      },
+      improvementToday: 0.5,
+    },
+    assessmentProgress: {
+      pending: 5,
+      averageScore: 78,
+    },
+    riskTrends: {
+      highRiskSuppliers: {
+        current: 3,
+        change: 1,
+        trend: "UP",
+      },
+    },
+    supplierProblems: {
+      pending: 2,
+      highPriority: 1,
+    },
+    timeline: {
+      today: { newAssessments: 2 },
+      thisMonth: { contractsExpiring: 1 },
+    },
+    contractManagement: {
+      expiringContracts: 2,
+    },
+  };
 
   const statsData = [
     {
@@ -37,16 +62,16 @@ export default function StatsCards() {
       change: `${stats.riskTrends.highRiskSuppliers.change}`,
       changeType: stats.riskTrends.highRiskSuppliers.change > 0 ? "negative" : "positive",
       bgColor: "bg-blue-50 dark:bg-blue-900/20",
-      iconColor: "text-blue-600 dark:text-blue-400"
+      iconColor: "text-blue-600 dark:text-blue-400",
     },
     {
       title: "NIS2 Compliance Score",
       value: `${stats.nis2Compliance.currentScore.toFixed(1)}%`,
       icon: "shield-check",
       change: `${stats.nis2Compliance.changePercentage > 0 ? '+' : ''}${stats.nis2Compliance.changePercentage.toFixed(1)}%`,
-      changeType: stats.nis2Compliance.trend === "UP" ? "positive" : stats.nis2Compliance.trend === "DOWN" ? "negative" : "neutral",
+      changeType: stats.nis2Compliance.trend === "UP" ? "positive" : "negative",
       bgColor: "bg-emerald-50 dark:bg-emerald-900/20",
-      iconColor: "text-emerald-600 dark:text-emerald-400"
+      iconColor: "text-emerald-600 dark:text-emerald-400",
     },
     {
       title: "Pending Assessments",
@@ -55,7 +80,7 @@ export default function StatsCards() {
       change: `${stats.timeline.today.newAssessments} today`,
       changeType: stats.timeline.today.newAssessments > 0 ? "negative" : "neutral",
       bgColor: "bg-amber-50 dark:bg-amber-900/20",
-      iconColor: "text-amber-600 dark:text-amber-400"
+      iconColor: "text-amber-600 dark:text-amber-400",
     },
     {
       title: "High Risk Suppliers",
@@ -64,16 +89,19 @@ export default function StatsCards() {
       change: `${stats.riskTrends.highRiskSuppliers.change > 0 ? '+' : ''}${stats.riskTrends.highRiskSuppliers.change}`,
       changeType: stats.riskTrends.highRiskSuppliers.trend === "UP" ? "negative" : "positive",
       bgColor: "bg-red-50 dark:bg-red-900/20",
-      iconColor: "text-red-600 dark:text-red-400"
+      iconColor: "text-red-600 dark:text-red-400",
     },
     {
       title: "Document Compliance",
       value: `${stats.quickStats.documentComplianceRate}%`,
       icon: "file-check",
       change: `${stats.nis2Compliance.breakdown.documentCompliance.score}% target`,
-      changeType: stats.quickStats.documentComplianceRate >= stats.nis2Compliance.breakdown.documentCompliance.score ? "positive" : "negative",
+      changeType:
+        stats.quickStats.documentComplianceRate >= stats.nis2Compliance.breakdown.documentCompliance.score
+          ? "positive"
+          : "negative",
       bgColor: "bg-purple-50 dark:bg-purple-900/20",
-      iconColor: "text-purple-600 dark:text-purple-400"
+      iconColor: "text-purple-600 dark:text-purple-400",
     },
     {
       title: "Active Problems",
@@ -82,7 +110,7 @@ export default function StatsCards() {
       change: `${stats.supplierProblems.highPriority} high priority`,
       changeType: stats.supplierProblems.highPriority > 0 ? "negative" : "neutral",
       bgColor: "bg-orange-50 dark:bg-orange-900/20",
-      iconColor: "text-orange-600 dark:text-orange-400"
+      iconColor: "text-orange-600 dark:text-orange-400",
     },
     {
       title: "Average Score",
@@ -91,7 +119,7 @@ export default function StatsCards() {
       change: `${stats.nis2Compliance.improvementToday > 0 ? '+' : ''}${stats.nis2Compliance.improvementToday.toFixed(1)}% today`,
       changeType: stats.nis2Compliance.improvementToday > 0 ? "positive" : "negative",
       bgColor: "bg-indigo-50 dark:bg-indigo-900/20",
-      iconColor: "text-indigo-600 dark:text-indigo-400"
+      iconColor: "text-indigo-600 dark:text-indigo-400",
     },
     {
       title: "Expiring Contracts",
@@ -100,14 +128,12 @@ export default function StatsCards() {
       change: `${stats.timeline.thisMonth.contractsExpiring} this month`,
       changeType: stats.timeline.thisMonth.contractsExpiring > 0 ? "negative" : "neutral",
       bgColor: "bg-cyan-50 dark:bg-cyan-900/20",
-      iconColor: "text-cyan-600 dark:text-cyan-400"
-    }
+      iconColor: "text-cyan-600 dark:text-cyan-400",
+    },
   ];
- console.log("newData",newData)
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-{/*  */}
-      
       {statsData.map((item, i) => {
         const Icon = getIconComponent(item.icon);
 
@@ -118,28 +144,21 @@ export default function StatsCards() {
         };
 
         return (
-          <Card
-            key={i}
-            className="p-4 sm:p-6 bg-background border shadow-sm hover:shadow-md transition-shadow duration-200 group"
-          >
+          <Card key={i} className="p-4 sm:p-6 bg-background border shadow-sm hover:shadow-md transition-shadow duration-200 group">
             <div className="flex items-center justify-between">
-              {/* LEFT TEXT */}
               <div className="flex-1 min-w-0">
-                <p className="text-xs sm:text-sm text-muted-foreground truncate mb-1">
-                  {item.title}
-                </p>
-                <p className="text-2xl sm:text-3xl font-bold text-foreground truncate">
-                  {item.value}
-                </p>
+                <p className="text-xs sm:text-sm text-muted-foreground truncate mb-1">{item.title}</p>
+                <p className="text-2xl sm:text-3xl font-bold text-foreground truncate">{item.value}</p>
 
                 {item.change && (
                   <div className="flex items-center gap-1 mt-2">
-                    <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${item.changeType === "positive"
+                    <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                      item.changeType === "positive"
                         ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
                         : item.changeType === "negative"
-                          ? "bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300"
-                          : "bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
-                      }`}>
+                        ? "bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300"
+                        : "bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                    }`}>
                       {getChangeIcon()}
                       <span>{item.change}</span>
                     </div>
@@ -147,24 +166,19 @@ export default function StatsCards() {
                 )}
               </div>
 
-              {/* RIGHT ICON BUBBLE */}
-              <div
-                className={`w-12 h-12 rounded-xl flex items-center justify-center ${item.bgColor} flex-shrink-0 ml-3 transition-transform duration-200 group-hover:scale-110`}
-              >
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${item.bgColor} flex-shrink-0 ml-3 transition-transform duration-200 group-hover:scale-110`}>
                 <Icon className={`w-5 h-5 ${item.iconColor}`} />
               </div>
             </div>
           </Card>
         );
       })}
-
-
-      
     </div>
   );
 }
 
-function StatsCardsSkeleton() {
+// Skeleton placeholder
+export function StatsCardsSkeleton() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
       {Array.from({ length: 8 }).map((_, i) => (
@@ -183,7 +197,8 @@ function StatsCardsSkeleton() {
   );
 }
 
-function ErrorState() {
+// Error state placeholder
+export function ErrorState() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
       {Array.from({ length: 4 }).map((_, i) => (

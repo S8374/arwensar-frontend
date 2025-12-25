@@ -10,7 +10,7 @@ export interface ISidebarItem {
   }[];
 }
 
-export type TRole =  "VENDOR" | "SUPPLYER";
+export type TRole =  "VENDOR"  | "ADMIN" | "SUPPLIER";
 // src/components/pages/dashboard/supplier/notifications/types.ts
 export type AlertType = "error" | "warning" | "info" | "success";
 
