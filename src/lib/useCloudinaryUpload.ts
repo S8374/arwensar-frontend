@@ -41,7 +41,7 @@ export const useCloudinaryUpload = () => {
         const url = await uploadSingleFile(file);
         uploaded.push(url);
         completed++;
-        
+
         // Update overall progress
         setUploadProgress(Math.round((completed / files.length) * 100));
         setUploadedUrls([...uploaded]); // Live preview of uploaded files

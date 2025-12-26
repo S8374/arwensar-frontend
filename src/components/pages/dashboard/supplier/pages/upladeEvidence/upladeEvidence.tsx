@@ -44,10 +44,10 @@ import { format } from "date-fns";
 import { useState, useRef } from "react";
 
 import toast from "react-hot-toast";
-import { useCloudinaryUpload } from "@/lib/useCloudinaryUpload";
 import { useGetDocumentCategoriesQuery, useGetDocumentsQuery, useUploadDocumentMutation } from "@/redux/features/document/document.api";
 import { SimpleReplaceModal } from "./ReplaceDocumentModal";
 import { ViewDocumentModal } from "./view";
+import { useMinioUpload } from "@/lib/useMinioUpload";
 
 // Default fallback categories (in case API fails)
 const FALLBACK_CATEGORIES = [
@@ -82,7 +82,7 @@ export default function EvidenceUploadPage() {
 
   // Upload hook
   const { uploadFile, isUploading, uploadProgress, resetUpload } =
-    useCloudinaryUpload();
+    useMinioUpload();
 
   const [uploadDocument, { isLoading: isSubmitting }] =
     useUploadDocumentMutation();
@@ -103,7 +103,6 @@ export default function EvidenceUploadPage() {
   const {
     data: categoriesData,
     isLoading: categoriesLoading,
-    error: categoriesError,
   } = useGetDocumentCategoriesQuery();
 
   const categories: Category[] = categoriesData?.categories || FALLBACK_CATEGORIES;

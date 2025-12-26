@@ -2,9 +2,10 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import {  FileText, FileSpreadsheet, FileDown } from "lucide-react";
+import { FileText, FileSpreadsheet, FileDown } from "lucide-react";
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { useGetReportsQuery } from "@/redux/features/report/report.api";
 
 const reports = [
   { name: "NIS2 Compliance Overview", framework: "NIS2", date: "2025-02-15", status: "Completed" },
@@ -15,6 +16,8 @@ const reports = [
 export default function ReportsPage() {
   const [_isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
+  const { data: reportsData, refetch, isLoading } = useGetReportsQuery();
+  console.log(reportsData);
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -110,7 +113,7 @@ export default function ReportsPage() {
         </Card>
       </div>
 
-      
+
     </div>
   );
 }

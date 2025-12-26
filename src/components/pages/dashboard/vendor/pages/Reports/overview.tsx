@@ -30,7 +30,7 @@ import {
     Clock,
 
     Send,
- 
+
     Shield,
     Zap,
     FileCheck,
@@ -44,7 +44,6 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { format, formatDistanceToNow } from 'date-fns';
 
@@ -65,7 +64,6 @@ export default function VendorReportsPage() {
     const { data: reportDetails, isLoading: detailsLoading } = useGetReportByIdQuery(selectedReportId || '', {
         skip: !selectedReportId
     });
-
     // Mutations
     const [generateReport, { isLoading: generating }] = useGenerateReportMutation();
     const [bulkGenerate, { isLoading: bulkGenerating }] = useBulkGenerateReportsMutation();
@@ -79,7 +77,8 @@ export default function VendorReportsPage() {
     const suppliers = suppliersData?.data || [];
     const stats = statistics?.data || {};
     const options = reportOptions?.data || {};
-
+    console.log("suppliers",suppliers);
+    console.log("reportsss", reports);
     // Filter reports based on active tab and search
     const filteredReports = reports.filter((report: any) => {
         const matchesTab = activeTab === 'all' || report.reportType === activeTab;
@@ -142,7 +141,7 @@ export default function VendorReportsPage() {
                     endDate: new Date().toISOString()
                 }
             };
-
+           console.log("payloade.....................",payload);
             const result = await generateReport(payload).unwrap();
             toast.success(`Report "${result.data?.title}" generated successfully!`);
             setReportTitle('');
@@ -191,19 +190,30 @@ export default function VendorReportsPage() {
     };
 
     const handleViewReport = async (reportId: string) => {
+        // Find the report by ID
+        const report = reports.find((r: any) => r.id === reportId);
+        if (!report || !report.documentUrl) {
+            toast.error('Report URL not found');
+            return;
+        }
+
         try {
-            const blob = await getReportDocument(reportId).unwrap();
-            const url = window.URL.createObjectURL(blob);
+            // Option 1: Direct download (saves as PDF)
             const link = document.createElement('a');
-            link.href = url;
-            link.download = `report-${reportId}.pdf`;
+            link.href = report.documentUrl;
+            link.download = `${report.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
+            link.target = '_blank'; // Optional: opens in new tab if browser blocks download
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            window.URL.revokeObjectURL(url);
+
             toast.success('Report downloaded successfully!');
         } catch (error) {
+            console.error('Download failed:', error);
             toast.error('Failed to download report');
+
+            // Fallback: open in new tab (in case download is blocked)
+            window.open(report.documentUrl, '_blank');
         }
     };
 
@@ -326,7 +336,7 @@ export default function VendorReportsPage() {
                 </div>
 
                 {/* Statistics Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
                     <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
                         <CardHeader className="pb-3">
                             <CardTitle className="text-sm font-medium text-blue-700 flex items-center gap-2">
@@ -362,25 +372,6 @@ export default function VendorReportsPage() {
                         </CardContent>
                     </Card>
 
-                    <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-                        <CardHeader className="pb-3">
-                            <CardTitle className="text-sm font-medium text-purple-700 flex items-center gap-2">
-                                <Database className="h-4 w-4" />
-                                Storage Used
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-3xl font-bold text-purple-900">
-                                {formatFileSize(storageUsage.total || 0)}
-                            </div>
-                            <div className="mt-2">
-                                <Progress value={(storageUsage.total / (1024 * 1024 * 100)) * 100} className="h-2" />
-                                <p className="text-xs text-purple-600 mt-1">
-                                    Avg: {formatFileSize(storageUsage.average || 0)} per report
-                                </p>
-                            </div>
-                        </CardContent>
-                    </Card>
 
                     <Card className="bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200">
                         <CardHeader className="pb-3">
@@ -460,6 +451,7 @@ export default function VendorReportsPage() {
                                     </SelectTrigger>
                                     <SelectContent>
                                         {suppliers.map((supplier: any) => (
+                                            
                                             <SelectItem key={supplier.id} value={supplier.id}>
                                                 {supplier.name}
                                             </SelectItem>
@@ -771,13 +763,8 @@ export default function VendorReportsPage() {
                                                             size="sm"
                                                             onClick={() => handleViewReport(report.id)}
                                                             title="Download"
-                                                            disabled={downloading}
                                                         >
-                                                            {downloading ? (
-                                                                <Loader2 className="h-4 w-4 animate-spin" />
-                                                            ) : (
-                                                                <Download className="h-4 w-4" />
-                                                            )}
+                                                            <Download className="h-4 w-4" />
                                                         </Button>
                                                         <Button
                                                             variant="ghost"

@@ -11,10 +11,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { uploadToCloudinary } from "@/lib/uploadFileToCloudinary";
 import { useUpdateDocumentMutation } from "@/redux/features/document/document.api";
 import { Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useMinioUpload } from "@/lib/useMinioUpload";
 
 interface ReplaceDocumentModalProps {
   document: any | null;
@@ -33,25 +33,27 @@ export function SimpleReplaceModal({
   const [isUploading, setIsUploading] = useState(false);
   const [updateDocument] = useUpdateDocumentMutation();
 
+  // ✅ Correct hook usage: call at top-level
+  const minioUploadHook = useMinioUpload();
+
   const handleReplace = async () => {
     if (!document || !selectedFile) return;
 
     setIsUploading(true);
     try {
-      // Upload new file
-      const fileUrl = await uploadToCloudinary(selectedFile);
-
-      // Prepare update payload
+      // ✅ Call the upload function returned by the hook
+      const fileUrl = await minioUploadHook.uploadFile(selectedFile);
+      console.log("file url",fileUrl);
+      // Prepare payload for document update
       const updatePayload = {
         documentId: document.id,
         data: {
-          name: document.name, // Keep the same name or you can make it configurable
+          name: document.name, // keep original name
           url: fileUrl,
           fileSize: selectedFile.size,
           mimeType: selectedFile.type,
-          status: "PENDING", // Reset status on replace
+          status: "PENDING", // reset status
           type: selectedFile.name.split(".").pop()?.toUpperCase() || document.type,
-          // Keep other fields unchanged
           description: document.description,
           category: document.category,
           expiryDate: document.expiryDate,
@@ -65,7 +67,7 @@ export function SimpleReplaceModal({
       toast.success("Document replaced successfully!");
       onSuccess?.();
       onClose();
-      setSelectedFile(null); // Reset file input
+      setSelectedFile(null); // reset input
     } catch (error: any) {
       console.error("Replace failed:", error);
       toast.error(error?.data?.message || "Failed to replace document");
@@ -78,17 +80,16 @@ export function SimpleReplaceModal({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file size (10MB max)
-    const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+    // Validate file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024;
     if (file.size > maxSize) {
       toast.error("File size too large. Maximum size is 10MB.");
       return;
     }
 
-    // Validate file type
+    // Validate allowed file types
     const allowedExtensions = ["pdf", "doc", "docx", "png", "jpg", "jpeg"];
     const fileExtension = file.name.split(".").pop()?.toLowerCase();
-    
     if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
       toast.error(`File type not allowed. Allowed types: ${allowedExtensions.join(", ")}`);
       return;
@@ -106,7 +107,7 @@ export function SimpleReplaceModal({
             Upload a new file to replace "{document?.name}"
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="replace-file">Select New File</Label>
@@ -152,7 +153,7 @@ export function SimpleReplaceModal({
             </p>
           </div>
         </div>
-        
+
         <DialogFooter className="gap-2">
           <Button
             variant="outline"

@@ -1,11 +1,11 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { profileSchema, type ProfileData } from "@/validation/profile";
-import { useVendorProfileManagementMutation } from "@/redux/features/vendor/vendor.api";
+import { useUpdateUserProfileMutation } from "@/redux/features/user/user.api";
 
 // src/hooks/useProfile.ts - Update the field mapping
 export const useProfile = (initialData?: any) => {
-  const [updateProfile, { isLoading, isSuccess, isError }] = useVendorProfileManagementMutation();
+  const [updateProfile, { isLoading, isSuccess, isError }] = useUpdateUserProfileMutation();
 
   const {
     register,

@@ -17,7 +17,7 @@ import {
   useSubmitAssessmentMutation,
   useRemoveEvidenceMutation,
 } from "@/redux/features/assainment/assainment.api";
-import { useCloudinaryUpload } from "@/lib/useCloudinaryUpload";
+import { useMinioUpload } from "@/lib/useMinioUpload";
 
 export default function DataSecurityAssessment() {
   const { assessmentId } = useParams<{ assessmentId: string }>();
@@ -28,7 +28,7 @@ export default function DataSecurityAssessment() {
   const [saveAnswer, { isLoading: saving }] = useSaveAnswerMutation();
   const [submitAssessment, { isLoading: submitting }] = useSubmitAssessmentMutation();
   const [removeEvidence, { isLoading: removingEvidence }] = useRemoveEvidenceMutation();
-  const { uploadFile, isUploading, uploadProgress } = useCloudinaryUpload();
+  const { uploadFile, isUploading, uploadProgress } = useMinioUpload();
 
   const [submissionId, setSubmissionId] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Record<string, any>>({});

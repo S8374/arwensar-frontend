@@ -48,7 +48,7 @@ export const documentApi = baseApi.injectEndpoints({
             query: ({ documentId, data }) => ({
                 url: `/documents/${documentId}`,
                 method: "PATCH",
-                body: data,
+                data: data,
             }),
             invalidatesTags: ["Document"],
         }),

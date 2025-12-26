@@ -20,7 +20,7 @@ export const verificationApi = baseApi.injectEndpoints({
         method: "GET",
         params: { token },
       }),
-      invalidatesTags: ['supplyer', 'Verification'],
+      invalidatesTags: [ 'Verification'],
     }),
     
     // Check verification status

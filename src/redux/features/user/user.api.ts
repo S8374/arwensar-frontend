@@ -13,10 +13,10 @@ export const userApi = baseApi.injectEndpoints({
         }),
 
         updateUserProfile: builder.mutation<any, any>({
-            query: (payload) => ({
+            query: (data) => ({
                 url: "/user/profile",
                 method: "PATCH",
-                body: payload,
+                data: data,
             }),
             invalidatesTags: ["User"],
         }),
