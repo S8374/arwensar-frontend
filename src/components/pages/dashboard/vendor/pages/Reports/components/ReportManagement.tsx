@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, FileText, Eye, Mail, Trash2, RefreshCw } from "lucide-react";
+import { Download, FileText, Eye, Mail, Trash2, RefreshCw, DownloadCloud } from "lucide-react";
 import { 
   useGetReportsQuery, 
   useGetReportDocumentMutation,
@@ -35,11 +35,12 @@ export default function ReportsManagement() {
   const [isSendDialogOpen, setIsSendDialogOpen] = useState(false);
   const [selectedReport, setSelectedReport] = useState<any>(null);
   const [recipientEmail, setRecipientEmail] = useState("");
+  const [isDownloadingAll, setIsDownloadingAll] = useState(false); // Track bulk download state
 
   // API hooks
   const { data: reportsData, refetch, isLoading } = useGetReportsQuery({
     page: 1,
-    limit: 10,
+    limit: 50, // Increased limit to fetch more reports if needed
     sortBy: "createdAt",
     sortOrder: "desc",
   });
@@ -54,19 +55,67 @@ export default function ReportsManagement() {
     try {
       const blob = await getReportDocument(reportId).unwrap();
       
-      // Create download link
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `${fileName.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`;
+      link.download = `${fileName.replace(/[^a-zA-Z0-9]/g, "_") || "report"}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
       
-      toast.success("Report downloaded successfully");
+      toast.success(`"${fileName}" downloaded successfully`);
     } catch (error) {
-      toast.error("Failed to download report");
+      toast.error(`Failed to download report: ${fileName}`);
+      console.error(error);
+    }
+  };
+
+  // NEW: Download All Reports
+  const handleDownloadAll = async () => {
+    if (reports.length === 0) {
+      toast.info("No reports available to download");
+      return;
+    }
+
+    setIsDownloadingAll(true);
+    toast.loading(`Downloading ${reports.length} report(s)...`, { id: "download-all" });
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const report of reports) {
+      try {
+        const blob = await getReportDocument(report.id).unwrap();
+        
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${(report.title || "Untitled_Report").replace(/[^a-zA-Z0-9]/g, "_")}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        successCount++;
+      } catch (error) {
+        failCount++;
+        console.error(`Failed to download report ID: ${report.id}`, error);
+      }
+
+      // Small delay to prevent browser blocking multiple downloads
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+
+    setIsDownloadingAll(false);
+    toast.dismiss("download-all");
+
+    if (failCount === 0) {
+      toast.success(`All ${successCount} report(s) downloaded successfully!`);
+    } else {
+      toast.warning(
+        `${successCount} downloaded, ${failCount} failed. Check console for details.`
+      );
     }
   };
 
@@ -79,13 +128,12 @@ export default function ReportsManagement() {
   };
 
   const handleDelete = async (reportId: string) => {
-    if (!window.confirm("Are you sure you want to delete this report?")) {
-      return;
-    }
+    if (!window.confirm("Are you sure you want to delete this report?")) return;
     
     try {
       await deleteReport(reportId).unwrap();
       toast.success("Report deleted successfully");
+      refetch();
     } catch (error) {
       toast.error("Failed to delete report");
     }
@@ -151,7 +199,7 @@ export default function ReportsManagement() {
             Generate, manage, and distribute supplier reports
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3">
           <Button
             variant="outline"
             onClick={() => refetch()}
@@ -160,6 +208,17 @@ export default function ReportsManagement() {
             <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
+
+          {/* NEW: Download All Button */}
+          <Button
+            variant="secondary"
+            onClick={handleDownloadAll}
+            disabled={isDownloadingAll || reports.length === 0}
+          >
+            <DownloadCloud className={`w-4 h-4 mr-2 ${isDownloadingAll ? "animate-bounce" : ""}`} />
+            {isDownloadingAll ? "Downloading..." : "Download All"}
+          </Button>
+
           <Button
             className="bg-blue-600 hover:bg-blue-700"
             onClick={() => setIsExportModalOpen(true)}
@@ -173,7 +232,9 @@ export default function ReportsManagement() {
       {/* Reports List */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Reports</CardTitle>
+          <CardTitle>
+            Recent Reports {reports.length > 0 && `(${reports.length})`}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -207,8 +268,8 @@ export default function ReportsManagement() {
                           <FileText className="w-6 h-6 text-muted-foreground" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-medium truncate">{report.title}</h4>
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <h4 className="font-medium truncate max-w-md">{report.title}</h4>
                             <Badge className={getReportTypeBadge(report.reportType)}>
                               {report.reportType.replace("_", " ")}
                             </Badge>
@@ -265,7 +326,7 @@ export default function ReportsManagement() {
                             </DropdownMenuItem>
                             <DropdownMenuItem 
                               onClick={() => handleDelete(report.id)}
-                              className="text-red-600"
+                              className="text-red-600 focus:text-red-600"
                             >
                               <Trash2 className="w-4 h-4 mr-2" />
                               Delete
@@ -322,7 +383,10 @@ export default function ReportsManagement() {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setIsSendDialogOpen(false)}
+              onClick={() => {
+                setIsSendDialogOpen(false);
+                setRecipientEmail("");
+              }}
             >
               Cancel
             </Button>
@@ -337,7 +401,7 @@ export default function ReportsManagement() {
         </DialogContent>
       </Dialog>
 
-      {/* Include the Export Modal */}
+      {/* Export / Generate Modal */}
       <ExportReportsModal
         open={isExportModalOpen}
         onOpenChange={setIsExportModalOpen}

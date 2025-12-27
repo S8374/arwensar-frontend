@@ -2,22 +2,84 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { FileText, FileSpreadsheet, FileDown } from "lucide-react";
+import { FileText, FileSpreadsheet, FileDown, Download } from "lucide-react";
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useGetReportsQuery } from "@/redux/features/report/report.api";
+import { format } from "date-fns"; // Add this import for nice date formatting
+import { saveAs } from "file-saver"; // You'll need to install: npm install file-saver
 
-const reports = [
-  { name: "NIS2 Compliance Overview", framework: "NIS2", date: "2025-02-15", status: "Completed" },
-  { name: "NIS2 Compliance Overview", framework: "NIS2", date: "2025-02-15", status: "Completed" },
-  { name: "NIS2 Compliance Overview", framework: "NIS2", date: "2025-02-15", status: "Completed" },
-];
+interface Report {
+  id: string;
+  title: string;
+  description: string;
+  reportType: string;
+  createdAt: string;
+  status: string;
+  documentUrl: string;
+  documentType: string;
+  fileSize: number;
+}
 
 export default function ReportsPage() {
-  const [_isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
-  const { data: reportsData, refetch, isLoading } = useGetReportsQuery();
-  console.log(reportsData);
+  const { data: reportsResponse, isLoading } = useGetReportsQuery({
+    page: 1,
+    limit: 10,
+    sortBy: "createdAt",
+    sortOrder: "desc", // Optional: newest first
+  });
+
+  const reports: Report[] = reportsResponse?.data || [];
+
+  const getFrameworkFromType = (type: string) => {
+    if (type === "RISK_ASSESSMENT") return "Risk Assessment";
+    // Add more mappings if you have other report types (e.g., NIS2, etc.)
+    return type.replace("_", " ");
+  };
+
+  const getStatusBadge = (status: string) => {
+    if (status === "GENERATED") {
+      return <Badge className="bg-green-100 text-green-700 border border-green-200">Completed</Badge>;
+    }
+    return <Badge variant="secondary">{status}</Badge>;
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  // Function to download a single PDF report
+  const downloadReport = async (report: Report) => {
+    try {
+      const response = await fetch(report.documentUrl);
+      const blob = await response.blob();
+      saveAs(blob, `${report.title || "Report"}_${report.id}.pdf`);
+    } catch (error) {
+      console.error("Download failed:", error);
+      // You could add a toast notification here for error
+    }
+  };
+
+  // Export All: Download all PDFs as a ZIP or individually (here we download one by one)
+  const exportAllReports = async () => {
+    if (reports.length === 0) return;
+
+    for (const report of reports) {
+      if (report.documentUrl && report.documentType === "application/pdf") {
+        await downloadReport(report);
+      }
+    }
+    // Optional: Add a toast "All reports downloaded!"
+  };
+
+  if (isLoading) {
+    return <div className="p-8 text-center">Loading reports...</div>;
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -31,7 +93,8 @@ export default function ReportsPage() {
           </div>
 
           <Button
-            onClick={() => setIsUploadModalOpen(true)}
+            onClick={exportAllReports}
+            disabled={reports.length === 0}
             className="bg-chart-6 hover:bg-chart-6/90 text-white font-medium"
           >
             <FileDown className="w-4 h-4 mr-2" />
@@ -44,76 +107,78 @@ export default function ReportsPage() {
       <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h2 className="text-lg sm:text-xl font-semibold text-foreground">Generated Reports</h2>
+          {reports.length === 0 && (
+            <p className="text-muted-foreground mt-4">No reports generated yet.</p>
+          )}
         </div>
 
-        <Card className="border shadow-sm overflow-hidden">
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/50 border-b">
-                    <TableHead className="font-semibold text-foreground">Report Name</TableHead>
-                    <TableHead className="font-semibold text-foreground">Framework</TableHead>
-                    <TableHead className="font-semibold text-foreground">Generated Date</TableHead>
-                    <TableHead className="font-semibold text-foreground">Status</TableHead>
-                    <TableHead className="text-right font-semibold text-foreground">Export</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {reports.map((report, index) => (
-                    <TableRow key={index} className="hover:bg-muted/30 transition-colors">
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-3">
-                          <FileText className="w-5 h-5 text-chart-6" />
-                          <span className="truncate max-w-xs">{report.name}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary" className="bg-muted text-foreground">
-                          {report.framework}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {report.date}
-                      </TableCell>
-                      <TableCell>
-                        <Badge className="bg-green-100 text-green-700 border border-green-200">
-                          Completed
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          {/* PDF Button */}
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-9 px-3 border-red-200 hover:bg-red-50 hover:border-red-300 transition-all"
-                          >
-                            <FileText className="w-4 h-4 text-red-600 mr-1.5" />
-                            <span className="text-red-600 font-medium text-xs sm:text-sm">PDF</span>
-                          </Button>
-
-                          {/* Excel Button */}
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-9 px-3 border-green-200 hover:bg-green-50 hover:border-green-300 transition-all"
-                          >
-                            <FileSpreadsheet className="w-4 h-4 text-green-600 mr-1.5" />
-                            <span className="text-green-600 font-medium text-xs sm:text-sm">Excel</span>
-                          </Button>
-                        </div>
-                      </TableCell>
+        {reports.length > 0 && (
+          <Card className="border shadow-sm overflow-hidden">
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50 border-b">
+                      <TableHead className="font-semibold text-foreground">Report Name</TableHead>
+                      <TableHead className="font-semibold text-foreground">Type / Framework</TableHead>
+                      <TableHead className="font-semibold text-foreground">Generated Date</TableHead>
+                      <TableHead className="font-semibold text-foreground">Status</TableHead>
+                      <TableHead className="font-semibold text-foreground">Size</TableHead>
+                      <TableHead className="text-right font-semibold text-foreground">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+                  </TableHeader>
+                  <TableBody>
+                    {reports.map((report) => (
+                      <TableRow key={report.id} className="hover:bg-muted/30 transition-colors">
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-3">
+                            <FileText className="w-5 h-5 text-chart-6" />
+                            <div>
+                              <div className="truncate max-w-xs font-medium">{report.title || "Untitled Report"}</div>
+                              <div className="text-sm text-muted-foreground">{report.description}</div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className="bg-muted text-foreground">
+                            {getFrameworkFromType(report.reportType)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {format(new Date(report.createdAt), "MMMM d, yyyy")}
+                        </TableCell>
+                        <TableCell>
+                          {getStatusBadge(report.status)}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {formatFileSize(report.fileSize)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            {/* PDF Download Button */}
+                            <Button
+                              onClick={() => downloadReport(report)}
+                              variant="outline"
+                              size="sm"
+                              className="h-9 px-3 border-red-200 hover:bg-red-50 hover:border-red-300 transition-all"
+                            >
+                              <Download className="w-4 h-4 text-red-600 mr-1.5" />
+                              <span className="text-red-600 font-medium text-xs sm:text-sm">PDF</span>
+                            </Button>
+
+                            {/* Placeholder for Excel if available in future */}
+                            {/* <Button variant="outline" size="sm" disabled>...</Button> */}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
-
-
     </div>
   );
 }
