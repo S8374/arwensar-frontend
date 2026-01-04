@@ -1,0 +1,14 @@
+{
+  "extends": [
+    "development"
+  ],
+  "hints": {
+    "button-type": "off",
+    "typescript-config/strict": "off",
+    "axe/forms": "off",
+    "axe/name-role-value": "off",
+    "no-inline-styles": "off",
+    "detect-css-reflows/paint": "off",
+    "detect-css-reflows/composite": "off"
+  }
+}
