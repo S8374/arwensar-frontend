@@ -27,7 +27,6 @@ export const withAuth = (Component: ComponentType, requiredRole?: TRole) => {
 
     const user = data?.data;
     const userRole = user?.role;
-    console.log("User Role:", userRole)
     const userEmail = user?.email;
     const isVerified = user?.isVerified;
 
@@ -104,3 +103,6 @@ export const withAuth = (Component: ComponentType, requiredRole?: TRole) => {
     return <Component />;
   };
 };
+
+
+

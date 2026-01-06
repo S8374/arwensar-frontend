@@ -28,6 +28,9 @@ import SignInSupplyer from "@/components/pages/auth/SignInSupplyer/SignInVendor"
 import SupplierAssignmentForm from "@/components/pages/dashboard/supplier/components/QuickSecurityAssessment";
 import ProblemsList from "@/components/pages/dashboard/problem/ProblemList";
 import ProblemDetail from "@/components/pages/dashboard/problem/ProblemDetails";
+import PaymentSuccess from "@/components/pages/Pricing/PricingComponents/pricing/PaymentSuccess";
+import PaymentCancel from "@/components/pages/Pricing/PricingComponents/pricing/PaymentCancel";
+import QuickSecurityAssessment from "@/components/pages/dashboard/supplier/components/QuickSecurityAssessment";
 
 export const router = createBrowserRouter([
     {
@@ -117,6 +120,10 @@ export const router = createBrowserRouter([
     }
     ,
     {
+        path: "/initial-assessment/:assessmentId",
+        Component: QuickSecurityAssessment
+    },
+    {
         Component: SupplierAssignmentForm,
         path: "assignment"
     },
@@ -148,5 +155,15 @@ export const router = createBrowserRouter([
     {
         Component: Unauthorized,
         path: "unauthorized"
-    }
+    },
+    // Add this to your router configuration
+    {
+        path: "/payment/success",
+        element: <PaymentSuccess />,
+    },
+    {
+        path: "/payment/cancel",
+        element: <PaymentCancel />,
+    },
+
 ]);
