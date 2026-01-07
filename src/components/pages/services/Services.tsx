@@ -14,9 +14,13 @@ export default function Services() {
       <div>
         <ReusableComponent
           imageSrc={image1}
-          title="NIS2 Supplier Risk Tool"
-          description1="Our comprehensive platform helps you manage all aspects of vendor risk management in accordance with NIS2 requirements."
-          description2="Get instant insights into your supplier security posture, automate compliance checks, and receive real-time alerts when risks emerge."
+          title="Platform Overview"
+          description1="CyberNark is a cloud-native SaaS platform created to address the growing regulatory and
+operational challenges related to supplier and third-party cyber risk management.
+"
+          description2="The platform is specifically designed to support organizations subject to NIS2 requirements, with a
+strong focus on supply chain security and accountability.
+"
           features={[
             { text: "Automated security assessments" },
             { text: "CIA/BIV risk classification" },
@@ -28,9 +32,10 @@ export default function Services() {
         />
         <ReusableComponent
           imageSrc={image2}
-          title="NIS2 Supplier Risk Tool"
-          description1="Our comprehensive platform helps you manage all aspects of vendor risk management in accordance with NIS2 requirements."
-          description2="Get instant insights into your supplier security posture, automate compliance checks, and receive real-time alerts when risks emerge."
+          title="Supplier Risk Management"
+          description1="Organizations can onboard suppliers through manual entry or bulk import, ensuring a structured
+and consistent registration process."
+          description2="Suppliers are guided through standardized security assessments and evidence submissions."
           features={[
             { text: "Automated security assessments" },
             { text: "CIA/BIV risk classification" },
@@ -43,9 +48,10 @@ export default function Services() {
         />
         <ReusableComponent
           imageSrc={image3}
-          title="NIS2 Supplier Risk Tool"
-          description1="Our comprehensive platform helps you manage all aspects of vendor risk management in accordance with NIS2 requirements."
-          description2="Get instant insights into your supplier security posture, automate compliance checks, and receive real-time alerts when risks emerge."
+          title="Risk Scoring and Monitoring"
+          description1="CyberNark applies BIV/CIA impact principles to assess the criticality and risk exposure of suppliers."
+          description2="Risk levels are continuously monitored and updated based on assessment results, evidence, and
+changes over time."
           features={[
             { text: "Automated security assessments" },
             { text: "CIA/BIV risk classification" },
@@ -57,9 +63,9 @@ export default function Services() {
         />
         <ReusableComponent
           imageSrc={image4}
-          title="NIS2 Supplier Risk Tool"
-          description1="Our comprehensive platform helps you manage all aspects of vendor risk management in accordance with NIS2 requirements."
-          description2="Get instant insights into your supplier security posture, automate compliance checks, and receive real-time alerts when risks emerge."
+          title="Alerts and Reporting"
+          description1="Automated alerts notify vendors of missing information, elevated risks, or expiring certifications."
+          description2="Comprehensive dashboards and reports provide audit-ready insight into supplier risk governance."
           features={[
             { text: "Automated security assessments" },
             { text: "CIA/BIV risk classification" },

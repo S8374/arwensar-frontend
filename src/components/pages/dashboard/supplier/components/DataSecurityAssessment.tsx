@@ -1,8 +1,9 @@
+/* eslint-disable react-hooks/use-memo */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-hooks/set-state-in-effect */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // src/pages/DataSecurityAssessment.tsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -11,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Upload, CheckCircle2, Circle, AlertCircle, Loader2, ChevronRight, FileText, Trash2, Edit3 } from "lucide-react";
+import { Upload, CheckCircle2, Circle, AlertCircle, Loader2, ChevronRight, FileText, Trash2, Edit3, Save, Check } from "lucide-react";
 import { toast } from "sonner";
 import { 
   useGetAssessmentByIdQuery, 
@@ -21,14 +22,14 @@ import {
   useRemoveEvidenceMutation,
 } from "@/redux/features/assainment/assainment.api";
 import { useMinioUpload } from "@/lib/useMinioUpload";
+import debounce from "lodash/debounce";
 
 export default function DataSecurityAssessment() {
   const { assessmentId } = useParams<{ assessmentId: string }>();
   const navigate = useNavigate();
 
-  const { data: assessmentData, isLoading: loadingAssessment, refetch: refetchAssessment } = useGetAssessmentByIdQuery(assessmentId!);
+  const { data: assessmentData, isLoading: loadingAssessment } = useGetAssessmentByIdQuery(assessmentId!);
   const [startAssessment, { isLoading: starting }] = useStartAssessmentMutation();
-  const [saveAnswer, { isLoading: saving }] = useSaveAnswerMutation();
   const [submitAssessment, { isLoading: submitting }] = useSubmitAssessmentMutation();
   const [removeEvidence, { isLoading: removingEvidence }] = useRemoveEvidenceMutation();
   const { uploadFile, isUploading, uploadProgress } = useMinioUpload();
@@ -36,6 +37,10 @@ export default function DataSecurityAssessment() {
   const [submissionId, setSubmissionId] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [answerIds, setAnswerIds] = useState<Record<string, string>>({});
+  const [localAnswers, setLocalAnswers] = useState<Record<string, any>>({});
+  const [savingQuestions, setSavingQuestions] = useState<Record<string, boolean>>({});
+  const [unsavedChanges, setUnsavedChanges] = useState<Record<string, boolean>>({});
+  const [lastSavedTime, setLastSavedTime] = useState<Record<string, Date>>({});
 
   const assessment = assessmentData?.data;
   const userSubmission = assessment?.userSubmission;
@@ -44,11 +49,13 @@ export default function DataSecurityAssessment() {
   const isEditable = userSubmission && 
     ["DRAFT", "REJECTED", "REQUIRES_ACTION"].includes(userSubmission.status);
 
-  // Initialize answers
+  // Initialize answers from server data
   useEffect(() => {
     if (userSubmission?.answers) {
       const saved: Record<string, any> = {};
       const ids: Record<string, string> = {};
+      const local: Record<string, any> = {};
+      
       userSubmission.answers.forEach((ans: any) => {
         saved[ans.question.id] = {
           answer: ans.answer || "",
@@ -57,9 +64,17 @@ export default function DataSecurityAssessment() {
           answerId: ans.id,
         };
         ids[ans.question.id] = ans.id;
+        local[ans.question.id] = {
+          answer: ans.answer || "",
+          comments: ans.comments || "",
+          evidence: ans.evidence || null,
+          answerId: ans.id,
+        };
       });
+      
       setAnswers(saved);
       setAnswerIds(ids);
+      setLocalAnswers(local);
       setSubmissionId(userSubmission.id);
     }
   }, [userSubmission]);
@@ -69,64 +84,178 @@ export default function DataSecurityAssessment() {
       const result = await startAssessment({ assessmentId: assessmentId! }).unwrap();
       setSubmissionId(result.id);
       toast.success("Assessment started!");
-      refetchAssessment();
     } catch (err: any) {
       toast.error(err?.data?.message || "Failed to start");
     }
   };
 
-  const handleSaveAnswer = async (questionId: string, update: Partial<any>) => {
-    if (!submissionId || !isEditable) return;
+  // Custom save answer hook with per-question loading
+  const useSaveAnswerWithState = () => {
+    const [saveAnswerMutation] = useSaveAnswerMutation();
 
-    const current = answers[questionId] || {};
-    const newData = { ...current, ...update };
+    const saveAnswer = async (questionId: string, data: any) => {
+      if (!submissionId || !isEditable) return;
 
-    try {
-      await saveAnswer({
-        submissionId,
-        questionId,
-        body: newData
-      }).unwrap();
+      // Set saving state for this specific question
+      setSavingQuestions(prev => ({ ...prev, [questionId]: true }));
 
-      setAnswers(prev => ({ ...prev, [questionId]: newData }));
-      toast.success("Answer saved!");
-    } catch (err) {
-      toast.error("Save failed");
-    }
+      try {
+        await saveAnswerMutation({
+          submissionId,
+          questionId,
+          body: data
+        }).unwrap();
+
+        // Update server answers state
+        setAnswers(prev => ({ ...prev, [questionId]: data }));
+        
+        // Clear unsaved changes
+        setUnsavedChanges(prev => ({ ...prev, [questionId]: false }));
+        
+        // Update last saved time
+        setLastSavedTime(prev => ({ ...prev, [questionId]: new Date() }));
+        
+        // Clear saving state after a short delay for better UX
+        setTimeout(() => {
+          setSavingQuestions(prev => ({ ...prev, [questionId]: false }));
+        }, 500);
+
+      } catch (err) {
+        setSavingQuestions(prev => ({ ...prev, [questionId]: false }));
+        toast.error("Save failed");
+      }
+    };
+
+    return { saveAnswer };
+  };
+
+  const { saveAnswer } = useSaveAnswerWithState();
+
+  // Debounced save function for auto-save (only for radio buttons)
+  const debouncedSave = useCallback(
+    debounce(async (questionId: string, data: any) => {
+      await saveAnswer(questionId, data);
+    }, 800), // 800ms delay for auto-save
+    [submissionId, isEditable]
+  );
+
+  const handleRadioChange = (questionId: string, value: string) => {
+    if (!isEditable) return;
+
+    // Update local state immediately for responsive UI
+    setLocalAnswers(prev => {
+      const current = prev[questionId] || {};
+      const updated = { ...current, answer: value };
+      return { ...prev, [questionId]: updated };
+    });
+
+    // Prepare data for saving
+    const currentData = answers[questionId] || {};
+    const newData = { ...currentData, answer: value };
+
+    // Trigger debounced save (auto-save for radio buttons)
+    debouncedSave(questionId, newData);
+  };
+
+  const handleTextChange = (questionId: string, value: string) => {
+    if (!isEditable) return;
+
+    // Update local state immediately
+    setLocalAnswers(prev => {
+      const current = prev[questionId] || {};
+      const updated = { ...current, comments: value };
+      return { ...prev, [questionId]: updated };
+    });
+
+    // Mark as unsaved for text fields
+    setUnsavedChanges(prev => ({ ...prev, [questionId]: true }));
+  };
+
+  const handleManualSave = async (questionId: string) => {
+    if (!isEditable) return;
+
+    const localAnswer = localAnswers[questionId] || {};
+    const currentData = answers[questionId] || {};
+    const newData = { ...currentData, comments: localAnswer.comments || "" };
+    
+    await saveAnswer(questionId, newData);
   };
 
   const handleEvidenceUpload = async (questionId: string, file: File) => {
+    if (!isEditable) return;
+
+    // Set saving state for this question
+    setSavingQuestions(prev => ({ ...prev, [questionId]: true }));
+
     try {
       const url = await uploadFile(file);
-      await handleSaveAnswer(questionId, { evidence: url });
+      
+      // Update local state immediately
+      setLocalAnswers(prev => ({
+        ...prev,
+        [questionId]: { ...prev[questionId], evidence: url }
+      }));
+
+      // Prepare data for saving
+      const currentData = answers[questionId] || {};
+      const newData = { ...currentData, evidence: url };
+      
+      await saveAnswer(questionId, newData);
+      
       toast.success("File uploaded successfully!");
     } catch {
+      setSavingQuestions(prev => ({ ...prev, [questionId]: false }));
       toast.error("Upload failed");
     }
   };
 
   const handleRemoveEvidence = async (questionId: string) => {
     const answerId = answerIds[questionId];
-    if (!answerId) {
+    if (!answerId || !isEditable) {
       toast.error("Cannot find answer ID");
       return;
     }
 
+    // Set saving state
+    setSavingQuestions(prev => ({ ...prev, [questionId]: true }));
+
     try {
       await removeEvidence({ answerId }).unwrap();
+      
+      // Update local state
+      setLocalAnswers(prev => ({
+        ...prev,
+        [questionId]: { ...prev[questionId], evidence: null }
+      }));
+
+      // Update server state
       setAnswers(prev => ({
         ...prev,
         [questionId]: { ...prev[questionId], evidence: null }
       }));
+      
+      // Clear saving state
+      setTimeout(() => {
+        setSavingQuestions(prev => ({ ...prev, [questionId]: false }));
+      }, 500);
+      
       toast.success("Evidence removed successfully!");
-      refetchAssessment();
     } catch (err: any) {
+      setSavingQuestions(prev => ({ ...prev, [questionId]: false }));
       toast.error(err?.data?.message || "Failed to remove evidence");
     }
   };
 
   const handleSubmit = async () => {
-    if (!submissionId) return;
+    if (!submissionId || !isEditable) return;
+    
+    // Check if there are unsaved text changes
+    const hasUnsavedChanges = Object.keys(unsavedChanges).some(key => unsavedChanges[key]);
+    if (hasUnsavedChanges) {
+      toast.error("Please save all text answers before submitting");
+      return;
+    }
+
     try {
       await submitAssessment({ submissionId }).unwrap();
       toast.success("Assessment re-submitted successfully!");
@@ -141,9 +270,9 @@ export default function DataSecurityAssessment() {
   ) || [];
 
   const totalQuestions = allQuestions.length;
-  const answeredCount = Object.values(answers).filter(a => a?.answer).length;
+  const answeredCount = Object.values(localAnswers).filter(a => a?.answer).length;
   const progress = totalQuestions ? Math.round((answeredCount / totalQuestions) * 100) : 0;
-  const canSubmit = progress === 100 && submissionId && isEditable;
+  const canSubmit = progress === 100 && submissionId && isEditable && !Object.values(unsavedChanges).some(v => v);
 
   if (loadingAssessment) {
     return (
@@ -199,11 +328,42 @@ export default function DataSecurityAssessment() {
 
         {/* Questions - Only show if editable */}
         {submissionId && isEditable && allQuestions.map((question: any, idx: number) => {
-          const userAnswer = answers[question.id] || { answer: "", comments: "", evidence: null };
+          const userAnswer = localAnswers[question.id] || { answer: "", comments: "", evidence: null };
           const isAnswered = !!userAnswer.answer;
+          const isSaving = savingQuestions[question.id];
+          const hasUnsavedText = unsavedChanges[question.id];
+          const savedTime = lastSavedTime[question.id];
+          const isRecentlySaved = savedTime && (new Date().getTime() - savedTime.getTime()) < 3000;
 
           return (
-            <Card key={question.id} className={`transition-all ${isAnswered ? "border-l-4 border-l-green-500" : ""}`}>
+            <Card key={question.id} className={`transition-all relative ${isAnswered ? "border-l-4 border-l-green-500" : ""}`}>
+              {/* Status Indicators */}
+              <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
+                {/* Recently saved indicator */}
+                {isRecentlySaved && !isSaving && !hasUnsavedText && (
+                  <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm animate-fade-in-out">
+                    <Check className="w-3 h-3" />
+                    <span>Saved</span>
+                  </div>
+                )}
+                
+                {/* Saving indicator */}
+                {isSaving && (
+                  <div className="flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    <span>Saving...</span>
+                  </div>
+                )}
+                
+                {/* Unsaved changes indicator */}
+                {hasUnsavedText && !isSaving && (
+                  <div className="flex items-center gap-2 px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm">
+                    <AlertCircle className="w-3 h-3" />
+                    <span>Unsaved</span>
+                  </div>
+                )}
+              </div>
+
               <CardHeader>
                 <div className="flex items-start gap-4">
                   {isAnswered ? (
@@ -228,15 +388,23 @@ export default function DataSecurityAssessment() {
               <CardContent className="space-y-8">
                 {/* Answer Options */}
                 <div>
-                  <Label className="text-base font-medium mb-4 block">Select Answer</Label>
+                  <div className="flex items-center justify-between mb-4">
+                    <Label className="text-base font-medium">Select Answer</Label>
+                    {isSaving && (
+                      <div className="flex items-center gap-2 text-sm text-blue-600">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        Auto-saving...
+                      </div>
+                    )}
+                  </div>
                   <RadioGroup
                     value={userAnswer.answer}
-                    onValueChange={(value) => handleSaveAnswer(question.id, { answer: value })}
-                    disabled={saving || !isEditable}
+                    onValueChange={(value) => handleRadioChange(question.id, value)}
+                    disabled={!isEditable || isSaving}
                   >
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       {["YES", "PARTIAL", "NO", "NOT_APPLICABLE"].map((opt) => (
-                        <div key={opt} className="flex items-center space-x-3 p-4 rounded-lg border hover:bg-gray-50 cursor-pointer">
+                        <div key={opt} className={`flex items-center space-x-3 p-4 rounded-lg border hover:bg-gray-50 cursor-pointer transition-all ${userAnswer.answer === opt ? 'bg-blue-50 border-blue-300' : ''}`}>
                           <RadioGroupItem value={opt} id={`${question.id}-${opt}`} />
                           <Label htmlFor={`${question.id}-${opt}`} className="cursor-pointer font-medium">
                             {opt.replace("_", " ")}
@@ -247,16 +415,44 @@ export default function DataSecurityAssessment() {
                   </RadioGroup>
                 </div>
 
-                {/* Comments */}
+                {/* Comments - With manual save button */}
                 {question.isInputField && (
-                  <div className="space-y-3">
-                    <Label className="text-base font-medium">Your Explanation</Label>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-base font-medium">Your Explanation</Label>
+                      <div className="flex items-center gap-3">
+                        {/* Last saved time */}
+                        {savedTime && !hasUnsavedText && !isSaving && (
+                          <span className="text-xs text-gray-500">
+                            Last saved: {savedTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        )}
+                        
+                        {/* Save button */}
+                        <Button
+                          size="sm"
+                          variant={hasUnsavedText ? "default" : "outline"}
+                          onClick={() => handleManualSave(question.id)}
+                          disabled={!hasUnsavedText || isSaving || !localAnswers[question.id]?.comments}
+                          className="gap-2"
+                        >
+                          {isSaving ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : hasUnsavedText ? (
+                            <Save className="w-4 h-4" />
+                          ) : (
+                            <Check className="w-4 h-4" />
+                          )}
+                          {isSaving ? "Saving..." : hasUnsavedText ? "Save" : "Saved"}
+                        </Button>
+                      </div>
+                    </div>
                     <Textarea
                       placeholder="Provide detailed explanation..."
-                      value={userAnswer.comments}
-                      onChange={(e) => handleSaveAnswer(question.id, { comments: e.target.value })}
+                      value={userAnswer.comments || ""}
+                      onChange={(e) => handleTextChange(question.id, e.target.value)}
                       className="min-h-40"
-                      disabled={saving || !isEditable}
+                      disabled={!isEditable}
                     />
                   </div>
                 )}
@@ -264,10 +460,18 @@ export default function DataSecurityAssessment() {
                 {/* Evidence Upload */}
                 {(question.isDocument || question.evidenceRequired) && (
                   <div className="space-y-3">
-                    <Label className="text-base font-medium flex items-center gap-2">
-                      <FileText className="w-5 h-5" />
-                      {question.evidenceRequired ? "Evidence Required" : "Supporting Document"}
-                    </Label>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-base font-medium flex items-center gap-2">
+                        <FileText className="w-5 h-5" />
+                        {question.evidenceRequired ? "Evidence Required" : "Supporting Document"}
+                      </Label>
+                      {isSaving && (
+                        <div className="flex items-center gap-2 text-sm text-blue-600">
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          Processing...
+                        </div>
+                      )}
+                    </div>
                     {userAnswer.evidence ? (
                       <div className="flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-lg">
                         <div className="flex items-center gap-4">
@@ -283,15 +487,20 @@ export default function DataSecurityAssessment() {
                           size="sm"
                           variant="destructive"
                           onClick={() => handleRemoveEvidence(question.id)}
-                          disabled={removingEvidence || !isEditable}
+                          disabled={removingEvidence || !isEditable || isSaving}
+                          className="gap-2"
                         >
-                          {removingEvidence ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                          {removingEvidence || isSaving ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
                           Remove
                         </Button>
                       </div>
                     ) : (
                       <label className="block">
-                        <div className="border-2 border-dashed rounded-xl p-10 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all">
+                        <div className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all ${isUploading ? 'border-blue-500 bg-blue-50' : 'hover:border-blue-500 hover:bg-blue-50'}`}>
                           {isUploading ? (
                             <div className="space-y-4">
                               <Loader2 className="w-12 h-12 animate-spin mx-auto text-blue-600" />
@@ -310,7 +519,7 @@ export default function DataSecurityAssessment() {
                           className="hidden"
                           accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
                           onChange={(e) => e.target.files?.[0] && handleEvidenceUpload(question.id, e.target.files[0])}
-                          disabled={isUploading || !isEditable}
+                          disabled={isUploading || !isEditable || isSaving}
                         />
                       </label>
                     )}
@@ -340,10 +549,15 @@ export default function DataSecurityAssessment() {
                     </h3>
                     <p className="text-muted-foreground">
                       {canSubmit 
-                        ? 'All questions have been updated. You can now re-submit.'
+                        ? 'All questions have been saved. You can now re-submit.'
                         : `${totalQuestions - answeredCount} question(s) remaining.`
                       }
                     </p>
+                    {Object.keys(unsavedChanges).filter(key => unsavedChanges[key]).length > 0 && (
+                      <p className="text-sm text-amber-600 mt-2">
+                        {Object.keys(unsavedChanges).filter(key => unsavedChanges[key]).length} unsaved text answer(s)
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -352,7 +566,7 @@ export default function DataSecurityAssessment() {
                     <Button
                       size="lg"
                       onClick={handleSubmit}
-                      disabled={submitting}
+                      disabled={submitting || Object.values(savingQuestions).some(v => v)}
                       className="text-xl px-16 py-6 bg-green-600 hover:bg-green-700"
                     >
                       {submitting ? (

@@ -4,14 +4,12 @@
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { 
-  Bell, 
   Mail, 
   AlertTriangle, 
   FileText, 
   CheckCircle2, 
   Loader2, 
   MessageSquare,
-  ShieldCheck,
   Calendar,
   CreditCard
 } from "lucide-react";
@@ -31,13 +29,11 @@ export default function NotificationSetting() {
     emailNotifications: false,
     riskAlerts: true,
     contractReminders: true,
-    complianceUpdates: true,
     assessmentReminders: true,
     messageAlerts: true,
     paymentAlerts: true,
     problemAlerts: true,
     reportAlerts: true,
-    pushNotifications: true,
   });
 
   // Sync with backend data when loaded
@@ -47,13 +43,11 @@ export default function NotificationSetting() {
         emailNotifications: data.data.emailNotifications ?? false,
         riskAlerts: data.data.riskAlerts ?? true,
         contractReminders: data.data.contractReminders ?? true,
-        complianceUpdates: data.data.complianceUpdates ?? true,
         assessmentReminders: data.data.assessmentReminders ?? true,
         messageAlerts: data.data.messageAlerts ?? true,
         paymentAlerts: data.data.paymentAlerts ?? true,
         problemAlerts: data.data.problemAlerts ?? true,
         reportAlerts: data.data.reportAlerts ?? true,
-        pushNotifications: data.data.pushNotifications ?? true,
       });
     }
   }, [data]);
@@ -77,11 +71,9 @@ export default function NotificationSetting() {
   };
 
   const fields = [
-    { label: "Push Notifications", icon: Bell, key: "pushNotifications" },
     { label: "Email Notifications", icon: Mail, key: "emailNotifications" },
     { label: "High Risk Alerts", icon: AlertTriangle, key: "riskAlerts" },
     { label: "Contract Reminders", icon: Calendar, key: "contractReminders" },
-    { label: "Compliance Updates", icon: ShieldCheck, key: "complianceUpdates" },
     { label: "Assessment Reminders", icon: FileText, key: "assessmentReminders" },
     { label: "New Messages", icon: MessageSquare, key: "messageAlerts" },
     { label: "Payment Alerts", icon: CreditCard, key: "paymentAlerts" },
@@ -122,11 +114,9 @@ export default function NotificationSetting() {
                   <div>
                     <h3 className="font-semibold text-foreground text-lg">{field.label}</h3>
                     <p className="text-sm text-muted-foreground mt-1">
-                      {field.key === "pushNotifications" && "Receive alerts on your device"}
                       {field.key === "emailNotifications" && "Get updates via email"}
                       {field.key === "riskAlerts" && "Critical risk changes"}
                       {field.key === "contractReminders" && "Expiring contracts"}
-                      {field.key === "complianceUpdates" && "NIS2 compliance changes"}
                       {field.key === "assessmentReminders" && "Pending assessments"}
                       {field.key === "messageAlerts" && "New messages from suppliers"}
                       {field.key === "paymentAlerts" && "Payment status updates"}

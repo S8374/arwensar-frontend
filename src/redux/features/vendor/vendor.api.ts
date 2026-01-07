@@ -98,6 +98,14 @@ export const vendorApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["vendor"],
     }),
+    // ================= VENDOR CONTRACT DASHBOARD =================
+    getVendorSupplierContracts: builder.query({
+      query: () => ({
+        url: "/vendor/contracts", // uses req.user.vendorId
+        method: "GET",
+      }),
+      providesTags: ["vendor"],
+    }),
 
   }),
 });
@@ -115,5 +123,6 @@ export const {
   useGetVendorStatsQuery,
   useBulkImportSuppliersMutation,
   useResendSupplierInvitationMutation, // 👈 add this
+  useGetVendorSupplierContractsQuery,
 
 } = vendorApi;

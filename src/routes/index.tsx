@@ -31,6 +31,7 @@ import ProblemDetail from "@/components/pages/dashboard/problem/ProblemDetails";
 import PaymentSuccess from "@/components/pages/Pricing/PricingComponents/pricing/PaymentSuccess";
 import PaymentCancel from "@/components/pages/Pricing/PricingComponents/pricing/PaymentCancel";
 import QuickSecurityAssessment from "@/components/pages/dashboard/supplier/components/QuickSecurityAssessment";
+import PrivacyPolicy from "@/components/pages/PrivacyPolicy/PrivacyPolicy";
 
 export const router = createBrowserRouter([
     {
@@ -117,6 +118,10 @@ export const router = createBrowserRouter([
     {
         path: "/problems/:problemId",
         Component: ProblemDetail,
+    },
+    {
+        path: "/privacy-policy",
+        Component: PrivacyPolicy,
     }
     ,
     {

@@ -29,14 +29,15 @@ export const supplierApi = baseApi.injectEndpoints({
       providesTags: ["supplier"],
     }),
 
-    updateSupplierProfile: builder.mutation<any, any>({
-      query: (body) => ({
-        url: "/supplier/profile",
-        method: "PATCH",
-        data: body,
-      }),
-      invalidatesTags: ["supplier"],
-    }),
+// Correct mutation – supplierId in URL, body as data
+updateSupplierProfile: builder.mutation<any, { supplierId: string; data: Partial<any> }>({
+  query: ({ supplierId, data }) => ({
+    url: `/supplier/profile/${supplierId}`, // Correct URL with supplierId as param
+    method: "PATCH",
+    data: data, // req.body in backend
+  }),
+  invalidatesTags: ["supplier"], // Will refetch getSupplierById etc.
+}),
 
     // Supplier assessments
     getSupplierAssessments: builder.query<any, void>({
@@ -82,7 +83,14 @@ export const supplierApi = baseApi.injectEndpoints({
         method: "GET",
       }),
     }),
-
+    // ================= SUPPLIER CONTRACT DASHBOARD =================
+    getMyContractStatus: builder.query({
+      query: () => ({
+        url: "/supplier/contract", // uses req.user.supplierId
+        method: "GET",
+      }),
+      providesTags: ["supplier"],
+    }),
     completeSupplierRegistration: builder.mutation<
       any,
       CompleteSupplierRegistrationRequest
@@ -92,6 +100,7 @@ export const supplierApi = baseApi.injectEndpoints({
         method: "POST",
         data: body,
       }),
+
     }),
   }),
 });
@@ -106,4 +115,6 @@ export const {
   useSubmitSupplierAssessmentMutation,
   useVerifyInvitationQuery,
   useCompleteSupplierRegistrationMutation,
+  useGetMyContractStatusQuery,
+
 } = supplierApi;

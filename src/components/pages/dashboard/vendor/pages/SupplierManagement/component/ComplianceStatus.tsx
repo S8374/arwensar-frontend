@@ -54,7 +54,7 @@ export default function ComplianceStatus({ supplier, progress }: ComplianceStatu
 
   const stats = {
     total: assessments.length,
-    completed: submissions.filter((s: any) => s.status === "APPROVED" || s.status === "PENDING").length,
+    completed: submissions.filter((s: any) => s.status === "APPROVED").length,
     pending: submissions.filter((s: any) => s.submittedAt && !s.reviewedAt).length,
     inProgress: submissions.filter((s: any) => s.status === "DRAFT").length,
     avgScore: progress?.averageScore ?? supplier.statistics?.averageScore ?? 0,

@@ -38,7 +38,7 @@ export default function ComplianceTable() {
       if (!item.submission) return 4; // Not started
       switch (item.submission.status) {
         case "DRAFT": return 1;
-        case "SUBMITTED": return 2;
+        case "PENDING": return 2;
         case "UNDER_REVIEW": return 3;
         case "REQUIRES_ACTION": return 0;
         case "APPROVED": return 5;
@@ -164,7 +164,7 @@ export default function ComplianceTable() {
   const getPrimaryButtonText = (assessment: any) => {
     const submission = assessment.submission;
 
-    if (!submission) return "Start Assessment";
+    if (!submission) return "start";
     if (submission.status === "DRAFT") return "Continue";
     if (submission.status === "SUBMITTED" || submission.status === "UNDER_REVIEW") return "View Submission";
     if (submission.status === "APPROVED") return "View Results";

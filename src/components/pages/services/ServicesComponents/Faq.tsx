@@ -7,34 +7,34 @@ import {
 
 const faqData = [
   {
-    question: "How quickly can I onboard my vendors?",
+    question: "What is CyberNark?",
     answer:
-      "Most teams complete their first vendor onboarding in under 15 minutes. Our intelligent automation extracts risk data, sends assessments, and generates reports instantly.",
+      "CyberNark is a cybersecurity risk management platform designed to help organizations manage supplier and third-party cyber risks in compliance with the NIS2 Directive.",
   },
   {
-    question: "Do you integrate with existing security tools?",
+    question: "Who is CyberNark for?",
     answer:
-      "Yes! We have native integrations with Slack, Jira, ServiceNow, Okta, and 50+ security tools. Our API also allows custom integrations in minutes.",
+      "CyberNark is built for organizations that work with multiple suppliers or third parties and need visibility, control, and compliance across their cyber risk ecosystem.",
   },
   {
-    question: "Is the platform SOC 2 compliant?",
+    question: "Is CyberNark compliant with GDPR?",
     answer:
-      "Absolutely. We're SOC 2 Type II certified, ISO 27001 compliant, and undergo annual penetration testing. Your data is encrypted at rest and in transit with AES-256.",
+      "Yes. CyberNark is designed following GDPR principles, including data minimization, access control, and privacy by design.",
   },
   {
-    question: "Can I customize risk questionnaires?",
+    question: "How secure is the platform?",
     answer:
-      "Yes — fully. Choose from our library of 200+ pre-built templates (NIST, ISO, SIG, etc.) or create unlimited custom questionnaires with conditional logic, scoring, and branding.",
+      "CyberNark implements security controls aligned with industry best practices, including access control, encryption, and secure infrastructure management.",
   },
   {
-    question: "What happens during the pilot program?",
+    question: "How is CyberNark delivered?",
     answer:
-      "You get full access to all Premium features for 14 days, dedicated onboarding support, and a lifetime discount locked in if you convert. No credit card required.",
+      "CyberNark is provided as a hosted SaaS (Software as a Service) solution, requiring no on-premise installation.",
   },
   {
-    question: "How is pricing determined?",
+    question: "Does CyberNark support role-based access?",
     answer:
-      "Simple and transparent: based on the number of active vendors you monitor. No hidden fees, no per-user pricing. Pilot partners lock in special rates forever.",
+      "Yes. CyberNark uses role-based access control (RBAC) to clearly separate permissions between vendors, suppliers, and internal users.",
   },
 ];
 

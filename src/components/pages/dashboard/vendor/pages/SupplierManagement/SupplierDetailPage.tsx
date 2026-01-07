@@ -3,8 +3,9 @@
 import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import {
-  Briefcase, Phone, Mail, AlertCircle, FileText, Shield, User,
-   CheckCircle2, Clock
+  Briefcase, Phone, Mail, AlertCircle, Shield, User,
+  CheckCircle2, Clock,
+  Edit2
 } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,6 +25,7 @@ import ComplianceTab from "./component/tabs/Compliance";
 import PerformanceTab from "./component/tabs/Performance";
 import DocumentsTab from "./component/tabs/DocumentsTab";
 import CreateNotificationDialog from "../Alerts/CreateNotificationDialog";
+import EditSupplierModal from "./model/EditSupplierModal";
 
 
 
@@ -62,7 +64,7 @@ const calculateContractStatus = (endDate: string | null) => {
 const getNis2Status = (supplier: any) => {
   const totalAssessments = supplier.statistics?.totalAssessments ?? 0;
   const submittedAssessments = supplier.statistics?.totalSubmissions ?? 0;
-console.log(".......",totalAssessments , submittedAssessments)
+  console.log(".......", totalAssessments, submittedAssessments)
   // If total assessments equals submitted assessments → Compliant
   if (totalAssessments === submittedAssessments) {
     return { label: "Non-Compliant", variant: "outline" as const, icon: CheckCircle2 };
@@ -74,10 +76,9 @@ console.log(".......",totalAssessments , submittedAssessments)
 export default function SupplierDetailPage() {
   const { id } = useParams<{ id: string }>();
 
- // const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
- // const [isContractOpen, setIsContractOpen] = useState(false);
-
+  // const [isContractOpen, setIsContractOpen] = useState(false);
   const {
     data: supplierResponse,
     isLoading: loadingSupplier,
@@ -122,7 +123,7 @@ export default function SupplierDetailPage() {
   }
 
   const nis2 = getNis2Status(supplier);
-   console.log("Supplier single getNis2Status",nis2);
+  console.log("Supplier single getNis2Status", nis2);
 
   const contract = calculateContractStatus(supplier.contractEndDate);
 
@@ -169,9 +170,10 @@ export default function SupplierDetailPage() {
           </div>
 
           <div className="flex flex-wrap gap-3">
-            <CreateNotificationDialog/>
-            <Button >
-              <FileText className="w-4 h-4 mr-2" />Edit Supplier
+            <CreateNotificationDialog />
+            <Button onClick={() => setIsEditOpen(true)}>
+              <Edit2 className="w-4 h-4 mr-2" />
+              Edit Supplier
             </Button>
           </div>
         </div>
@@ -193,7 +195,7 @@ export default function SupplierDetailPage() {
       </div>
 
       {/* Modals */}
-      {/* <EditSupplierModal open={isEditOpen} onOpenChange={setIsEditOpen} supplier={supplier} onSuccess={refetchSupplier} /> */}
+      <EditSupplierModal open={isEditOpen} onOpenChange={setIsEditOpen} supplier={supplier}  />
       <SendAlertModal open={isAlertOpen} onOpenChange={setIsAlertOpen} supplierId={id!} supplierName={supplier.name} />
       {/* <ViewContractModal open={isContractOpen} onOpenChange={setIsContractOpen} documentUrl={supplier.contractDocument || ""} supplierName={supplier.name} /> */}
     </div>

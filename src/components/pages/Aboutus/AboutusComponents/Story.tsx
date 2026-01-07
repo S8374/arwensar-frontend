@@ -7,7 +7,7 @@ export default function Story() {
 
                 {/* Intro Text */}
                 <div className="w-full lg:w-[912px] text-center text-foreground text-2xl sm:text-3xl font-semibold leading-8 sm:leading-10">
-                    CyberNark is a supplier risk and compliance automation platform that helps organizations manage, assess, and monitor their third-party vendors—fully aligned with NIS2 requirements.
+                    We believe in security by design, regulatory alignment, transparency, and long-term trust.
                 </div>
 
                 {/* Divider */}
@@ -16,23 +16,26 @@ export default function Story() {
                 {/* Founding Story */}
                 <div className="self-stretch flex flex-col lg:flex-row justify-start items-start gap-8 lg:gap-12">
                     <div className="text-center lg:text-left text-foreground text-3xl sm:text-4xl font-semibold leading-10 sm:leading-[52px] lg:w-1/3">
-                        Our Founding Story
+                        Our Background
                     </div>
                     <div className="lg:w-2/3 justify-start text-muted-foreground text-lg sm:text-xl font-normal leading-7 space-y-4">
                         <p>
-                            CyberNark was born from a simple but urgent realization:
-                            most organizations have no clear view of the risks hidden in their supplier network.
+                            CyberNark was founded in response to the increasing complexity of cybersecurity regulations and
+                            the operational burden they place on organizations.
+
                         </p>
 
                         <p>
-                            While working with companies that struggled to meet NIS2 and security requirements, it became clear that supplier risk was one of the biggest blind spots. Spreadsheets, scattered emails, outdated surveys, missing evidence — everything relied on manual work. And as regulations tightened, the chaos only grew.
-                        </p>
+                            Our team brings together experience in cybersecurity operations, risk management, and software
+                            development.
 
+                        </p>
+{/* 
                         <p>There was no affordable solution.</p>
 
                         <p>
                             No simple tool for companies that needed real vendor insight without paying enterprise prices like OneTrust or Drata.
-                        </p>
+                        </p> */}
 
                         <p>So CyberNark was created with one mission:</p>
 
@@ -59,7 +62,9 @@ export default function Story() {
                         Our Vision
                     </div>
                     <div className="self-stretch flex-1 justify-start text-muted-foreground text-lg sm:text-xl font-medium leading-7">
-                        To create a safer digital world by bringing transparency, automation, and trust to every supplier relationship. We envision a future where organizations can confidently grow, knowing their entire supply chain is secure, compliant, and continuously monitored, without complexity or high costs.
+                        We envision a digital ecosystem in which trust between organizations is measurable, verifiable, and
+continuously maintained.
+
                     </div>
                 </div>
 
@@ -76,7 +81,9 @@ export default function Story() {
                     </div>
                     <div className="self-stretch justify-start text-muted-foreground space-y-4">
                         <p className="text-lg sm:text-xl font-medium leading-7">
-                            To make supplier risk management simple, automated, and accessible for every organization.
+                            Our mission is to help organizations achieve control, transparency, and confidence in their supply
+chain cybersecurity posture.
+
                         </p>
 
                         <p className="text-lg sm:text-xl font-semibold leading-7">
