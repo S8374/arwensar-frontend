@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// src/components/pages/dashboard/shared/ProblemsList.tsx
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,8 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { format } from "date-fns";
-import { AlertCircle, MessageSquare, Plus, Filter, ChevronRight } from "lucide-react";
-import { useGetProblemsQuery } from "@/redux/features/problem/problem.api";
+import { AlertCircle, MessageSquare, Plus, Filter, Trash, Edit2 } from "lucide-react";
+import { useGetProblemsQuery, useUpdateProblemMutation, useDeleteProblemMutation } from "@/redux/features/problem/problem.api";
 import CreateProblemForm from "./CreateProblemForm";
 import { useNavigate } from "react-router-dom";
 
@@ -25,6 +24,7 @@ const priorityColors = {
   HIGH: "bg-orange-100 text-orange-800",
   URGENT: "bg-red-100 text-red-800",
 };
+
 type Problem = {
   id: string;
   title: string;
@@ -42,17 +42,31 @@ export default function ProblemsList() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [selectedProblem, setSelectedProblem] = useState<Problem | null>(null);
+  const [isStatusOpen, setIsStatusOpen] = useState(false);
 
-  const { data, isLoading } = useGetProblemsQuery(undefined);
-  console.log("Problems data:", data);
+  const { data, isLoading } = useGetProblemsQuery();
+  const [updateProblem] = useUpdateProblemMutation();
+  const [deleteProblem] = useDeleteProblemMutation();
+
   const problems = data?.data || [];
- // const meta = data?.data?.meta;
 
   const filteredProblems = problems.filter((p: any) => {
     if (statusFilter !== "all" && p.status !== statusFilter) return false;
     if (priorityFilter !== "all" && p.priority !== priorityFilter) return false;
     return true;
   });
+
+  const handleStatusUpdate = async (problemId: string, status: Problem["status"]) => {
+    await updateProblem({ problemId, body: { status } });
+    setIsStatusOpen(false);
+  };
+
+  const handleDelete = async (problemId: string) => {
+    if (confirm("Are you sure you want to delete this problem?")) {
+      await deleteProblem(problemId);
+    }
+  };
 
   if (isLoading) {
     return <div className="text-center py-12">Loading problems...</div>;
@@ -64,9 +78,7 @@ export default function ProblemsList() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Problems & Issues</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage reported issues with suppliers
-          </p>
+          <p className="text-muted-foreground mt-1">Manage reported issues with suppliers</p>
         </div>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
@@ -86,40 +98,36 @@ export default function ProblemsList() {
 
       {/* Filters */}
       <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Filter className="w-5 h-5" />
-            <CardTitle className="text-lg">Filters</CardTitle>
-          </div>
+        <CardHeader className="flex items-center gap-2">
+          <Filter className="w-5 h-5" />
+          <CardTitle className="text-lg">Filters</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-4">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="OPEN">Open</SelectItem>
-                <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-                <SelectItem value="RESOLVED">Resolved</SelectItem>
-                <SelectItem value="CLOSED">Closed</SelectItem>
-              </SelectContent>
-            </Select>
+        <CardContent className="flex flex-wrap gap-4">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="OPEN">Open</SelectItem>
+              <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+              <SelectItem value="RESOLVED">Resolved</SelectItem>
+              <SelectItem value="CLOSED">Closed</SelectItem>
+            </SelectContent>
+          </Select>
 
-            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Priority" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Priorities</SelectItem>
-                <SelectItem value="LOW">Low</SelectItem>
-                <SelectItem value="MEDIUM">Medium</SelectItem>
-                <SelectItem value="HIGH">High</SelectItem>
-                <SelectItem value="URGENT">Urgent</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Priority" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Priorities</SelectItem>
+              <SelectItem value="LOW">Low</SelectItem>
+              <SelectItem value="MEDIUM">Medium</SelectItem>
+              <SelectItem value="HIGH">High</SelectItem>
+              <SelectItem value="URGENT">Urgent</SelectItem>
+            </SelectContent>
+          </Select>
         </CardContent>
       </Card>
 
@@ -134,22 +142,14 @@ export default function ProblemsList() {
           </Card>
         ) : (
           filteredProblems.map((problem: Problem) => (
-            <Card
-              key={problem.id}
-              className="cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => navigate(`/problems/${problem.id}`)}
-            >
+            <Card key={problem.id} className="hover:shadow-lg transition-shadow">
               <CardContent className="p-6">
                 <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
+                  <div className="flex-1 cursor-pointer" onClick={() => navigate(`/problems/${problem.id}`)}>
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="text-xl font-semibold">{problem.title}</h3>
-                      <Badge className={priorityColors[problem.priority]}>
-                        {problem.priority}
-                      </Badge>
-                      <Badge className={statusColors[problem.status]}>
-                        {problem.status.replace("_", " ")}
-                      </Badge>
+                      <Badge className={priorityColors[problem.priority]}>{problem.priority}</Badge>
+                      <Badge className={statusColors[problem.status]}>{problem.status.replace("_", " ")}</Badge>
                     </div>
                     <p className="text-muted-foreground mb-3">{problem.description}</p>
                     <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
@@ -165,9 +165,40 @@ export default function ProblemsList() {
                       <span>{format(new Date(problem.createdAt), "MMM dd, yyyy")}</span>
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon">
-                    <ChevronRight className="w-5 h-5" />
-                  </Button>
+
+                  {/* Actions */}
+                  <div className="flex flex-col gap-2 items-end">
+                    {/* Update Status */}
+                    <Dialog open={isStatusOpen && selectedProblem?.id === problem.id} onOpenChange={setIsStatusOpen}>
+                      <DialogTrigger asChild>
+                        <Button size="icon" variant="outline" onClick={() => { setSelectedProblem(problem); setIsStatusOpen(true); }}>
+                          <Edit2 className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-sm">
+                        <DialogHeader>
+                          <DialogTitle>Update Status</DialogTitle>
+                        </DialogHeader>
+                        <Select defaultValue={problem.status} onValueChange={(value) => handleStatusUpdate(problem.id, value as Problem["status"])}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="OPEN">Open</SelectItem>
+                            <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+                            <SelectItem value="RESOLVED">Resolved</SelectItem>
+                            <SelectItem value="CLOSED">Closed</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button className="mt-4 w-full" onClick={() => setIsStatusOpen(false)}>Close</Button>
+                      </DialogContent>
+                    </Dialog>
+
+                    {/* Delete */}
+                    <Button size="icon" variant="destructive" onClick={() => handleDelete(problem.id)}>
+                      <Trash className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>

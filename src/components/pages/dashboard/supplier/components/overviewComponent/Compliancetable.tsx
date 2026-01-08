@@ -215,19 +215,7 @@ export default function ComplianceTable() {
 
   return (
     <Card className="border-0 shadow-sm">
-      <CardHeader className="pb-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold">Compliance Progress</h2>
-            <p className="text-muted-foreground mt-1">
-              Complete assessments to maintain compliance
-            </p>
-          </div>
-          <Badge variant="outline" className="text-sm px-4 py-1">
-            {sortedData.length} Assessment{sortedData.length > 1 ? "s" : ""}
-          </Badge>
-        </div>
-      </CardHeader>
+     
 
       <CardContent className="p-0">
         <div className="overflow-x-auto">

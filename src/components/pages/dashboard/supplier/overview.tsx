@@ -1,87 +1,33 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// src/components/pages/dashboard/supplier/SupplierDashboard.tsx
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import {
-  FileText,
-  Clock,
-  BarChart3,
-  User,
-  Shield,
-  Calendar,
-  TrendingUp,
-  TrendingDown,
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-  FileCheck,
-  Phone,
-  Mail,
-  Target,
-  Activity,
-  Award,
-  Clock3,
-  ChevronRight,
-  RefreshCw,
-  Building,
-  Briefcase,
-} from "lucide-react";
+import { BarChart3, Shield, AlertTriangle, FileCheck, Phone, Mail, Target, Activity, Award, RefreshCw, Building } from "lucide-react";
 import { useGetSupplierDashboardQuery } from "@/redux/features/supplyer/supplyer.api";
 import ComplianceTable from "./components/overviewComponent/Compliancetable";
-import { formatDistanceToNow, format } from "date-fns";
+import {  format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function SupplierDashboard() {
   const { data: dashboardData, isLoading, refetch } = useGetSupplierDashboardQuery();
+  if (isLoading) return <DashboardSkeleton />;
 
-  // Handle loading state
-  if (isLoading) {
-    return <DashboardSkeleton />;
-  }
-
-  // Extract data with safe defaults
   const data = dashboardData?.data || {};
-
-  // Supplier Information
   const supplierInfo = data.supplierInfo || {};
-
-  // Vendor Information
   const vendorInfo = data.myVendor || {};
-
-  // Contract Information
   const contractInfo = data.contractInfo || {};
-
-  // Assessment Stats
   const assessmentStats = data.assessmentStats || {};
-  const completed =
-    assessmentStats.totalAssessments - assessmentStats.pendingAssessments;
-  const progress =
-    assessmentStats.totalAssessments === 0
-      ? 0
-      : Math.round(
-        (completed / assessmentStats.totalAssessments) * 100
-      );
-  // Risk Stats
   const riskStats = data.riskStats || {};
-
-  // Performance Stats
   const performanceStats = data.performanceStats || {};
-
-  // Document Stats
   const documentStats = data.documentStats || {};
-
-  // Problem Stats
   const problemStats = data.problemStats || {};
+ // const recentActivity = data.recentActivity || {};
 
-  // Recent Activity
-  const recentActivity = data.recentActivity || {};
+  const overallCompletion = assessmentStats.totalAssessments > 0
+    ? Math.round((assessmentStats.completedAssessments / assessmentStats.totalAssessments) * 100)
+    : 0;
 
-  // Upcoming Events
-  const upcomingEvents = data.upcomingEvents || [];
-
-  // Helper functions
   const getRiskLevelColor = (level: string) => {
     switch (level) {
       case 'LOW': return 'bg-green-100 text-green-800 border-green-300';
@@ -92,510 +38,127 @@ export default function SupplierDashboard() {
     }
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'HIGH': return 'bg-red-100 text-red-800';
-      case 'MEDIUM': return 'bg-yellow-100 text-yellow-800';
-      case 'LOW': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'PENDING':
-      case 'IN_PROGRESS':
-        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200"><Clock3 className="w-3 h-3 mr-1" /> {status}</Badge>;
-      case 'APPROVED':
-      case 'COMPLETED':
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200"><CheckCircle className="w-3 h-3 mr-1" /> {status}</Badge>;
-      case 'REJECTED':
-        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200"><XCircle className="w-3 h-3 mr-1" /> {status}</Badge>;
-      case 'DRAFT':
-        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200"><FileText className="w-3 h-3 mr-1" /> {status}</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-
-  // Calculate overall completion percentage
-  const overallCompletion = assessmentStats.totalAssessments > 0
-    ? Math.round((assessmentStats.completedAssessments / assessmentStats.totalAssessments) * 100)
-    : 0;
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
-      {/* Header with Actions */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+    <div className="container mx-auto px-4 py-6 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
-            Welcome back, {supplierInfo.contactPerson || "Supplier"} 👋
-          </h1>
-          <p className="text-lg text-muted-foreground mt-2">
-            Monitor your compliance progress, assessments, and contract status
-          </p>
+          <h1 className="text-3xl font-bold">Welcome back, {supplierInfo.contactPerson || "Supplier"} 👋</h1>
+          <p className="text-sm text-muted-foreground mt-1">Monitor your compliance progress, assessments, and contracts</p>
         </div>
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={() => refetch()}>
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Refresh
-          </Button>
-        </div>
+        <Button variant="outline" onClick={() => refetch()} className="flex items-center gap-1">
+          <RefreshCw className="w-4 h-4" /> Refresh
+        </Button>
       </div>
 
-      {/* Key Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Overall Progress */}
-        <Card className="border-l-4 border-l-blue-500 shadow-lg">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-sm font-semibold">
-              <Target className="w-4 h-4 text-blue-600" />
-              Overall Progress
-            </CardTitle>
+      {/* Key Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="">
+          <CardHeader>
+            <CardTitle className="text-sm flex items-center gap-1"><Target className="w-4 h-4" /> Overall Progress</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold mb-2">{overallCompletion}%</div>
-            <Progress value={overallCompletion} className="h-2 mb-2" />
-            <p className="text-sm text-muted-foreground">
-              {assessmentStats.completedAssessments} of {assessmentStats.totalAssessments} assessments completed
-            </p>
+            <div className="text-xl font-bold mb-1">{overallCompletion}%</div>
+            <Progress value={overallCompletion} className="h-2 mb-1" />
+            <p className="text-xs text-muted-foreground">{assessmentStats.completedAssessments} of {assessmentStats.totalAssessments} assessments completed</p>
           </CardContent>
         </Card>
 
-        {/* Risk Level */}
-        <Card className="border-l-4 border-l-red-500 shadow-lg">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-sm font-semibold">
-              <AlertTriangle className="w-4 h-4 text-red-600" />
-              Risk Level
-            </CardTitle>
+        <Card className="">
+          <CardHeader>
+            <CardTitle className="text-sm flex items-center gap-1"><AlertTriangle className="w-4 h-4" /> Risk Level</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold mb-2">
-              <Badge className={`${getRiskLevelColor(riskStats.riskLevel)} px-4 py-1.5 text-lg`}>
-                {riskStats.riskLevel || "Not Assessed"}
-              </Badge>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              BIV Score: {riskStats.bivScore?.toFixed(1) || "—"}
-            </p>
+            <Badge className={`${getRiskLevelColor(riskStats.riskLevel)} px-2 py-1 text-xs`}>{riskStats.riskLevel || "Not Assessed"}</Badge>
+            <p className="text-xs text-muted-foreground mt-1">BIV Score: {riskStats.bivScore || 0}</p>
           </CardContent>
         </Card>
 
-        {/* Contract Status */}
-        <Card className={`border-l-4 ${contractInfo.isExpiringSoon ? 'border-l-amber-500' : 'border-l-green-500'} shadow-lg`}>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-sm font-semibold">
-              <FileCheck className="w-4 h-4" />
-              Contract Status
-            </CardTitle>
+        <Card className={`${contractInfo.isExpiringSoon }`}>
+          <CardHeader>
+            <CardTitle className="text-sm flex items-center gap-1"><FileCheck className="w-4 h-4" /> Contract Status</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold mb-2">
-              {contractInfo.isExpired ? "Expired" : contractInfo.isExpiringSoon ? "Expiring" : "Active"}
-            </div>
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm">
-                Ends: {contractInfo.contractEndDate ? format(new Date(contractInfo.contractEndDate), 'MMM dd, yyyy') : "—"}
-              </span>
-              {contractInfo.daysUntilExpiry && (
-                <Badge variant={contractInfo.daysUntilExpiry < 30 ? "destructive" : "outline"}>
-                  {contractInfo.daysUntilExpiry} days left
-                </Badge>
-              )}
-            </div>
+            <div className="font-bold">{contractInfo.isExpired ? "Expired" : contractInfo.isExpiringSoon ? "Expiring" : "Active"}</div>
+            {contractInfo.contractEndDate && <div className="text-xs text-muted-foreground">Ends: {format(new Date(contractInfo.contractEndDate), 'MMM dd, yyyy')}</div>}
           </CardContent>
         </Card>
 
-        {/* Performance Score */}
-        <Card className="border-l-4 border-l-emerald-500 shadow-lg">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-sm font-semibold">
-              <Award className="w-4 h-4 text-emerald-600" />
-              Performance Score
-            </CardTitle>
+        <Card className="">
+          <CardHeader>
+            <CardTitle className="text-sm flex items-center gap-1"><Award className="w-4 h-4" /> Performance</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold mb-2">{performanceStats.overallScore || 0}%</div>
-            <div className="flex items-center gap-2">
-              {performanceStats.improvementTrend === 'UP' ? (
-                <TrendingUp className="w-4 h-4 text-green-600" />
-              ) : performanceStats.improvementTrend === 'DOWN' ? (
-                <TrendingDown className="w-4 h-4 text-red-600" />
-              ) : (
-                <Activity className="w-4 h-4 text-gray-600" />
-              )}
-              <span className="text-sm text-muted-foreground capitalize">
-                {performanceStats.improvementTrend?.toLowerCase() || 'Stable'} trend
-              </span>
-            </div>
+            <div className="font-bold">{performanceStats.overallScore || 0}%</div>
+            <span className="text-xs text-muted-foreground capitalize">{performanceStats.improvementTrend?.toLowerCase() || 'Stable'} trend</span>
           </CardContent>
         </Card>
       </div>
 
-      {/* Three Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Assessment & Activity */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Vendor Profile Section */}
-          <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building className="w-5 h-5" />
-                Your Vendor Profile
-              </CardTitle>
-              <CardDescription>
-                Information about the vendor managing your compliance
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col md:flex-row items-start md:items-center gap-6 p-4 border rounded-lg bg-gray-50">
-                {/* Vendor Logo/Placeholder */}
-                <div className="flex-shrink-0">
-                  <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
-                    {vendorInfo.companyLogo ? (
-                      <img 
-                        src={vendorInfo.companyLogo} 
-                        alt={vendorInfo.companyName} 
-                        className="w-16 h-16 object-contain rounded-lg"
-                      />
-                    ) : (
-                      <Building className="w-10 h-10 text-white" />
-                    )}
-                  </div>
-                </div>
-
-                {/* Vendor Details */}
-                <div className="flex-1 space-y-3">
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900">{vendorInfo.companyName || "No Vendor Assigned"}</h3>
-                    <p className="text-sm text-gray-600 flex items-center gap-2 mt-1">
-                      <Briefcase className="w-4 h-4" />
-                      {vendorInfo.industryType || "Industry not specified"}
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Mail className="w-4 h-4 text-gray-500" />
-                        <span className="text-sm text-gray-700">{vendorInfo.email || "Email not provided"}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Phone className="w-4 h-4 text-gray-500" />
-                        <span className="text-sm text-gray-700">{vendorInfo.contactNumber || "Phone not provided"}</span>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      {/* <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-600">Vendor ID:</span>
-                        <Badge variant="outline" className="text-xs">
-                          {vendorInfo.id?.slice(0, 8) || "N/A"}
-                        </Badge>
-                      </div> */}
-                      {/* <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                      >
-                        <ExternalLink className="w-4 h-4 mr-2" />
-                        View Vendor Portal
-                      </Button> */}
-                    </div>
-                  </div>
-                </div>
+      {/* Vendor, Quick Stats, Risk Breakdown */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Vendor Profile */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-1"><Building className="w-5 h-5" /> Vendor Profile</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-blue-500 rounded-lg flex items-center justify-center text-white">
+                {vendorInfo.companyLogo ? <img src={vendorInfo.companyLogo} alt={vendorInfo.companyName} className="w-14 h-14 object-contain" /> : <Building className="w-6 h-6" />}
               </div>
-
-              {/* Vendor Contact Information */}
-              <div className="mt-6 p-4 border rounded-lg bg-blue-50/50">
-                <h4 className="font-semibold text-gray-900 mb-3">Contact Your Vendor</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-3 bg-white rounded-lg border">
-                    <p className="text-sm text-gray-500 mb-1">Primary Contact</p>
-                    <p className="font-medium">{vendorInfo.companyName || "Vendor"}</p>
-                  </div>
-                  <div className="p-3 bg-white rounded-lg border">
-                    <p className="text-sm text-gray-500 mb-1">Email Address</p>
-                    <a 
-                      href={`mailto:${vendorInfo.email}`} 
-                      className="text-blue-600 hover:underline font-medium"
-                    >
-                      {vendorInfo.email || "N/A"}
-                    </a>
-                  </div>
-                  <div className="p-3 bg-white rounded-lg border">
-                    <p className="text-sm text-gray-500 mb-1">Phone Number</p>
-                    <a 
-                      href={`tel:${vendorInfo.contactNumber}`} 
-                      className="text-blue-600 hover:underline font-medium"
-                    >
-                      {vendorInfo.contactNumber || "N/A"}
-                    </a>
-                  </div>
-                </div>
+              <div>
+                <h3 className="font-bold">{vendorInfo.companyName || "No Vendor Assigned"}</h3>
+                <p className="text-xs text-muted-foreground">{vendorInfo.industryType || "Industry not specified"}</p>
+                <p className="text-xs text-muted-foreground flex items-center gap-1"><Mail className="w-3 h-3" /> {vendorInfo.email || "N/A"}</p>
+                <p className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="w-3 h-3" /> {vendorInfo.contactNumber || "N/A"}</p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </CardContent>
+        </Card>
 
-          {/* Assessment Overview */}
-          <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="w-5 h-5" />
-                Assessment Overview
-              </CardTitle>
-              <CardDescription>
-                Track your assessment progress and submissions
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 gap-4 mb-6">
-                <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <div className="text-3xl font-bold text-blue-600">{assessmentStats.totalAssessments || 0}</div>
-                  <div className="text-sm text-blue-700">Total Assessments</div>
-                </div>
-                <div className="text-center p-4 bg-amber-50 rounded-lg">
-                  <div className="text-3xl font-bold text-amber-600">{assessmentStats.pendingAssessments || 0}</div>
-                  <div className="text-sm text-amber-700">Pending</div>
-                </div>
-                <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <div className="text-3xl font-bold text-green-600">{assessmentStats.completedAssessments || 0}</div>
-                  <div className="text-sm text-green-700">Completed</div>
-                </div>
-              </div>
+        {/* Quick Stats */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-1"><Activity className="w-5 h-5" /> Quick Stats</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-xs">
+            <div className="flex justify-between"><span>Documents</span> <Badge>{documentStats.totalDocuments || 0}</Badge></div>
+            <div className="flex justify-between"><span>Problems</span> <Badge>{problemStats.totalProblems || 0}</Badge></div>
+            <div className="flex justify-between"><span>Assessments</span> <Badge>{assessmentStats.completedAssessments || 0}</Badge></div>
+          </CardContent>
+        </Card>
 
-              {/* Recent Submissions */}
-              <div className="space-y-4">
-                <h4 className="font-semibold text-lg flex items-center gap-2">
-                  <Clock className="w-5 h-5" />
-                  Recent Submissions
-                </h4>
-                {recentActivity.submissions?.length === 0 ? (
-                  <div className="text-center py-8 border rounded-lg">
-                    <FileText className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                    <p className="text-muted-foreground">No submissions yet</p>
-                    <Button variant="link" className="mt-2">Start Assessment</Button>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {recentActivity.submissions?.slice(0, 3).map((submission: any) => (
-                      <div key={submission.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
-                        <div>
-                          <h5 className="font-medium">{submission.assessmentTitle}</h5>
-                          <div className="flex items-center gap-3 mt-1">
-                            {getStatusBadge(submission.status)}
-                            <span className="text-sm text-muted-foreground">
-                              {formatDistanceToNow(new Date(submission.submittedAt), { addSuffix: true })}
-                            </span>
-                            {submission.score && (
-                              <span className="text-sm font-medium">Score: {submission.score}%</span>
-                            )}
-                          </div>
-                        </div>
-                        <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-        
-        </div>
-
-        {/* Right Column - Supplier Info & Quick Stats */}
-        <div className="space-y-6">
-          {/* Supplier Information */}
-          <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="w-5 h-5" />
-                Your Supplier Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-blue-100 rounded-full">
-                  <User className="w-6 h-6 text-blue-600" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-lg">{supplierInfo.name}</h4>
-                  <p className="text-sm text-muted-foreground">{supplierInfo.contactPerson}</p>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm">{supplierInfo.email}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm">{supplierInfo.phone}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Category</span>
-                  <Badge variant="outline">{supplierInfo.category}</Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Criticality</span>
-                  <Badge variant="outline" className={getPriorityColor(supplierInfo.criticality)}>
-                    {supplierInfo.criticality}
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Status</span>
-                  <Badge variant={supplierInfo.status === 'ACTIVE' ? 'default' : 'secondary'}>
-                    {supplierInfo.status}
-                  </Badge>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Quick Stats */}
-          <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="w-5 h-5" />
-                Quick Stats
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Documents */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Documents</span>
-                  <Badge variant="outline">{documentStats.totalDocuments || 0}</Badge>
-                </div>
-                <div className="flex gap-2">
-                  <Badge variant="default" className="flex-1 text-center bg-green-100 text-green-800 border-green-300">
-                    ✓ {documentStats.approvedDocuments || 0}
-                  </Badge>
-                  <Badge variant="outline" className="flex-1 text-center">
-                    ⏱️ {documentStats.pendingDocuments || 0}
-                  </Badge>
-                  <Badge variant="outline" className="flex-1 text-center bg-red-100 text-red-800 border-red-300">
-                    ✗ {documentStats.rejectedDocuments || 0}
-                  </Badge>
-                </div>
-              </div>
-
-              {/* Problems */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Problems</span>
-                  <Badge variant="outline">{problemStats.totalProblems || 0}</Badge>
-                </div>
-                <div className="flex gap-2">
-                  <Badge variant="outline" className="flex-1 text-center">
-                    Open: {problemStats.openProblems || 0}
-                  </Badge>
-                  <Badge variant="outline" className="flex-1 text-center bg-red-100 text-red-800 border-red-300">
-                    High: {problemStats.highPriorityProblems || 0}
-                  </Badge>
-                </div>
-              </div>
-
-              {/* NIS2 Compliance */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">NIS2 Compliance</span>
-                  <Badge variant={assessmentStats.pendingAssessments === assessmentStats.totalAssessments ? 'default' : 'destructive'}>
-                    {assessmentStats.pendingAssessments === assessmentStats.totalAssessments ? 'Non-compliant' : 'Compliant'}
-                  </Badge>
-                </div>
-                <Progress value={progress} className="h-2" />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Risk Breakdown */}
-          <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="w-5 h-5" />
-                Risk Breakdown
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-sm">Business Impact</span>
-                  <span className="font-medium">{riskStats.businessScore || 0}%</span>
-                </div>
-                <Progress value={riskStats.businessScore || 0} className="h-2" />
-
-                <div className="flex justify-between">
-                  <span className="text-sm">Integrity</span>
-                  <span className="font-medium">{riskStats.integrityScore || 0}%</span>
-                </div>
-                <Progress value={riskStats.integrityScore || 0} className="h-2" />
-
-                <div className="flex justify-between">
-                  <span className="text-sm">Availability</span>
-                  <span className="font-medium">{riskStats.availabilityScore || 0}%</span>
-                </div>
-                <Progress value={riskStats.availabilityScore || 0} className="h-2" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Risk Breakdown */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-1"><Shield className="w-5 h-5" /> Risk Breakdown</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-xs">
+            <div className="flex justify-between"><span>Business</span> <span>{riskStats.businessScore || 0}%</span></div>
+            <Progress value={riskStats.businessScore || 0} className="h-2"/>
+            <div className="flex justify-between"><span>Integrity</span> <span>{riskStats.integrityScore || 0}%</span></div>
+            <Progress value={riskStats.integrityScore || 0} className="h-2"/>
+            <div className="flex justify-between"><span>Availability</span> <span>{riskStats.availabilityScore || 0}%</span></div>
+            <Progress value={riskStats.availabilityScore || 0} className="h-2"/>
+          </CardContent>
+        </Card>
       </div>
-  {/* Upcoming Events */}
-          <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="w-5 h-5" />
-                Upcoming Events
-              </CardTitle>
-              <CardDescription>
-                Important dates and deadlines
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {upcomingEvents.length === 0 ? (
-                <div className="text-center py-8">
-                  <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                  <p className="text-muted-foreground">No upcoming events</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {upcomingEvents.map((event: any, index: number) => (
-                    <div key={index} className="flex items-center gap-4 p-4 border rounded-lg">
-                      <div className={`p-3 rounded-full ${event.type === 'CONTRACT_EXPIRY' ? 'bg-red-100' : 'bg-blue-100'}`}>
-                        {event.type === 'CONTRACT_EXPIRY' ? (
-                          <FileCheck className="w-5 h-5 text-red-600" />
-                        ) : (
-                          <FileText className="w-5 h-5 text-blue-600" />
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <h5 className="font-medium">{event.title}</h5>
-                        <div className="flex items-center gap-3 mt-1">
-                          <span className="text-sm text-muted-foreground">
-                            {format(new Date(event.date), 'MMM dd, yyyy')}
-                          </span>
-                          <Badge variant="outline" className={getPriorityColor(event.priority)}>
-                            {event.priority} Priority
-                          </Badge>
-                        </div>
-                      </div>
-                      <Badge variant={event.daysUntil < 15 ? "destructive" : "outline"}>
-                        {event.daysUntil} days
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-      {/* Compliance Table */}
-      <Card className="shadow-lg">
-        <CardContent>
+
+      {/* Assessment Overview & Compliance Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-1"><BarChart3 className="w-5 h-5" /> Assessment Overview</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-3 gap-4">
+            <div className="p-2 bg-blue-50 rounded text-center"><div className="font-bold">{assessmentStats.totalAssessments || 0}</div><div className="text-xs">Total</div></div>
+            <div className="p-2 bg-amber-50 rounded text-center"><div className="font-bold">{assessmentStats.pendingAssessments || 0}</div><div className="text-xs">Pending</div></div>
+            <div className="p-2 bg-green-50 rounded text-center"><div className="font-bold">{assessmentStats.completedAssessments || 0}</div><div className="text-xs">Completed</div></div>
+          </div>
+
           <ComplianceTable />
         </CardContent>
       </Card>
@@ -603,68 +166,7 @@ export default function SupplierDashboard() {
   );
 }
 
-// Loading Skeleton
+// Skeleton Loader
 function DashboardSkeleton() {
-  return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <Skeleton className="h-10 w-64 mb-2" />
-          <Skeleton className="h-6 w-80" />
-        </div>
-        <Skeleton className="h-10 w-32" />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {Array(4).fill(0).map((_, i) => (
-          <Card key={i}>
-            <CardHeader className="pb-3">
-              <Skeleton className="h-6 w-32" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-12 w-20 mb-2" />
-              <Skeleton className="h-4 w-full" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-8 w-48 mb-2" />
-              <Skeleton className="h-4 w-64" />
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 gap-4 mb-6">
-                {Array(3).fill(0).map((_, i) => (
-                  <Skeleton key={i} className="h-24 w-full rounded-lg" />
-                ))}
-              </div>
-              <div className="space-y-3">
-                {Array(3).fill(0).map((_, i) => (
-                  <Skeleton key={i} className="h-20 w-full rounded-lg" />
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-8 w-48" />
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Skeleton className="h-16 w-full rounded-lg" />
-              {Array(4).fill(0).map((_, i) => (
-                <Skeleton key={i} className="h-4 w-full" />
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
-  );
+  return <div className="p-4 space-y-6"><Skeleton className="h-8 w-64" /><Skeleton className="h-6 w-80" /><Skeleton className="h-10 w-full" count={10} /></div>;
 }

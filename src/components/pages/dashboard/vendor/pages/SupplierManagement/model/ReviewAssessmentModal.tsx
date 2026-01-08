@@ -132,7 +132,7 @@ export default function ReviewAssessmentModal({
                         </div>
 
                         {/* Overall Scores */}
-                        <Card className="bg-gradient-to-r from-primary/5 to-primary/10">
+                        <Card className="bg-linear-to-r from-primary/5 to-primary/10">
                             <CardContent className="pt-6">
                                 <h4 className="font-semibold text-lg mb-4">Overall Results</h4>
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">

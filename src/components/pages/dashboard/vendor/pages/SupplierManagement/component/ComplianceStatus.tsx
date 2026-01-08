@@ -14,7 +14,6 @@ import {
   Timer,
   FileCheck,
   MessageSquare,
-  Calendar,
 } from "lucide-react";
 
 import {
@@ -178,26 +177,6 @@ export default function ComplianceStatus({ supplier, progress }: ComplianceStatu
 
           <Separator />
 
-          {/* Milestone Summary */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="text-center p-4 shadow">
-              <Calendar className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
-              <p className="text-xs text-muted-foreground mb-1">Last Assessment</p>
-              <p className="text-sm font-semibold">{formatDate(supplier.lastAssessmentDate)}</p>
-            </Card>
-
-            <Card className="text-center p-4 shadow">
-              <FileCheck className={`w-6 h-6 mx-auto mb-2 ${supplier.initialAssessmentCompleted ? "text-green-600" : "text-muted-foreground"}`} />
-              <p className="text-xs text-muted-foreground mb-1">Initial Assessment</p>
-              <p className="text-sm font-semibold">{supplier.initialAssessmentCompleted ? "Completed" : "Pending"}</p>
-            </Card>
-
-            <Card className="text-center p-4 shadow">
-              <ShieldCheck className={`w-6 h-6 mx-auto mb-2 ${supplier.fullAssessmentCompleted ? "text-green-600" : "text-amber-600"}`} />
-              <p className="text-xs text-muted-foreground mb-1">Full Assessment</p>
-              <p className="text-sm font-semibold">{supplier.fullAssessmentCompleted ? "Completed" : "Pending"}</p>
-            </Card>
-          </div>
         </CardContent>
       </Card>
 
