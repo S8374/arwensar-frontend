@@ -1,42 +1,65 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, Mail, Building, Phone } from "lucide-react";
+import { User } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
-import { useEffect } from "react";
 import { useGetUserProfileQuery } from "@/redux/features/user/user.api";
+import { useMinioUpload } from "@/lib/useMinioUpload";
 
-export default function Profile() {
- const { data: userData } = useGetUserProfileQuery(undefined);
-  console.log("user data for profile",userData);
-  const profileData = {
-    firstName: userData?.data?.vendorProfile?.firstName || "",
-    lastName: userData?.data?.vendorProfile?.lastName || "",
-    email: userData?.data?.email || "", // This comes from user table
-    companyName: userData?.data?.vendorProfile?.companyName || "", // Changed from 'company'
-    contactNumber: userData?.data?.vendorProfile?.contactNumber || "", // Changed from 'phone'
-    industryType: userData?.data?.vendorProfile?.industryType || "",
-  };
-  console.log("profile data",profileData);
+type ProfileProps = {
+  isVendor: boolean;
+};
+
+export default function Profile({ isVendor }: ProfileProps) {
+  const { data: userData } = useGetUserProfileQuery();
+  const { uploadFile, isUploading } = useMinioUpload();
+
+  // ---------- Prepare profile data ----------
+  const profileData = isVendor
+    ? {
+        firstName: userData?.data?.vendorProfile?.firstName || "",
+        lastName: userData?.data?.vendorProfile?.lastName || "",
+        email: userData?.data?.email || "",
+        companyName: userData?.data?.vendorProfile?.companyName || "",
+        contactNumber: userData?.data?.vendorProfile?.contactNumber || "",
+        industryType: userData?.data?.vendorProfile?.industryType || "",
+        profileImage: userData?.data?.profileImage || "",
+      }
+    : {
+        firstName: userData?.data?.supplierProfile?.contactPerson || "",
+        email: userData?.data?.email || "",
+        companyName:
+          userData?.data?.supplierProfile?.vendor?.companyName || "",
+        contactNumber: userData?.data?.supplierProfile?.phone || "",
+        industryType:
+          userData?.data?.supplierProfile?.vendor?.industryType || "",
+        profileImage: userData?.data?.profileImage || "",
+      };
+
+  // ---------- useProfile hook ----------
   const {
     register,
     handleSubmit,
-    errors,
+    setValue,
+    reset,
+    formState: { errors, isDirty },
     isLoading,
     isSuccess,
     isError,
-    isDirty,
-    reset,
-  } = useProfile(profileData);
+  } = useProfile(profileData, isVendor);
 
-  // Reset form when userData changes
-  useEffect(() => {
-    reset(profileData);
-  }, [userData]);
+
+  // ---------- Image upload ----------
+  const handleImageUpload = async (file: File) => {
+    const url = await uploadFile(file);
+    setValue("profileImage", url, { shouldDirty: true });
+  };
 
   return (
     <div className="space-y-8">
-      {/* Success Message */}
+      {/* SUCCESS */}
       {isSuccess && (
         <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
           <p className="text-green-800 text-sm font-medium">
@@ -45,7 +68,7 @@ export default function Profile() {
         </div>
       )}
 
-      {/* Error Message */}
+      {/* ERROR */}
       {isError && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
           <p className="text-red-800 text-sm">
@@ -54,114 +77,94 @@ export default function Profile() {
         </div>
       )}
 
-      {/* Section Title */}
+      {/* TITLE */}
       <div className="flex items-center gap-3">
         <User className="w-6 h-6 text-chart-6" />
-        <h2 className="text-xl font-semibold text-foreground">
-          Profile Information
-        </h2>
+        <h2 className="text-xl font-semibold">Profile Information</h2>
       </div>
 
-      {/* Form Grid */}
-       <form onSubmit={handleSubmit} className="space-y-6">
+      {/* FORM */}
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* First Name - same */}
-          <div className="space-y-2">
-            <Label htmlFor="firstName">First Name</Label>
-            <Input
-              id="firstName"
-              className="h-11 bg-muted/40 border-0 focus-visible:ring"
-              {...register("firstName")}
-            />
+          {/* First Name */}
+          <div>
+            <Label>First Name</Label>
+            <Input {...register("firstName")} />
             {errors.firstName && (
-              <p className="text-sm text-red-500">{errors.firstName.message}</p>
+              <p className="text-red-500 text-sm">
+                {errors.firstName.message as string}
+              </p>
             )}
           </div>
 
-          {/* Last Name - same */}
-          <div className="space-y-2">
-            <Label htmlFor="lastName">Last Name</Label>
-            <Input
-              id="lastName"
-              className="h-11 bg-muted/40 border-0 focus-visible:ring-1"
-              {...register("lastName")}
-            />
-            {errors.lastName && (
-              <p className="text-sm text-red-500">{errors.lastName.message}</p>
-            )}
+          {/* Last Name (Vendor only) */}
+          {isVendor && (
+            <div>
+              <Label>Last Name</Label>
+              <Input {...register("lastName")} />
+              {errors.lastName && (
+                <p className="text-red-500 text-sm">
+                  {errors.lastName.message as string}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Email */}
+          <div>
+            <Label>Email</Label>
+            <Input value={profileData.email} disabled />
           </div>
 
-          {/* Email - disabled field */}
-          <div className="space-y-2">
-            <Label htmlFor="email">Email Address</Label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-3.5 w-4 h-4 text-muted-foreground" />
+          {/* Company */}
+          <div>
+            <Label>Company Name</Label>
+            <Input {...register("companyName")} disabled={!isVendor} />
+          </div>
+
+          {/* Phone */}
+          <div>
+            <Label>Phone Number</Label>
+            <Input {...register("contactNumber")} />
+          </div>
+
+          {/* Industry */}
+          <div>
+            <Label>Industry Type</Label>
+            <Input {...register("industryType")} disabled={!isVendor} />
+          </div>
+
+          {/* Profile Image Upload */}
+          <div className="md:col-span-2">
+            <Label>Profile Image</Label>
+            <div className="flex items-center gap-4">
+              {profileData.profileImage && (
+                <img
+                  src={profileData.profileImage}
+                  alt="profile"
+                  className="w-16 h-16 rounded-full object-cover"
+                />
+              )}
               <Input
-                id="email"
-                type="email"
-                className="h-11 pl-10 bg-muted/40 border-0 focus-visible:ring"
-                value={profileData.email}
-                disabled
+                type="file"
+                accept="image/*"
+                onChange={(e) =>
+                  e.target.files && handleImageUpload(e.target.files[0])
+                }
+                disabled={isUploading}
               />
             </div>
-            <p className="text-xs text-muted-foreground">Contact support to change email</p>
-          </div>
-
-          {/* Company Name - changed from 'company' */}
-          <div className="space-y-2">
-            <Label htmlFor="companyName">Company Name</Label>
-            <div className="relative">
-              <Building className="absolute left-3 top-3.5 w-4 h-4 text-muted-foreground" />
-              <Input
-                id="companyName"
-                className="h-11 pl-10 bg-muted/40 border-0 focus-visible:ring-1"
-                {...register("companyName")}
-              />
-            </div>
-            {errors.companyName && (
-              <p className="text-sm text-red-500">{errors.companyName.message}</p>
-            )}
-          </div>
-
-          {/* Contact Number - changed from 'phone' */}
-          <div className="space-y-2">
-            <Label htmlFor="contactNumber">Phone Number</Label>
-            <div className="relative">
-              <Phone className="absolute left-3 top-3.5 w-4 h-4 text-muted-foreground" />
-              <Input
-                id="contactNumber"
-                type="tel"
-                className="h-11 pl-10 bg-muted/40 border-0 focus-visible:ring-1"
-                {...register("contactNumber")}
-              />
-            </div>
-            {errors.contactNumber && (
-              <p className="text-sm text-red-500">{errors.contactNumber.message}</p>
-            )}
-          </div>
-
-          {/* Industry Type - new field */}
-          <div className="space-y-2">
-            <Label htmlFor="industryType">Industry Type</Label>
-            <Input
-              id="industryType"
-              className="h-11 bg-muted/40 border-0 focus-visible:ring-1"
-              {...register("industryType")}
-            />
           </div>
         </div>
 
-        {/* Save Button */}
-        <div className="flex justify-start pt-4">
-          <Button
-            type="submit"
-            size="lg"
-            disabled={!isDirty || isLoading}
-            className="bg-chart-6 hover:bg-chart-6/90 font-medium px-8 disabled:opacity-50"
-          >
-            {isLoading ? "Saving..." : "Save Changes"}
-          </Button>
-        </div>
+        {/* SAVE */}
+        <Button
+          type="submit"
+          disabled={!isDirty || isLoading}
+          className="bg-chart-6 px-8"
+        >
+          {isLoading ? "Saving..." : "Save Changes"}
+        </Button>
       </form>
     </div>
   );

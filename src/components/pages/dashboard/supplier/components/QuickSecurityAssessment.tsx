@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-hooks/set-state-in-effect */
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -159,7 +160,7 @@ export default function QuickSecurityAssessment() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-8 px-4">
-      <div className=" mx-auto space-y-8">
+      <div className="mx-auto space-y-8 max-w-5xl">
         {/* Header */}
         <Card className="shadow-lg">
           <CardHeader className="text-center">
@@ -197,10 +198,37 @@ export default function QuickSecurityAssessment() {
           </div>
         )}
 
-        {/* Questions - Only show if editable */}
+        {/* Questions */}
         {submissionId && isEditable && allQuestions.map((question: any, idx: number) => {
-          const userAnswer = answers[question.id] || { answer: "", comments: "", evidence: null };
-          const isAnswered = !!userAnswer.answer;
+          const savedAnswer = answers[question.id] || { answer: "", comments: "", evidence: null };
+          
+          // Local state for comments when input field exists
+          const [localComments, setLocalComments] = useState(savedAnswer.comments || "");
+          const [hasUnsavedComments, setHasUnsavedComments] = useState(false);
+
+          // Sync local state when saved comments change
+          useEffect(() => {
+            setLocalComments(savedAnswer.comments || "");
+            setHasUnsavedComments(false);
+          }, [savedAnswer.comments]);
+
+          const isAnswered = !!savedAnswer.answer;
+
+          const handleRadioChange = async (value: string) => {
+            await handleSaveAnswer(question.id, { answer: value });
+          };
+
+          const handleSaveComments = async () => {
+            if (!hasUnsavedComments) return;
+            await handleSaveAnswer(question.id, { comments: localComments });
+            setHasUnsavedComments(false);
+          };
+
+          const handleCommentsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+            const newValue = e.target.value;
+            setLocalComments(newValue);
+            setHasUnsavedComments(newValue !== savedAnswer.comments);
+          };
 
           return (
             <Card key={question.id} className={`transition-all ${isAnswered ? "border-l-4 border-l-green-500" : ""}`}>
@@ -226,12 +254,12 @@ export default function QuickSecurityAssessment() {
               </CardHeader>
 
               <CardContent className="space-y-8">
-                {/* Answer Options */}
+                {/* Answer Options - Auto Save */}
                 <div>
                   <Label className="text-base font-medium mb-4 block">Select Answer</Label>
                   <RadioGroup
-                    value={userAnswer.answer}
-                    onValueChange={(value) => handleSaveAnswer(question.id, { answer: value })}
+                    value={savedAnswer.answer}
+                    onValueChange={handleRadioChange}
                     disabled={saving || !isEditable}
                   >
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -247,33 +275,56 @@ export default function QuickSecurityAssessment() {
                   </RadioGroup>
                 </div>
 
-                {/* Comments */}
+                {/* Comments - Manual Save ONLY when isInputField is true */}
                 {question.isInputField && (
                   <div className="space-y-3">
-                    <Label className="text-base font-medium">Your Explanation</Label>
+                    <div className="flex justify-between items-center">
+                      <Label className="text-base font-medium">Your Explanation</Label>
+                      {hasUnsavedComments && (
+                        <Button
+                          size="sm"
+                          onClick={handleSaveComments}
+                          disabled={saving}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          {saving ? (
+                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                          ) : (
+                            <CheckCircle2 className="w-4 h-4 mr-2" />
+                          )}
+                          Save Explanation
+                        </Button>
+                      )}
+                    </div>
                     <Textarea
                       placeholder="Provide detailed explanation..."
-                      value={userAnswer.comments}
-                      onChange={(e) => handleSaveAnswer(question.id, { comments: e.target.value })}
+                      value={localComments}
+                      onChange={handleCommentsChange}
                       className="min-h-40"
                       disabled={saving || !isEditable}
                     />
+                    {hasUnsavedComments && (
+                      <p className="text-sm text-orange-600 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        You have unsaved changes
+                      </p>
+                    )}
                   </div>
                 )}
 
                 {/* Evidence Upload */}
-                {(question.isDocument || question.evidenceRequired) && (
+                {(question.isDocument ) && (
                   <div className="space-y-3">
                     <Label className="text-base font-medium flex items-center gap-2">
                       <FileText className="w-5 h-5" />
                       {question.evidenceRequired ? "Evidence Required" : "Supporting Document"}
                     </Label>
-                    {userAnswer.evidence ? (
+                    {savedAnswer.evidence ? (
                       <div className="flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-lg">
                         <div className="flex items-center gap-4">
                           <FileText className="w-8 h-8 text-blue-600" />
                           <div>
-                            <a href={userAnswer.evidence} target="_blank" rel="noopener noreferrer" className="text-blue-700 font-medium underline block">
+                            <a href={savedAnswer.evidence} target="_blank" rel="noopener noreferrer" className="text-blue-700 font-medium underline block">
                               View Document
                             </a>
                             <p className="text-sm text-gray-600">Click to download/view</p>

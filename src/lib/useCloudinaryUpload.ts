@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/hooks/useCloudinaryUpload.ts
 import { useState } from 'react';
 import { uploadToCloudinary } from '@/lib/uploadFileToCloudinary';

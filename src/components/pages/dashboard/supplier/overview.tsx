@@ -24,7 +24,9 @@ import {
   Award,
   Clock3,
   ChevronRight,
-  RefreshCw
+  RefreshCw,
+  Building,
+  Briefcase,
 } from "lucide-react";
 import { useGetSupplierDashboardQuery } from "@/redux/features/supplyer/supplyer.api";
 import ComplianceTable from "./components/overviewComponent/Compliancetable";
@@ -44,6 +46,9 @@ export default function SupplierDashboard() {
 
   // Supplier Information
   const supplierInfo = data.supplierInfo || {};
+
+  // Vendor Information
+  const vendorInfo = data.myVendor || {};
 
   // Contract Information
   const contractInfo = data.contractInfo || {};
@@ -75,7 +80,7 @@ export default function SupplierDashboard() {
 
   // Upcoming Events
   const upcomingEvents = data.upcomingEvents || [];
-  console.log("dashboardData", dashboardData)
+
   // Helper functions
   const getRiskLevelColor = (level: string) => {
     switch (level) {
@@ -135,7 +140,6 @@ export default function SupplierDashboard() {
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
           </Button>
-
         </div>
       </div>
 
@@ -230,10 +234,111 @@ export default function SupplierDashboard() {
         </Card>
       </div>
 
-      {/* Two Column Layout */}
+      {/* Three Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Assessment & Activity */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Vendor Profile Section */}
+          <Card className="shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building className="w-5 h-5" />
+                Your Vendor Profile
+              </CardTitle>
+              <CardDescription>
+                Information about the vendor managing your compliance
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col md:flex-row items-start md:items-center gap-6 p-4 border rounded-lg bg-gray-50">
+                {/* Vendor Logo/Placeholder */}
+                <div className="flex-shrink-0">
+                  <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
+                    {vendorInfo.companyLogo ? (
+                      <img 
+                        src={vendorInfo.companyLogo} 
+                        alt={vendorInfo.companyName} 
+                        className="w-16 h-16 object-contain rounded-lg"
+                      />
+                    ) : (
+                      <Building className="w-10 h-10 text-white" />
+                    )}
+                  </div>
+                </div>
+
+                {/* Vendor Details */}
+                <div className="flex-1 space-y-3">
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">{vendorInfo.companyName || "No Vendor Assigned"}</h3>
+                    <p className="text-sm text-gray-600 flex items-center gap-2 mt-1">
+                      <Briefcase className="w-4 h-4" />
+                      {vendorInfo.industryType || "Industry not specified"}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Mail className="w-4 h-4 text-gray-500" />
+                        <span className="text-sm text-gray-700">{vendorInfo.email || "Email not provided"}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Phone className="w-4 h-4 text-gray-500" />
+                        <span className="text-sm text-gray-700">{vendorInfo.contactNumber || "Phone not provided"}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      {/* <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-600">Vendor ID:</span>
+                        <Badge variant="outline" className="text-xs">
+                          {vendorInfo.id?.slice(0, 8) || "N/A"}
+                        </Badge>
+                      </div> */}
+                      {/* <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                      >
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        View Vendor Portal
+                      </Button> */}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Vendor Contact Information */}
+              <div className="mt-6 p-4 border rounded-lg bg-blue-50/50">
+                <h4 className="font-semibold text-gray-900 mb-3">Contact Your Vendor</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-3 bg-white rounded-lg border">
+                    <p className="text-sm text-gray-500 mb-1">Primary Contact</p>
+                    <p className="font-medium">{vendorInfo.companyName || "Vendor"}</p>
+                  </div>
+                  <div className="p-3 bg-white rounded-lg border">
+                    <p className="text-sm text-gray-500 mb-1">Email Address</p>
+                    <a 
+                      href={`mailto:${vendorInfo.email}`} 
+                      className="text-blue-600 hover:underline font-medium"
+                    >
+                      {vendorInfo.email || "N/A"}
+                    </a>
+                  </div>
+                  <div className="p-3 bg-white rounded-lg border">
+                    <p className="text-sm text-gray-500 mb-1">Phone Number</p>
+                    <a 
+                      href={`tel:${vendorInfo.contactNumber}`} 
+                      className="text-blue-600 hover:underline font-medium"
+                    >
+                      {vendorInfo.contactNumber || "N/A"}
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Assessment Overview */}
           <Card className="shadow-lg">
             <CardHeader>
@@ -298,54 +403,7 @@ export default function SupplierDashboard() {
             </CardContent>
           </Card>
 
-          {/* Upcoming Events */}
-          <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="w-5 h-5" />
-                Upcoming Events
-              </CardTitle>
-              <CardDescription>
-                Important dates and deadlines
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {upcomingEvents.length === 0 ? (
-                <div className="text-center py-8">
-                  <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                  <p className="text-muted-foreground">No upcoming events</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {upcomingEvents.map((event: any, index: number) => (
-                    <div key={index} className="flex items-center gap-4 p-4 border rounded-lg">
-                      <div className={`p-3 rounded-full ${event.type === 'CONTRACT_EXPIRY' ? 'bg-red-100' : 'bg-blue-100'}`}>
-                        {event.type === 'CONTRACT_EXPIRY' ? (
-                          <FileCheck className="w-5 h-5 text-red-600" />
-                        ) : (
-                          <FileText className="w-5 h-5 text-blue-600" />
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <h5 className="font-medium">{event.title}</h5>
-                        <div className="flex items-center gap-3 mt-1">
-                          <span className="text-sm text-muted-foreground">
-                            {format(new Date(event.date), 'MMM dd, yyyy')}
-                          </span>
-                          <Badge variant="outline" className={getPriorityColor(event.priority)}>
-                            {event.priority} Priority
-                          </Badge>
-                        </div>
-                      </div>
-                      <Badge variant={event.daysUntil < 15 ? "destructive" : "outline"}>
-                        {event.daysUntil} days
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        
         </div>
 
         {/* Right Column - Supplier Info & Quick Stats */}
@@ -355,7 +413,7 @@ export default function SupplierDashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <User className="w-5 h-5" />
-                Supplier Information
+                Your Supplier Information
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -451,7 +509,6 @@ export default function SupplierDashboard() {
                   </Badge>
                 </div>
                 <Progress value={progress} className="h-2" />
-
               </div>
             </CardContent>
           </Card>
@@ -488,11 +545,56 @@ export default function SupplierDashboard() {
           </Card>
         </div>
       </div>
-
+  {/* Upcoming Events */}
+          <Card className="shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="w-5 h-5" />
+                Upcoming Events
+              </CardTitle>
+              <CardDescription>
+                Important dates and deadlines
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {upcomingEvents.length === 0 ? (
+                <div className="text-center py-8">
+                  <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                  <p className="text-muted-foreground">No upcoming events</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {upcomingEvents.map((event: any, index: number) => (
+                    <div key={index} className="flex items-center gap-4 p-4 border rounded-lg">
+                      <div className={`p-3 rounded-full ${event.type === 'CONTRACT_EXPIRY' ? 'bg-red-100' : 'bg-blue-100'}`}>
+                        {event.type === 'CONTRACT_EXPIRY' ? (
+                          <FileCheck className="w-5 h-5 text-red-600" />
+                        ) : (
+                          <FileText className="w-5 h-5 text-blue-600" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h5 className="font-medium">{event.title}</h5>
+                        <div className="flex items-center gap-3 mt-1">
+                          <span className="text-sm text-muted-foreground">
+                            {format(new Date(event.date), 'MMM dd, yyyy')}
+                          </span>
+                          <Badge variant="outline" className={getPriorityColor(event.priority)}>
+                            {event.priority} Priority
+                          </Badge>
+                        </div>
+                      </div>
+                      <Badge variant={event.daysUntil < 15 ? "destructive" : "outline"}>
+                        {event.daysUntil} days
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
       {/* Compliance Table */}
       <Card className="shadow-lg">
-        <CardHeader>
-        </CardHeader>
         <CardContent>
           <ComplianceTable />
         </CardContent>

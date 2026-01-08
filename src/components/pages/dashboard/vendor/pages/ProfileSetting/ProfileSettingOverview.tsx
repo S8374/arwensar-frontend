@@ -90,7 +90,7 @@ export default function ProfileSettingOverview() {
           {/* Tab Panels */}
           <div className="mt-10">
             <TabsContent value="profile" className="mt-0">
-              <Profile />
+              <Profile  isVendor={isVendor}/>
             </TabsContent>
 
             <TabsContent value="notifications" className="mt-0">

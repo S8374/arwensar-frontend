@@ -1,15 +1,22 @@
 import { z } from "zod";
 
-
-export const profileSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  email: z.string().email("Invalid email format"), // Read-only
-  companyName: z.string().min(1, "Company name is required"), // Changed from 'company'
-  contactNumber: z.string().min(1, "Phone number is required"), // Changed from 'phone'
-  industryType: z.string().optional(), // Optional field
+export const vendorProfileSchema = z.object({
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
+  email: z.string().email(),
+  companyName: z.string().min(1),
+  contactNumber: z.string().min(1),
+  industryType: z.string().min(1),
+  profileImage: z.string().optional(),
+  companyLogo: z.string().optional(),
 });
 
+export const supplierProfileSchema = z.object({
+  firstName: z.string().min(1),
+  email: z.string().email(),
+  contactNumber: z.string().min(1),
+  profileImage: z.string().optional(),
+});
 
-
-export type ProfileData = z.infer<typeof profileSchema>;
+export type VendorProfileData = z.infer<typeof vendorProfileSchema>;
+export type SupplierProfileData = z.infer<typeof supplierProfileSchema>;

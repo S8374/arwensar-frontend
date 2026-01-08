@@ -4,10 +4,13 @@
 import { Shield, Lock, Server, Mail, FileLock, CheckCircle2, AlertCircle, User, Activity, Package2Icon, TargetIcon, FileText, Calendar1 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import ScrollToTop from "@/hooks/ScrollToTop";
 
 export default function PrivacyPolicy() {
   return (
     <div className="min-h-screen bg-linear-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900">
+      <ScrollToTop />
+
       <div className="container mx-auto px-4 py-16">
         {/* Hero Section */}
         <div className="text-center mb-16">
