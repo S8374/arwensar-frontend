@@ -26,18 +26,11 @@ import PerformanceTab from "./component/tabs/Performance";
 import DocumentsTab from "./component/tabs/DocumentsTab";
 import CreateNotificationDialog from "../Alerts/CreateNotificationDialog";
 import EditSupplierModal from "./model/EditSupplierModal";
+import { useUserInfoQuery } from "@/redux/features/auth/auth.api";
+import { getPlanFeatures } from "@/lib/planFeatures";
 
 
 
-const getCriticalityVariant = (criticality: string | null) => {
-  switch (criticality?.toUpperCase()) {
-    case "CRITICAL":
-    case "HIGH": return "destructive";
-    case "MEDIUM": return "warning";
-    case "LOW": return "success";
-    default: return "default";
-  }
-};
 
 const getRiskLevelVariant = (risk: string | null) => {
   switch (risk?.toUpperCase()) {
@@ -64,7 +57,6 @@ const calculateContractStatus = (endDate: string | null) => {
 const getNis2Status = (supplier: any) => {
   const totalAssessments = supplier.statistics?.totalAssessments ?? 0;
   const submittedAssessments = supplier.statistics?.totalSubmissions ?? 0;
-  console.log(".......", totalAssessments, submittedAssessments)
   // If total assessments equals submitted assessments → Compliant
   if (totalAssessments === submittedAssessments) {
     return { label: "Non-Compliant", variant: "outline" as const, icon: CheckCircle2 };
@@ -75,7 +67,9 @@ const getNis2Status = (supplier: any) => {
 };
 export default function SupplierDetailPage() {
   const { id } = useParams<{ id: string }>();
-
+  const { data: userData } = useUserInfoQuery(undefined);
+  const plan = userData?.data?.subscription?.plan;
+  const permissions = getPlanFeatures(plan);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   // const [isContractOpen, setIsContractOpen] = useState(false);
@@ -139,9 +133,7 @@ export default function SupplierDetailPage() {
               <div>
                 <h1 className="text-4xl font-bold">{supplier.name}</h1>
                 <div className="flex flex-wrap items-center gap-3 mt-2">
-                  <Badge variant={getCriticalityVariant(supplier.criticality)}>
-                    {supplier.criticality || "N/A"} Criticality
-                  </Badge>
+
                   <Badge variant={supplier.isActive ? "success" : "secondary"}>
                     {supplier.isActive ? "Active" : "Inactive"}
                   </Badge>
@@ -163,7 +155,7 @@ export default function SupplierDetailPage() {
               <Shield className="w-6 h-6" />
               <span className="font-medium">NIS2 Compliance:</span>
               <Badge variant={nis2.variant} className="text-base px-3 py-1 flex items-center gap-2">
-                <nis2.icon className="w-4 h-4" />
+                <nis2.icon className="" />
                 {nis2.label}
               </Badge>
             </div>
@@ -171,10 +163,18 @@ export default function SupplierDetailPage() {
 
           <div className="flex flex-wrap gap-3">
             <CreateNotificationDialog />
-            <Button onClick={() => setIsEditOpen(true)}>
-              <Edit2 className="w-4 h-4 mr-2" />
-              Edit Supplier
+            <Button
+              onClick={() => permissions.editSupplier && setIsEditOpen(true)}
+              disabled={!permissions.editSupplier}
+              variant={permissions.editSupplier ? "default" : "outline"}
+              className="flex items-center gap-2"
+              title={!permissions.editSupplier ? "This feature Features is not in this plans" : undefined}
+            >
+              <Edit2 className="w-4 h-4" />
+              {permissions.editSupplier ? "Edit Supplier" : "Edit Supplier (Premium)"}
             </Button>
+
+
           </div>
         </div>
 
@@ -188,14 +188,14 @@ export default function SupplierDetailPage() {
           </TabsList>
 
           <TabsContent value="overview"><SupplierOverviewTab supplier={supplier} progress={progress} contractStatus={contract} /></TabsContent>
-          <TabsContent value="compliance"><ComplianceTab supplier={supplier} progress={progress} /></TabsContent>
+          <TabsContent value="compliance"><ComplianceTab permissions={permissions} supplier={supplier} progress={progress} /></TabsContent>
           <TabsContent value="performance"><PerformanceTab supplier={supplier} progress={progress} /></TabsContent>
           <TabsContent value="documents"><DocumentsTab supplierId={id!} /></TabsContent>
         </Tabs>
       </div>
 
       {/* Modals */}
-      <EditSupplierModal open={isEditOpen} onOpenChange={setIsEditOpen} supplier={supplier}  />
+      <EditSupplierModal open={isEditOpen} onOpenChange={setIsEditOpen} supplier={supplier} />
       <SendAlertModal open={isAlertOpen} onOpenChange={setIsAlertOpen} supplierId={id!} supplierName={supplier.name} />
       {/* <ViewContractModal open={isContractOpen} onOpenChange={setIsContractOpen} documentUrl={supplier.contractDocument || ""} supplierName={supplier.name} /> */}
     </div>

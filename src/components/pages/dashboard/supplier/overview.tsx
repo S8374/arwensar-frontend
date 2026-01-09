@@ -168,5 +168,5 @@ export default function SupplierDashboard() {
 
 // Skeleton Loader
 function DashboardSkeleton() {
-  return <div className="p-4 space-y-6"><Skeleton className="h-8 w-64" /><Skeleton className="h-6 w-80" /><Skeleton className="h-10 w-full" count={10} /></div>;
+  return <div className="p-4 space-y-6"><Skeleton className="h-8 w-64" /><Skeleton className="h-6 w-80" /><Skeleton className="h-10 w-full"/></div>;
 }

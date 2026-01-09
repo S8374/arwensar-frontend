@@ -52,7 +52,7 @@ export const useMinioUpload = (_selectedFile?: File) => {
     }
   };
 
-  const uploadFile = async (file: File, p0?: (progress: number) => void) => {
+  const uploadFile = async (file: File, _p0?: (progress: number) => void) => {
     const urls = await uploadFiles([file]);
     return urls[0];
   };

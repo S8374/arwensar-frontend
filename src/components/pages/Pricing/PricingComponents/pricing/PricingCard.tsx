@@ -147,11 +147,7 @@ export default function PricingCard({ plan, onSelect }: PricingCardProps) {
               <span className="text-xl text-muted-foreground">/month</span>
             </div>
             <p className="mt-3 text-sm text-muted-foreground">Billed monthly</p>
-            {plan.trialDays > 0 && (
-              <p className="mt-2 text-sm font-medium text-primary">
-                {plan.trialDays}-day free trial
-              </p>
-            )}
+    
           </div>
 
           <ul className="space-y-4">

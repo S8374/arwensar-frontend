@@ -12,7 +12,6 @@ import {
   UserCheck,
   ShieldCheck
 } from "lucide-react";
-import { format } from "date-fns";
 import { useGetMyActivityQuery } from "@/redux/features/activity/activity.api";
 
 type Props = {
@@ -88,28 +87,22 @@ export default function PerformanceTab({  }: Props) {
                         {getActivityIcon(activity.action)}
                       </div>
                       <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <p className="font-medium">
-                            {activity.action.replace(/_/g, " ")}
-                          </p>
-                          <span className="text-xs text-muted-foreground">
-                            {format(new Date(activity.createdAt), "MMM d, h:mm a")}
-                          </span>
-                        </div>
-                        {activity.ipAddress && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            From IP: {activity.ipAddress}
-                          </p>
-                        )}
-                        {activity.details && (
-                          <div className="text-xs text-muted-foreground mt-2 space-y-1">
-                            {Object.entries(activity.details).map(([key, value]) => (
-                              <div key={key}>
-                                <strong className="capitalize">{key}:</strong> {String(value)}
-                              </div>
-                            ))}
-                          </div>
-                        )}
+                       
+                        
+                    
+                  {activity.details && (
+  <div className="text-xs text-muted-foreground mt-2 space-y-1">
+    {Object.entries(activity.details)
+      .filter(([key, value]) => !(key === "ip" && value === "unknown")) // skip unknown IP
+      .map(([key, value]) => (
+        <div key={key}>
+          <strong className="capitalize">{key}</strong>: {String(value)}
+        </div>
+      ))
+    }
+  </div>
+)}
+
                       </div>
                     </div>
                   ))}

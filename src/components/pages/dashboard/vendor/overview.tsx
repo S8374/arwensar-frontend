@@ -11,17 +11,21 @@ import { useState } from "react";
 import { useGetVendorStatsQuery } from "@/redux/features/vendor/vendor.api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useUserInfoQuery } from "@/redux/features/auth/auth.api";
+import { getPlanFeatures } from "@/lib/planFeatures";
+import FeatureRestricted from "@/components/upgrade/FeatureRestricted";
 
 export default function VendorDashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+  const { data: userData } = useUserInfoQuery(undefined);
+  const plan = userData?.data?.subscription?.plan;
+  const permissions = getPlanFeatures(plan);
   const { data, isLoading, isError } = useGetVendorStatsQuery(undefined);
   const stats = data?.data;
 
   if (isLoading) {
     return <DashboardSkeleton />;
   }
-
   if (isError || !stats) {
     return <ErrorState />;
   }
@@ -63,18 +67,36 @@ export default function VendorDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Donut Chart */}
         <div className="lg:col-span-8">
-          <ComplianceDonutChart data={complianceDonutData} />
+          {
+            permissions.complianceDashboard ? <ComplianceDonutChart data={complianceDonutData} /> : <FeatureRestricted
+              title="Compliance Dashboard"
+              description="Visualize compliance distribution with interactive charts"
+              requiredPlan="premium"
+              feature="compliance_dashboard"
+              className="h-full"
+            />
+          }
+
         </div>
 
         {/* Right Column */}
         <div className="lg:col-span-4 space-y-6">
           <div className="transform hover:scale-[1.02] transition-transform duration-200">
-            <ComplianceGaugeCard
-              compliancePercentage={stats.complianceGauge.compliancePercentage}
-              compliant={stats.complianceGauge.compliantSuppliers}
-              nonCompliant={stats.complianceGauge.nonCompliantSuppliers}
-              total={stats.supplierStats.totalSuppliers}
-            />
+            {
+              permissions.overallCompliance ? <ComplianceGaugeCard
+                compliancePercentage={stats.complianceGauge.compliancePercentage}
+                compliant={stats.complianceGauge.compliantSuppliers}
+                nonCompliant={stats.complianceGauge.nonCompliantSuppliers}
+                total={stats.supplierStats.totalSuppliers}
+              /> : <FeatureRestricted
+                title="overallCompliance "
+                description="Visualize compliance distribution with interactive charts"
+                requiredPlan="premium"
+                feature="compliance_dashboard"
+                className="h-full"
+              />
+            }
+
           </div>
           <div className="transform hover:scale-[1.02] transition-transform duration-200">
             <RecentAlerts alerts={stats.recentUpdates} />
@@ -165,8 +187,8 @@ function ErrorState() {
         <p className="text-gray-600 dark:text-gray-400 mb-6">
           We encountered an issue while loading your dashboard data.
         </p>
-        <Button 
-          onClick={() => window.location.reload()} 
+        <Button
+          onClick={() => window.location.reload()}
           className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
         >
           Try Again

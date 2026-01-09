@@ -203,13 +203,13 @@ export default function NotificationsAlertsPage() {
 
         {/* Tabs */}
         <Tabs defaultValue="all" className="w-full">
-          <TabsList className="grid w-full max-w-md grid-cols-3 mb-8">
+          <TabsList className="grid w-full max-w-md grid-cols-2 mb-8">
             <TabsTrigger value="all">
               All ({notifications.length})
             </TabsTrigger>
-            <TabsTrigger value="unread">
+            {/* <TabsTrigger value="unread">
               Unread ({unreadCount})
-            </TabsTrigger>
+            </TabsTrigger> */}
             <TabsTrigger value="read">
               Read ({readNotifications.length})
             </TabsTrigger>

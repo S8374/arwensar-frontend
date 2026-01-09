@@ -25,7 +25,7 @@ export default function DataSecurityAssessment() {
 
   const [startAssessment, { isLoading: starting }] =
     useStartAssessmentMutation();
-  const [saveAnswer] = useSaveAnswerMutation();
+  const [saveAnswer] = useSaveAnswerMutation(); // Added isLoading from saveAnswer
   const [submitAssessment, { isLoading: submitting }] =
     useSubmitAssessmentMutation();
 
@@ -35,6 +35,8 @@ export default function DataSecurityAssessment() {
   const [submissionId, setSubmissionId] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [savedMap, setSavedMap] = useState<Record<string, boolean>>({});
+  const [savingQuestionId, setSavingQuestionId] = useState<string | null>(null); // Track which question is saving
+  
   console.log("savedMap", savedMap);
   const isEditable =
     submission &&
@@ -76,7 +78,8 @@ export default function DataSecurityAssessment() {
   /* ================= SAVE ANSWER ================= */
   const handleSave = async (questionId: string, payload: any) => {
     if (!submissionId) return;
-    console.log("submissionId", saveAnswer)
+    
+    setSavingQuestionId(questionId); // Set the question ID that's being saved
     try {
       await saveAnswer({
         submissionId,
@@ -90,6 +93,8 @@ export default function DataSecurityAssessment() {
       toast.success("Answer saved");
     } catch {
       toast.error("Save failed");
+    } finally {
+      setSavingQuestionId(null); // Reset saving state
     }
   };
 
@@ -121,13 +126,12 @@ export default function DataSecurityAssessment() {
 
   return (
     <div className="mx-auto space-y-8 py-8">
-
       {/* ================= HEADER ================= */}
       <Card>
         <CardHeader className="text-center">
-          <h1 className="text-3xl font-bold">{assessment.title}</h1>
+          <h1 className="text-3xl font-bold">{assessment?.title}</h1>
           <p className="text-muted-foreground">
-            {assessment.description}
+            {assessment?.description}
           </p>
 
           {submission && (
@@ -147,7 +151,14 @@ export default function DataSecurityAssessment() {
               onClick={handleStartAssessment}
               disabled={starting}
             >
-              {starting ? "Starting..." : "Start Assessment"}
+              {starting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Starting Assessment...
+                </>
+              ) : (
+                "Start Assessment"
+              )}
             </Button>
           </CardContent>
         </Card>
@@ -174,6 +185,7 @@ export default function DataSecurityAssessment() {
             question={q}
             initialValue={answers[q.id]}
             isEditable={isEditable}
+            isSaving={savingQuestionId === q.id} // Pass saving state
             onSave={handleSave}
             onDirty={() =>
               setSavedMap((p) => ({ ...p, [q.id]: false }))
@@ -189,7 +201,14 @@ export default function DataSecurityAssessment() {
             disabled={!canSubmit || submitting}
             onClick={() => submitAssessment({ submissionId })}
           >
-            {submitting ? "Submitting..." : "Submit Assessment"}
+            {submitting ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Submitting...
+              </>
+            ) : (
+              "Submit Assessment"
+            )}
           </Button>
 
           {!canSubmit && (

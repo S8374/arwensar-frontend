@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { baseApi } from "@/redux/baseApi";
 import type { AlertData } from "@/validation/alert";
-import type { ProfileData } from "@/validation/profile";
+import type { VendorProfileData } from "@/validation/profile";
 
 export const vendorApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -24,7 +24,7 @@ export const vendorApi = baseApi.injectEndpoints({
     }),
 
     vendorProfileManagement: builder.mutation({
-      query: (profileData: ProfileData) => ({
+      query: (profileData: VendorProfileData) => ({
         url: "/profile/vendor/update-profile",
         method: "PATCH",
         body: profileData,
