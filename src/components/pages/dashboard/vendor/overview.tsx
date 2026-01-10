@@ -18,11 +18,12 @@ import FeatureRestricted from "@/components/upgrade/FeatureRestricted";
 export default function VendorDashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { data: userData } = useUserInfoQuery(undefined);
-  const plan = userData?.data?.subscription?.plan;
+  const plan = userData?.data?.subscription;
+  console.log("Plan",plan ,userData)
   const permissions = getPlanFeatures(plan);
   const { data, isLoading, isError } = useGetVendorStatsQuery(undefined);
   const stats = data?.data;
-
+console.log("permissions.complianceDashboard ",permissions.complianceDashboard )
   if (isLoading) {
     return <DashboardSkeleton />;
   }

@@ -80,7 +80,7 @@ export default function SupplierDetailPage() {
   } = useGetSupplierByIdQuery(id!, { skip: !id });
 
   const [getProgress, { data: progressData, isLoading: loadingProgress }] = useLazyGetSingelSupplyerProgressQuery();
-
+  console.log("permissions",permissions.editSupplier);
   const supplier = supplierResponse?.data;
   const progress = progressData?.data;
 
@@ -165,7 +165,8 @@ export default function SupplierDetailPage() {
             <CreateNotificationDialog />
             <Button
               onClick={() => permissions.editSupplier && setIsEditOpen(true)}
-              disabled={!permissions.editSupplier}
+                disabled={!permissions.editSupplier}
+
               variant={permissions.editSupplier ? "default" : "outline"}
               className="flex items-center gap-2"
               title={!permissions.editSupplier ? "This feature Features is not in this plans" : undefined}

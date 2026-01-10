@@ -31,7 +31,7 @@ const steps = [
 
 export default function HowItWorks() {
   return (
-    <section className="w-full py-16 lg:py-20 bg-indigo-50 flex flex-col items-center gap-12 px-4 sm:px-6 lg:px-8">
+    <section className="w-full py-16 lg:py-20 bg-background flex flex-col items-center gap-12 px-4 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="max-w-2xl lg:max-w-4xl flex flex-col items-center gap-4 text-center">
         <h2 className="text-gray-900 text-3xl sm:text-4xl lg:text-5xl font-semibold leading-tight">
@@ -50,11 +50,11 @@ export default function HowItWorks() {
           return (
             <Card
               key={index}
-              className="w-full p-4 sm:p-5 lg:p-6 bg-white rounded-xl shadow-md border border-stone-300 flex flex-col items-center gap-4 lg:gap-5 hover:shadow-xl transition duration-300"
+              className="w-full p-4 sm:p-5 lg:p-6 bg-background rounded-xl shadow-md border border-background flex flex-col items-center gap-4 lg:gap-5 hover:shadow-xl transition duration-300"
             >
               {/* Icon */}
-              <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-blue-600 rounded-full flex items-center justify-center">
-                <Icon className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-white" />
+              <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-chart-6 rounded-full flex items-center justify-center">
+                <Icon className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-background" />
               </div>
 
               {/* Text */}

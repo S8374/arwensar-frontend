@@ -8,49 +8,60 @@ export type PlanFeatures = {
     emailSupport: boolean;
     prioritySupport: boolean;
     standardAlertsAndReminders: boolean;
-    documentReviewsPerMonth: number,
-    reportsGeneratedPerMonth: number,
-    messagesPerMonth: number,
-    notificationsSend: number,
-    reportCreate: number,
+    documentReviewsPerMonth: number;
+    reportsGeneratedPerMonth: number;
+    messagesPerMonth: number;
+    notificationsSend: number;
+    reportCreate: number;
 };
 
 export function getPlanFeatures(subscription: any): PlanFeatures {
+    console.log("subscription object:", subscription);
 
-  console.log("subscription",subscription);
-
-    // ✅ Only grant permissions if subscription is active
-    if (!subscription || subscription.status !== "ACTIVE") {
-        return {
-            editSupplier: false,
-            fullAssessments: false,
-            complianceDashboard: false,
-            overallCompliance: false,
-            emailSupport: false,
-            prioritySupport: false,
-            standardAlertsAndReminders: false,
-            documentReviewsPerMonth: subscription?.documentReviewsPerMonth,
-            reportsGeneratedPerMonth: subscription?.reportsGeneratedPerMonth,
-            messagesPerMonth: subscription?.messagesPerMonth,
-            notificationsSend: subscription?.notificationsSend,
-            reportCreate: subscription?.reportCreate,
-        };
+    if (!subscription) {
+        console.log("No subscription found");
+        return getDefaultFeatures();
     }
 
-    const features = subscription.plan?.features ?? {};
+    // Check if subscription has features directly (your current structure)
+    const features = subscription.features || {};
+    console.log("features object:", features);
+
+    // For backward compatibility, also check subscription.plan?.features
+    const planFeatures = subscription.plan?.features || {};
+
+    // Merge both feature sources (direct features take priority)
+    const allFeatures = { ...planFeatures, ...features };
 
     return {
-        editSupplier: Boolean(features.editSupplier),
-        fullAssessments: Boolean(features.fullAssessments),
-        complianceDashboard: Boolean(features.complianceDashboard),
-        overallCompliance: Boolean(features.overallCompliance),
-        emailSupport: Boolean(features.emailSupport),
-        prioritySupport: Boolean(features.prioritySupport),
-        standardAlertsAndReminders: Boolean(features.standardAlertsAndReminders),
-        documentReviewsPerMonth: subscription?.documentReviewsPerMonth,
-        reportsGeneratedPerMonth: subscription?.reportsGeneratedPerMonth,
-        messagesPerMonth: subscription?.messagesPerMonth,
-        notificationsSend: subscription?.notificationsSend,
-        reportCreate: subscription?.reportCreate,
+        editSupplier: Boolean(allFeatures.editSupplier),
+        fullAssessments: Boolean(allFeatures.fullAssessments),
+        complianceDashboard: Boolean(allFeatures.complianceDashboard),
+        overallCompliance: Boolean(allFeatures.overallCompliance),
+        emailSupport: Boolean(allFeatures.emailSupport),
+        prioritySupport: Boolean(allFeatures.prioritySupport),
+        standardAlertsAndReminders: Boolean(allFeatures.standardAlertsAndReminders),
+        documentReviewsPerMonth: Number(allFeatures.documentReviewsPerMonth) || 0,
+        reportsGeneratedPerMonth: Number(allFeatures.reportsGeneratedPerMonth) || 0,
+        messagesPerMonth: Number(allFeatures.messagesPerMonth) || 0,
+        notificationsSend: Number(allFeatures.notificationsSend) || 0,
+        reportCreate: Number(allFeatures.reportCreate) || 0,
+    };
+}
+
+function getDefaultFeatures(): PlanFeatures {
+    return {
+        editSupplier: false,
+        fullAssessments: false,
+        complianceDashboard: false,
+        overallCompliance: false,
+        emailSupport: false,
+        prioritySupport: false,
+        standardAlertsAndReminders: false,
+        documentReviewsPerMonth: 0,
+        reportsGeneratedPerMonth: 0,
+        messagesPerMonth: 0,
+        notificationsSend: 0,
+        reportCreate: 0,
     };
 }

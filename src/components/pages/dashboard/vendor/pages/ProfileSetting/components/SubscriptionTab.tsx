@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Clock, CreditCard, Sparkles } from "lucide-react";
+import { useCreateCheckoutSessionMutation, useGetCurrentSubscriptionQuery } from "@/redux/features/payment/payment.api";
 
 interface SubscriptionTabProps {
   user: any;
@@ -14,6 +15,13 @@ export default function SubscriptionTab({ user }: SubscriptionTabProps) {
   const subscription = user?.subscription;
   const plan = subscription?.plan;
 
+  const [createCheckoutSession, { isLoading }] =
+    useCreateCheckoutSessionMutation();
+  const { data } = useGetCurrentSubscriptionQuery();
+  // const { } = useConfirmPaymentMutation();
+  // const { } = useGetSessionStatusQuery
+  // const { } = useCancelSubscriptionMutation()
+  console.log(data)
   /* ---------------- EMPTY STATE ---------------- */
   if (!plan) {
     return (
@@ -37,11 +45,28 @@ export default function SubscriptionTab({ user }: SubscriptionTabProps) {
     );
   }
 
+  /* ---------------- PAYMENT HANDLER ---------------- */
+  const handleCompletePayment = async () => {
+    try {
+      const res = await createCheckoutSession({
+        planId: plan.id,
+        billingCycle: "MONTHLY",
+      }).unwrap();
+
+      if (res?.data?.url) {
+        window.location.href = res.data.url as string; // ✅ STRIPE REDIRECT
+      }
+    } catch (error) {
+      console.error("Checkout error:", error);
+    }
+  };
+
+
   const trialDaysLeft = subscription?.trialEnd
     ? Math.ceil(
-        (new Date(subscription.trialEnd).getTime() - Date.now()) /
-          (1000 * 60 * 60 * 24)
-      )
+      (new Date(subscription.trialEnd).getTime() - Date.now()) /
+      (1000 * 60 * 60 * 24)
+    )
     : 0;
 
   /* ---------------- STATUS COLOR ---------------- */
@@ -49,16 +74,15 @@ export default function SubscriptionTab({ user }: SubscriptionTabProps) {
     ACTIVE: "bg-green-500/15 text-green-700",
     TRIALING: "bg-blue-500/15 text-blue-700",
     PENDING: "bg-yellow-500/20 text-yellow-800",
-    CANCELED: "bg-red-500/15 text-red-700"
+    CANCELED: "bg-red-500/15 text-red-700",
   };
 
   return (
     <div className="space-y-6">
       <Card className="overflow-hidden shadow-xl border">
         {/* HEADER */}
-        <div className=" p-8 text-black">
+        <div className="p-8 text-black">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-            {/* PLAN INFO */}
             <div>
               <div className="flex items-center gap-3">
                 <h2 className="text-3xl font-bold">{plan.name}</h2>
@@ -71,11 +95,8 @@ export default function SubscriptionTab({ user }: SubscriptionTabProps) {
               </p>
             </div>
 
-            {/* PRICE */}
             <div className="text-right">
-              <p className="text-4xl font-bold">
-                €{plan.price}
-              </p>
+              <p className="text-4xl font-bold">€{plan.price}</p>
               <p className="text-black text-sm">
                 per {plan.billingCycle.toLowerCase()}
               </p>
@@ -114,14 +135,16 @@ export default function SubscriptionTab({ user }: SubscriptionTabProps) {
 
               <Button
                 size="lg"
+                disabled={isLoading}
+                onClick={handleCompletePayment}
                 className="bg-yellow-400 text-black hover:bg-yellow-500"
               >
-                Complete Payment
+                {isLoading ? "Redirecting..." : "Complete Payment"}
               </Button>
             </div>
           )}
 
-          {/* ACTIONS */}
+          {/* ACTIVE */}
           {subscription.status === "ACTIVE" && (
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pt-4 border-t">
               <p className="text-sm text-muted-foreground">
@@ -139,3 +162,8 @@ export default function SubscriptionTab({ user }: SubscriptionTabProps) {
     </div>
   );
 }
+
+
+
+
+

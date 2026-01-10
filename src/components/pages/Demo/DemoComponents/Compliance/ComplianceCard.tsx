@@ -11,7 +11,7 @@ export default function ComplianceCard({ feature}: { feature: Compliance}) {
     return (
         <Card
             
-            className="group relative bg-linear-to-b from-chart-6/20 to-chart-6/50 overflow-hidden rounded-lg border shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-background"
+            className="group relative bg-background overflow-hidden rounded-lg border shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-background"
         >
 
 

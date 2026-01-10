@@ -1,3 +1,6 @@
+/* eslint-disable react-hooks/purity */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { Check } from "lucide-react";
 import {
   Card,
@@ -38,7 +41,7 @@ interface PricingPlan {
 
 interface PricingCardProps {
   plan: PricingPlan;
-  onSelect?: () => void; // Optional, for analytics or parent highlighting
+  onSelect?: () => void;
 }
 
 /* ---------------- HELPERS ---------------- */
@@ -46,39 +49,74 @@ function formatFeatureLabel(key: string, value: boolean | number) {
   const label = key
     .replace(/([A-Z])/g, " $1")
     .replace(/^./, (str) => str.toUpperCase());
-  if (typeof value === "number") {
-    return `${label}: ${value}`;
-  }
-  return label;
+  return typeof value === "number" ? `${label}: ${value}` : label;
 }
 
 /* ---------------- COMPONENT ---------------- */
 export default function PricingCard({ plan, onSelect }: PricingCardProps) {
-  const price = Number(plan.price);
   const navigate = useNavigate();
+  const price = Number(plan.price);
 
-  // Check authentication status
-  const { data: userInfo, isLoading: isCheckingAuth, isError: isAuthError } = useUserInfoQuery(undefined);
+  /* ---------- USER INFO ---------- */
+  const {
+    data: userInfo,
+    isLoading: isCheckingAuth,
+    isError: isAuthError,
+  } = useUserInfoQuery(undefined);
 
-  const [createCheckoutSession, { isLoading: isCreatingSession }] = useCreateCheckoutSessionMutation();
+  const subscription = userInfo?.data?.subscription;
+  const subscriptionStatus = subscription?.status;
+  const currentPlanId = subscription?.plan?.id;
 
+  const isAuthenticated = !!userInfo && !isAuthError;
+  const isCurrentPlan = currentPlanId === plan.id;
+
+  /* ---------- STRIPE ---------- */
+  const [
+    createCheckoutSession,
+    { isLoading: isCreatingSession },
+  ] = useCreateCheckoutSessionMutation();
+
+  /* ---------- LOCAL STATE ---------- */
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const isAuthenticated = !!userInfo && !isAuthError;
+  /* ---------- BUTTON LOGIC ---------- */
+  let buttonLabel = "Choose This Plan";
+  let buttonDisabled = isCheckingAuth || isProcessing || isCreatingSession;
 
+  if (isCurrentPlan && subscriptionStatus === "ACTIVE") {
+    buttonLabel = "Active Plan";
+    buttonDisabled = true;
+  }
+
+  if (isCurrentPlan && subscriptionStatus === "PENDING") {
+    buttonLabel = "Complete Payment";
+  }
+
+  if (!isCurrentPlan && subscriptionStatus === "ACTIVE") {
+    buttonLabel = "Change Plan";
+  }
+
+  /* ---------- HANDLERS ---------- */
   const handlePlanClick = async () => {
-    onSelect?.(); // Optional callback for parent (e.g. scroll highlight)
+    onSelect?.();
 
-    // If user is not logged in → redirect to login
     if (!isAuthenticated) {
-      navigate("/loginvendor", { state: { from: window.location.pathname } });
+      navigate("/loginvendor", {
+        state: { from: window.location.pathname },
+      });
       return;
     }
 
-    // If already processing or loading, prevent double click
-    if (isProcessing || isCreatingSession) return;
+    // PENDING → resume payment
+    if (isCurrentPlan && subscriptionStatus === "PENDING") {
+      setIsModalOpen(true);
+      return;
+    }
+
+    if (buttonDisabled) return;
 
     setIsProcessing(true);
 
@@ -89,15 +127,14 @@ export default function PricingCard({ plan, onSelect }: PricingCardProps) {
       }).unwrap();
 
       if (!res.data?.url) {
-        throw new Error("No checkout URL received from server");
+        throw new Error("Checkout URL missing");
       }
 
       setCheckoutUrl(String(res.data.url));
-
       setIsModalOpen(true);
     } catch (err) {
-      console.error("Failed to create checkout session:", err);
-      alert("Unable to start checkout. Please try again later.");
+      console.error("Checkout error:", err);
+      alert("Unable to start checkout. Please try again.");
     } finally {
       setIsProcessing(false);
     }
@@ -110,108 +147,84 @@ export default function PricingCard({ plan, onSelect }: PricingCardProps) {
     }
   };
 
-  const isButtonDisabled = isCheckingAuth || isProcessing || isCreatingSession;
-
+  /* ---------- RENDER ---------- */
   return (
     <>
       <Card
-        className={`relative overflow-hidden rounded-3xl shadow-xl border-0 transition-all duration-300 hover:shadow-2xl hover:-translate-y-3 flex flex-col h-full ${plan.isPopular ? "ring-4 ring-primary ring-offset-4" : ""
-          }`}
+        className={`relative overflow-hidden rounded-3xl shadow-xl transition-all hover:shadow-2xl hover:-translate-y-3 flex flex-col h-full ${
+          plan.isPopular ? "ring-4 ring-primary ring-offset-4" : ""
+        }`}
       >
-        {/* Gradient Background */}
-        <div
-          className={`absolute inset-0 bg-gradient-to-b opacity-60 ${plan.name === "Starter"
-              ? "from-blue-100 to-blue-50 dark:from-blue-900/40"
-              : plan.name === "Business"
-                ? "from-amber-100 to-amber-50 dark:from-amber-900/40"
-                : "from-purple-100 to-purple-50 dark:from-purple-900/40"
-            }`}
-        />
-
-        {/* Popular Badge */}
         {plan.isPopular && (
-          <Badge className="absolute top-4 right-4 z-20">Most Popular</Badge>
+          <Badge className="absolute top-4 right-4 z-20">
+            Most Popular
+          </Badge>
         )}
 
-        <CardHeader className="relative z-10 pt-12 pb-6 text-center">
+        <CardHeader className="pt-12 pb-6 text-center">
           <h3 className="text-3xl font-bold">{plan.name}</h3>
-          <p className="mt-4 text-muted-foreground text-sm max-w-xs mx-auto">
+          <p className="mt-3 text-sm text-muted-foreground">
             {plan.description}
           </p>
         </CardHeader>
 
-        <CardContent className="relative z-10 flex-1 pb-8">
-          <div className="text-center mb-10">
-            <div className="flex items-baseline justify-center gap-2">
-              <span className="text-6xl font-extralight">€{price}</span>
-              <span className="text-xl text-muted-foreground">/month</span>
-            </div>
-            <p className="mt-3 text-sm text-muted-foreground">Billed monthly</p>
-    
+        <CardContent className="flex-1">
+          <div className="text-center mb-8">
+            <span className="text-6xl font-light">€{price}</span>
+            <p className="text-muted-foreground mt-1">/ month</p>
           </div>
 
           <ul className="space-y-4">
-            {Object.entries(plan.features).map(([key, value]) => {
-              if (!value) return null;
-              return (
-                <li key={key} className="flex items-start gap-3">
-                  <Check className="w-5 h-5 text-primary mt-0.5 shrink-0" />
-                  <span className="text-sm leading-relaxed">
+            {Object.entries(plan.features).map(([key, value]) =>
+              value ? (
+                <li key={key} className="flex gap-3">
+                  <Check className="w-5 h-5 text-primary mt-0.5" />
+                  <span className="text-sm">
                     {formatFeatureLabel(key, value)}
                   </span>
                 </li>
-              );
-            })}
+              ) : null
+            )}
           </ul>
         </CardContent>
 
-        <CardFooter className="relative z-10 pt-6 pb-12 px-8">
+        <CardFooter className="pb-10 px-8">
           <Button
             onClick={handlePlanClick}
-            disabled={isButtonDisabled}
+            disabled={buttonDisabled}
             size="lg"
-            className="w-full h-14 text-lg font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all"
-            variant={plan.isPopular ? "default" : "outline"}
+            className="w-full h-14 text-lg font-semibold rounded-2xl"
+            variant={
+              isCurrentPlan && subscriptionStatus === "ACTIVE"
+                ? "secondary"
+                : plan.isPopular
+                ? "default"
+                : "outline"
+            }
           >
-            {isCheckingAuth || isProcessing ? (
-              "Loading..."
-            ) : plan.name === "Starter" ? (
-              "Start Free Trial"
-            ) : (
-              "Choose This Plan"
-            )}
+            {isCheckingAuth || isProcessing || isCreatingSession
+              ? "Processing..."
+              : buttonLabel}
           </Button>
         </CardFooter>
       </Card>
 
-      {/* Checkout Confirmation Modal */}
+      {/* ---------- CHECKOUT MODAL ---------- */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-center text-2xl">
-              Proceed to Payment
-            </DialogTitle>
-            <DialogDescription className="text-center pt-4">
-              You're about to subscribe to the{" "}
-              <strong>{plan.name}</strong> plan for{" "}
+            <DialogTitle>Proceed to Payment</DialogTitle>
+            <DialogDescription>
+              Subscribe to <strong>{plan.name}</strong> for{" "}
               <strong>€{price}/month</strong>.
-              <br />
-              You'll be taken to Stripe's secure checkout.
             </DialogDescription>
           </DialogHeader>
 
-          <DialogFooter className="flex gap-3 sm:justify-center mt-6">
-            <Button
-              variant="outline"
-              onClick={() => setIsModalOpen(false)}
-              disabled={isProcessing}
-            >
+          <DialogFooter className="flex gap-3">
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
               Cancel
             </Button>
-            <Button
-              onClick={handleProceedToCheckout}
-              disabled={!checkoutUrl}
-            >
+            <Button onClick={handleProceedToCheckout} disabled={!checkoutUrl}>
               Continue to Stripe
             </Button>
           </DialogFooter>

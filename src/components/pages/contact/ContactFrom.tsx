@@ -1,21 +1,73 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+"use client"; // ← Required for client-side hooks
 
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Mail } from "lucide-react";
-import { useContactForm } from "@/hooks/useContactForm";
+import { Loader2 } from "lucide-react";
+import toast from "react-hot-toast";
+
+// Zod schema for validation
+const formSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  email: z.string().email("Please enter a valid email"),
+  phoneNumber: z.string().min(8, "Phone number must be at least 8 digits"),
+  companyName: z.string().optional(),
+  message: z.string().min(10, "Message must be at least 10 characters").optional(),
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 export default function ContactForm() {
-  const {
-    register,
-    handleSubmit,
-    errors,
-    isLoading,
-    isSuccess,
-    isError,
-  } = useContactForm();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState(false);
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      phoneNumber: "",
+      companyName: "",
+      message: "",
+    },
+  });
+
+  const { register, handleSubmit, formState: { errors }, reset } = form;
+
+  const onSubmit = (_data: FormValues) => {
+    setIsLoading(true);
+    setSubmitError(false);
+
+    // Fake API delay (1.2 seconds)
+    setTimeout(() => {
+      // Simulate success (90% chance) - you can make it always succeed
+      const success = Math.random() > 0.1; // ~90% success rate
+
+      if (success) {
+        toast.success("Message Sent!"
+        );
+        setIsSuccess(true);
+        reset(); // Clear form
+      } else {
+        toast("Error"
+        );
+        setSubmitError(true);
+      }
+
+      setIsLoading(false);
+    }, 200);
+  };
 
   return (
     <section className="w-full px-6 -mt-20 py-36 bg-muted flex flex-col items-center gap-16">
@@ -42,7 +94,7 @@ export default function ContactForm() {
       )}
 
       {/* Error Message */}
-      {isError && (
+      {submitError && (
         <div className="w-full max-w-6xl">
           <Card className="bg-background border">
             <CardContent className="pt-6">
@@ -65,7 +117,7 @@ export default function ContactForm() {
           </CardHeader>
 
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               {/* Name Row */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="flex flex-col gap-2">
@@ -129,7 +181,7 @@ export default function ContactForm() {
                   {...register("companyName")}
                 />
                 {errors.companyName && (
-                  <p className="text-sm text-chart-1">{errors.companyName.message}</p>
+                  <p className="text-sm text-chart-1">{errors.companyName?.message}</p>
                 )}
               </div>
 
@@ -147,12 +199,19 @@ export default function ContactForm() {
               </div>
 
               {/* Button */}
-              <Button 
+              <Button
                 type="submit"
                 disabled={isLoading}
                 className="w-full bg-primary text-foreground font-medium hover:bg-primary/95 disabled:opacity-50"
               >
-                {isLoading ? "Sending..." : "Send Message"}
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  "Send Message"
+                )}
               </Button>
             </form>
           </CardContent>
@@ -173,7 +232,6 @@ export default function ContactForm() {
                   <p className="text-muted-foreground text-sm">
                     Send us an email anytime
                   </p>
-                  <p className="text-primary text-lg">Sales@cybernark.com</p>
                   <p className="text-primary text-lg">Info@cybernark.com</p>
                 </div>
               </CardContent>

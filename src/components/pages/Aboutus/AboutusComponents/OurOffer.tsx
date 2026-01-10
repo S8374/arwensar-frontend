@@ -1,11 +1,8 @@
 // components/OurOffer.tsx
-import { Card, CardContent } from "@/components/ui/card";
-import { 
-  CheckSquare, 
-  BarChart3, 
-  BellRing, 
-  TrendingUp 
-} from "lucide-react";
+import { CardContent } from "@/components/ui/card";
+import { CheckSquare, BarChart3, BellRing, TrendingUp } from "lucide-react";
+import { AnimatedContainer, AnimatedItem, AnimatedSection } from "@/lib/animation/AnimatedContainer";
+import { AnimatedCard } from "@/lib/animation/AnimatedCard";
 
 interface Feature {
   title: string;
@@ -18,7 +15,7 @@ interface Feature {
 const features: Feature[] = [
   {
     title: "Vendor Risk Assessment",
-    description: "Comprehensive evaluation tools to assess supplier compliance and performance.",
+    description: "Comprehensive evaluation tools to assess supplier compliance .",
     icon: CheckSquare,
     color: "blue",
     bgColor: "bg-blue-100",
@@ -48,48 +45,55 @@ const features: Feature[] = [
 
 export default function OurOffer() {
   return (
-    <section className="w-full py-20 lg:py-32 bg-primary/5">
+    <AnimatedContainer className="w-full py-20 lg:py-32 bg-primary/5">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-16">
-          <h2 className="text-4xl lg:text-5xl font-bold text-foreground">
-            What We Offer
-          </h2>
-          <p className="mt-4 text-lg text-muted-foreground max-w-3xl mx-auto">
-            A complete suite of tools designed to make vendor risk management simple, transparent, and effective.
-          </p>
-        </div>
+        <AnimatedSection className="text-center mb-16">
+          <AnimatedItem>
+            <h2 className="text-4xl lg:text-5xl font-bold text-foreground">
+              What We Offer
+            </h2>
+          </AnimatedItem>
+          <AnimatedItem delay={0.1}>
+            <p className="mt-4 text-lg text-muted-foreground max-w-3xl mx-auto">
+              A complete suite of tools designed to make vendor risk management simple, transparent, and effective.
+            </p>
+          </AnimatedItem>
+        </AnimatedSection>
 
-        {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
-          {features.map((feature) => {
+        {/* Features Flex Wrap */}
+        <AnimatedSection className="flex flex-wrap justify-center gap-8 md:gap-10">
+          {features.map((feature, index) => {
             const Icon = feature.icon;
             return (
-              <Card
-                key={feature.title}
-                className="group bg-card border-border rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-2"
-              >
-                <CardContent className="p-8 flex flex-col items-start gap-6">
-                  {/* Icon */}
-                  <div className={`w-14 h-14 ${feature.bgColor} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                    <Icon className={`w-8 h-8 text-${feature.color}-600`} />
-                  </div>
+              <AnimatedItem key={feature.title} delay={0.1 + index * 0.1} className="flex-1 max-w-sm">
+                <AnimatedCard
+                  className="group bg-card border-border rounded-2xl shadow-sm h-full hover:shadow-xl transition-all duration-300"
+                >
+                  <CardContent className="p-6 sm:p-8 flex flex-col items-start gap-6 h-full">
+                    {/* Icon */}
+                    <div
+                      className={`w-14 h-14 ${feature.bgColor} rounded-xl flex items-center justify-center transition-transform group-hover:scale-110`}
+                    >
+                      <Icon className={`w-8 h-8 text-${feature.color}-600`} />
+                    </div>
 
-                  {/* Text */}
-                  <div className="space-y-3">
-                    <h3 className="text-xl font-semibold text-card-foreground">
-                      {feature.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {feature.description}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+                    {/* Text */}
+                    <div className="space-y-3 flex-1">
+                      <h3 className="text-xl font-semibold text-card-foreground">
+                        {feature.title}
+                      </h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {feature.description}
+                      </p>
+                    </div>
+                  </CardContent>
+                </AnimatedCard>
+              </AnimatedItem>
             );
           })}
-        </div>
+        </AnimatedSection>
       </div>
-    </section>
+    </AnimatedContainer>
   );
 }

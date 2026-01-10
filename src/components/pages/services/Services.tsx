@@ -22,59 +22,83 @@ operational challenges related to supplier and third-party cyber risk management
 strong focus on supply chain security and accountability.
 "
           features={[
-            { text: "Automated security assessments" },
-            { text: "CIA/BIV risk classification" },
-            { text: "Compliance tracking and reporting" },
-            { text: "Vendor communication portal" }
+            { text: "User behavior analytics" },
+            { text: "Firewall configuration monitoring" },
+
+            { text: "Risk scoring dashboard" },
+
+            { text: "Behavioral anomaly detection" },
+
           ]}
           buttonText="Learn More"
           buttonVariant="primary"
+          onButtonClick={() => {
+            document.getElementById("section2")?.scrollIntoView({ behavior: "smooth" });
+          }}
         />
         <ReusableComponent
+          id="section2"
+
           imageSrc={image2}
           title="Supplier Risk Management"
           description1="Organizations can onboard suppliers through manual entry or bulk import, ensuring a structured
 and consistent registration process."
           description2="Suppliers are guided through standardized security assessments and evidence submissions."
           features={[
-            { text: "Automated security assessments" },
-            { text: "CIA/BIV risk classification" },
-            { text: "Compliance tracking and reporting" },
-            { text: "Vendor communication portal" }
+            { text: "Access request workflow" },
+
+            { text: "Multi-cloud security oversight" },
+
+            { text: "Data integrity monitoring" },
+
+            { text: "Critical asset tracking" },
+
           ]}
           buttonText="Learn More"
           buttonVariant="primary"
           reverse={true}
+          onButtonClick={() => {
+            document.getElementById("section3")?.scrollIntoView({ behavior: "smooth" });
+          }}
         />
         <ReusableComponent
+          id="section3"
           imageSrc={image3}
           title="Risk Scoring and Monitoring"
           description1="CyberNark applies BIV/CIA impact principles to assess the criticality and risk exposure of suppliers."
           description2="Risk levels are continuously monitored and updated based on assessment results, evidence, and
 changes over time."
           features={[
-            { text: "Automated security assessments" },
-            { text: "CIA/BIV risk classification" },
-            { text: "Compliance tracking and reporting" },
-            { text: "Vendor communication portal" }
+            { text: "Real-time compliance alerts" },
+
+            { text: "CIA (Confidentiality, Integrity, Availability) triad assessment" },
+
+            { text: "BIV (Business, Integrity, Availability) risk classification" },
+            { text: "Dynamic risk questionnaires" }
           ]}
           buttonText="Learn More"
           buttonVariant="primary"
+          onButtonClick={() => {
+            document.getElementById("section4")?.scrollIntoView({ behavior: "smooth" });
+          }}
+
         />
         <ReusableComponent
+          id="section4"
           imageSrc={image4}
           title="Alerts and Reporting"
           description1="Automated alerts notify vendors of missing information, elevated risks, or expiring certifications."
           description2="Comprehensive dashboards and reports provide audit-ready insight into supplier risk governance."
           features={[
-            { text: "Automated security assessments" },
-            { text: "CIA/BIV risk classification" },
+            { text: "NIS2 compliance tracking" },
+            { text: "Regulatory requirement mapping" },
             { text: "Compliance tracking and reporting" },
             { text: "Vendor communication portal" }
           ]}
           buttonText="Learn More"
           buttonVariant="primary"
           reverse={true}
+
         />
       </div>
       <FAQ />
