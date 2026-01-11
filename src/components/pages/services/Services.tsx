@@ -98,7 +98,9 @@ changes over time."
           buttonText="Learn More"
           buttonVariant="primary"
           reverse={true}
-
+          onButtonClick={() => {
+            document.getElementById("section5")?.scrollIntoView({ behavior: "smooth" });
+          }}
         />
       </div>
       <FAQ />

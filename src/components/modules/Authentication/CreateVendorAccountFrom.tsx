@@ -201,11 +201,11 @@ export default function CreateVendorAccountForm() {
         />
         <Label htmlFor="termsAccepted" className="text-sm font-normal leading-tight cursor-pointer">
           I agree to the{" "}
-          <NavLink to="/terms" className="text-primary underline">
+      
             Terms of Service
-          </NavLink>{" "}
+    
           and{" "}
-          <NavLink to="/privacy" className="text-primary underline">
+          <NavLink to="/privacy-policy" className="text-primary underline">
             Privacy Policy
           </NavLink>
         </Label>

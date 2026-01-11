@@ -3,11 +3,15 @@ import StatsCards from "../../../component/OverViewComponent/StatsCards";
 import SupplierTable from "../../../component/OverViewComponent/SupplierTable";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useUserInfoQuery } from "@/redux/features/auth/auth.api";
 
 export default function VendorSupplierManageSection() {
   const { data, isLoading } = useGetVendorStatsQuery(undefined);
   const stats = data?.data;
+  const { data: userData } = useUserInfoQuery(undefined);
+  const plan = userData?.data?.subscription;
 
+  const supplierCreateLimit = plan?.plan?.supplierLimit;
   return (
     <div className="space-y-8 sm:space-y-12 lg:space-y-20">
       {/* Header Section */}
@@ -28,7 +32,7 @@ export default function VendorSupplierManageSection() {
 
       {/* Supplier Table Section */}
       <div className="px-4 sm:px-6 lg:px-0">
-        <SupplierTable />
+        <SupplierTable supplierCreateLimit={supplierCreateLimit} />
       </div>
     </div>
   );

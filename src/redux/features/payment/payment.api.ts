@@ -56,10 +56,10 @@ export const paymentApi = baseApi.injectEndpoints({
       CreateCheckoutResponse,
       CreateCheckoutPayload
     >({
-      query: (body) => ({
+      query: (data) => ({
         url: "/payment/create-checkout-session",
         method: "POST",
-        body, // ✅ FIXED
+        data : data, // ✅ FIXED
       }),
     }),
 

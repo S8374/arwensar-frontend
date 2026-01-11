@@ -23,6 +23,8 @@ import {
   useDeleteDocumentMutation,
 } from "@/redux/features/document/document.api";
 import { toast } from "sonner";
+import { useUserInfoQuery } from "@/redux/features/auth/auth.api";
+import { getPlanFeatures } from "@/lib/planFeatures";
 
 const formatFileSize = (bytes: number) => {
   if (bytes === 0) return "0 B";
@@ -58,7 +60,10 @@ export default function DocumentsTab({ supplierId }: Props) {
 
   const [reviewDocument, { isLoading: reviewing }] = useReviewDocumentMutation();
   const [deleteDocument] = useDeleteDocumentMutation();
+  const { data: userData } = useUserInfoQuery(undefined);
+  const plan = userData?.data?.subscription;
 
+  const permissions = getPlanFeatures(plan);
   const documents = docsResponse?.data || [];
 
   const handleReview = async (status: "APPROVED" | "REJECTED") => {
@@ -161,7 +166,10 @@ export default function DocumentsTab({ supplierId }: Props) {
                       </Button>
                     </DialogTrigger>
                     <DialogContent>
-                      <DialogHeader><DialogTitle>Review Document</DialogTitle></DialogHeader>
+                      <DialogHeader>
+                        <DialogTitle>Review Document</DialogTitle>
+                        <p>Limit To review : {permissions.documentReviewsPerMonth}</p>
+                        </DialogHeader>
                       <div className="space-y-4 py-4">
                         <div><h4 className="font-medium mb-2">{doc.name}</h4></div>
                         <div className="space-y-2">
@@ -170,7 +178,6 @@ export default function DocumentsTab({ supplierId }: Props) {
                         </div>
                       </div>
                       <DialogFooter>
-                        <Button variant="outline" onClick={() => setSelectedDoc(null)} disabled={reviewing}>Cancel</Button>
                         <Button variant="destructive" onClick={() => handleReview("REJECTED")} disabled={reviewing}><X className="w-4 h-4 mr-1" />Reject</Button>
                         <Button onClick={() => handleReview("APPROVED")} disabled={reviewing}><Check className="w-4 h-4 mr-1" />{reviewing ? "Approving..." : "Approve"}</Button>
                       </DialogFooter>

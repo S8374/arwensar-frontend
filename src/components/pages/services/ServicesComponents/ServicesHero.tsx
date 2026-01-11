@@ -65,18 +65,6 @@ export default function ServicesHero() {
                   </motion.p>
                 </AnimatedItem>
 
-             
-
-
-              <AnimatedItem delay={0.1}>
-                <motion.p
-                  variants={fadeInUp}
-                  className="text-sm sm:text-base lg:text-lg font-medium text-muted-foreground leading-relaxed"
-                >
-                  {heroData.description}
-                </motion.p>
-              </AnimatedItem>
-
               {/* Stats Cards */}
               <AnimatedItem delay={0.2}>
                 <div className="mt-6 sm:mt-8 lg:mt-12 w-full max-w-md">

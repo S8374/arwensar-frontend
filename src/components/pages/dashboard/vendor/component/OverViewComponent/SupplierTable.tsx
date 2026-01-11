@@ -37,7 +37,9 @@ const getRiskBadgeVariant = (criticality: string) => {
       return "bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800";
   }
 };
-
+interface SupplierTableProps {
+  supplierCreateLimit: number | null;
+}
 const getRiskLabel = (criticality: string) => {
   switch (criticality?.toUpperCase()) {
     case "HIGH": return "High Risk";
@@ -46,7 +48,9 @@ const getRiskLabel = (criticality: string) => {
   }
 };
 
-export default function SupplierTable() {
+export default function SupplierTable({
+  supplierCreateLimit,
+}: SupplierTableProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [riskFilter, setRiskFilter] = useState("all");
@@ -421,7 +425,7 @@ export default function SupplierTable() {
         </CardContent>
       </Card>
 
-      <ImportSuppliersModal open={isModalOpen} onOpenChange={setIsModalOpen} />
+      <ImportSuppliersModal supplierCreateLimit={supplierCreateLimit} open={isModalOpen} onOpenChange={setIsModalOpen} />
     </>
   );
 }

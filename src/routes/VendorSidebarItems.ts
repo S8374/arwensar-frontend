@@ -6,8 +6,12 @@ import VendorSupplierManageSection from "@/components/pages/dashboard/vendor/pag
 import ProfileSettingOverview from "@/components/pages/dashboard/vendor/pages/ProfileSetting/ProfileSettingOverview";
 import ReportsPage from "@/components/pages/dashboard/vendor/pages/Reports/overview";
 import ProblemsPage from "@/components/pages/dashboard/problem/ProblemList";
+import ApiAccess from "@/components/pages/dashboard/vendor/pages/ApiAccsess/ApiAccess";
+import CustomWorkflows from "@/components/pages/dashboard/vendor/pages/CustomWorkFlow/CustomWorkFlow";
 
 export const vendorSidebarItems: ISidebarItem[] = [
+  
+
   {
     title: "",
     items: [
@@ -46,6 +50,19 @@ export const vendorSidebarItems: ISidebarItem[] = [
         url: "/vendor/problem",
         icon: "Settings",
         component: ProblemsPage,
+      },
+        {
+        title: "Api Access",
+        url: "/vendor/apiAccess",
+        icon: "Link",
+        component: ApiAccess,
+      }
+      ,
+        {
+        title: "Custom Work Flow",
+        url: "/vendor/customWorkFlow",
+        icon: "Work",
+        component: CustomWorkflows,
       }
     ],
 

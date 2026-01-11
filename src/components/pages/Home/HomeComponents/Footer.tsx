@@ -96,12 +96,6 @@ export default function Footer() {
               >
                 Privacy Policy
               </NavLink>
-              <NavLink
-                to="/terms"
-                className="text-muted-foreground hover:text-primary transition-colors font-medium"
-              >
-                Terms of Service
-              </NavLink>
             </div>
           </div>
         </div>

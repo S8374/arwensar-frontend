@@ -19,11 +19,20 @@ export default function VendorDashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { data: userData } = useUserInfoQuery(undefined);
   const plan = userData?.data?.subscription;
-  console.log("Plan",plan ,userData)
+
   const permissions = getPlanFeatures(plan);
   const { data, isLoading, isError } = useGetVendorStatsQuery(undefined);
   const stats = data?.data;
-console.log("permissions.complianceDashboard ",permissions.complianceDashboard )
+
+
+  const supplierCreateLimit = plan?.plan?.supplierLimit;
+
+  
+  console.log("Plan", plan)
+  console.log("permissions.complianceDashboard ", permissions)
+  console.log("Supplier limit", supplierCreateLimit)
+
+  
   if (isLoading) {
     return <DashboardSkeleton />;
   }
@@ -54,7 +63,7 @@ console.log("permissions.complianceDashboard ",permissions.complianceDashboard )
         <Button
           onClick={() => setIsModalOpen(true)}
           size="lg"
-          className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-200"
+          className="w-full sm:w-auto bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-200"
         >
           <Plus className="w-5 h-5 mr-2" />
           Add Supplier
@@ -108,12 +117,12 @@ console.log("permissions.complianceDashboard ",permissions.complianceDashboard )
       {/* Supplier Table - Enhanced with glass effect */}
       <Card className=" border-0 bg-linear-to-br from-white to-gray-50/50 dark:from-gray-900 dark:to-gray-800/50 backdrop-blur-sm">
         <CardContent className="p-6">
-          <SupplierTable />
+          <SupplierTable  supplierCreateLimit={supplierCreateLimit} />
         </CardContent>
       </Card>
 
       {/* Modal */}
-      <AddSupplierModal open={isModalOpen} onOpenChange={setIsModalOpen} />
+      <AddSupplierModal supplierCreateLimit={supplierCreateLimit} open={isModalOpen} onOpenChange={setIsModalOpen} />
     </div>
   );
 }

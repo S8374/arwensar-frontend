@@ -55,19 +55,19 @@ export default function NotificationBell() {
     isError,
     refetch,
   } = useGetNotificationsQuery(undefined, {
-    pollingInterval: open ? 30000 : 0, // Poll every 30s when popover is open
+    pollingInterval: open ? 100 : 0, // Poll every 30s when popover is open
   });
 
   const { data: unreadData } = useGetUnreadNotificationCountQuery(undefined, {
     pollingInterval: 60000, // Update badge every minute
   });
-
+  console.log("unreadData",unreadData);
   const [markAsRead] = useMarkNotificationAsReadMutation();
   const [clearAll] = useClearAllNotificationsMutation();
 
   const notifications: Notification[] = notificationsData?.data || [];
 
-  const unreadCount = unreadData?.count || 0;
+const unreadCount: number = unreadData?.data?.count ?? 0;
 
   const handleMarkAllAsRead = async () => {
     try {

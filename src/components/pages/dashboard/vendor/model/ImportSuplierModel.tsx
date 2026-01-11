@@ -20,6 +20,7 @@ import VideoModal from "../component/OverViewComponent/VideoModal";
 interface ImportSuppliersModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  supplierCreateLimit: number | null
 }
 
 interface ParsedSupplier {
@@ -37,6 +38,7 @@ interface ParsedSupplier {
 export default function ImportSuppliersModal({
   open,
   onOpenChange,
+  supplierCreateLimit
 }: ImportSuppliersModalProps) {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [parsedSuppliers, setParsedSuppliers] = useState<ParsedSupplier[]>([]);
@@ -322,6 +324,18 @@ export default function ImportSuppliersModal({
           <DialogTitle className="text-xl font-semibold">
             {isPreview ? "Preview & Import Suppliers" : "Import Suppliers"}
           </DialogTitle>
+          <p className="text-sm text-muted-foreground">
+            Supplier creation limit:{" "}
+            <span className="font-medium">
+              {supplierCreateLimit === null ? (
+                <span className="text-emerald-600">Unlimited</span>
+              ) : (
+                <span className="text-destructive">
+                  {supplierCreateLimit}
+                </span>
+              )}
+            </span>
+          </p>
           <DialogDescription className="text-sm text-muted-foreground mt-1">
             {isPreview
               ? `Ready to import ${parsedSuppliers.length} suppliers. Review details below.`

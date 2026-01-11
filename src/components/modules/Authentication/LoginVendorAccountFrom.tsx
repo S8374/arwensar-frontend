@@ -94,8 +94,8 @@ export const LoginVendorAccountFrom = () => {
           <div className="space-y-1">
             <Label htmlFor="terms" className="text-sm text-muted-foreground font-normal cursor-pointer">
               I agree to CyberNark's{" "}
-              <span className="text-primary underline">Terms of Use</span> and acknowledge our{" "}
-              <span className="text-primary underline">Privacy Policy</span>.
+            Terms of Use and acknowledge our{" "}
+              <NavLink to={"/privacy-policy"} className="text-primary underline">Privacy Policy</NavLink>.
             </Label>
             {errors.terms && (
               <p className="text-sm text-chart-1">{errors.terms.message}</p>

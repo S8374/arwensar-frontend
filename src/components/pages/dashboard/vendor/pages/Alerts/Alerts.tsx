@@ -302,7 +302,7 @@ const handleSendReport = async (reportId: string, recipientEmail?: string) => {
             Notifications & Alerts
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            {totalNotifications} total notifications • {unreadCount?.count || 0} unread
+            {totalNotifications} total notifications • {unreadCount?.data?.count || 0} unread
           </p>
         </div>
  

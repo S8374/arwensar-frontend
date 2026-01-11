@@ -28,6 +28,7 @@ import {
 import { useReviewAssessmentMutation } from "@/redux/features/assainment/assainment.api";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useUserInfoQuery } from "@/redux/features/auth/auth.api";
 
 interface ReviewAssessmentModalProps {
     submission: any;
@@ -53,7 +54,11 @@ export default function ReviewAssessmentModal({
 }: ReviewAssessmentModalProps) {
     const [reviewComments, setReviewComments] = useState("");
     const [reviewAssessment, { isLoading }] = useReviewAssessmentMutation();
-    console.log("selected submission", submission);
+    const { data: userData } = useUserInfoQuery(undefined);
+    const plan = userData?.data?.subscription;
+    const assainmentReviewLimit = plan?.plan?.assessmentLimit
+    console.log("Plan", plan)
+    console.log("selected submission", assainmentReviewLimit);
     const handleReview = async (
         status: "APPROVED" | "REJECTED" | "REQUIRES_ACTION"
     ) => {
@@ -97,7 +102,9 @@ export default function ReviewAssessmentModal({
                     <DialogTitle className="text-2xl flex items-center gap-3">
                         <FileText className="w-8 h-8 text-primary" />
                         Review Assessment Submission
+
                     </DialogTitle>
+                    <p>You can Review Assessment {assainmentReviewLimit} </p>
                 </DialogHeader>
 
                 <ScrollArea className="flex-1 pr-4 overflow-auto">

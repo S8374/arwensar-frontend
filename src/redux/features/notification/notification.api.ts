@@ -26,7 +26,13 @@ export interface NotificationStats {
     high: number;
   };
 }
-
+interface UnreadCountResponse {
+  success: boolean;
+  message: string;
+  data: {
+    count: number;
+  };
+}
 export interface MarkAsReadPayload {
   notificationIds?: string[];
   markAll?: boolean;
@@ -93,7 +99,7 @@ export const notificationApi = baseApi.injectEndpoints({
     }),
 
     // Get unread count
-    getUnreadNotificationCount: builder.query<{ count: number }, void>({
+    getUnreadNotificationCount: builder.query<UnreadCountResponse, void>({
       query: () => ({
         url: "/notifications/unread-count",
         method: "GET",

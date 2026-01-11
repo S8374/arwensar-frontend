@@ -34,6 +34,8 @@ import {
 import { useCreateNotificationMutation, useGetTargetUsersQuery } from "@/redux/features/notification/notification.api";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { useUserInfoQuery } from "@/redux/features/auth/auth.api";
+import { getPlanFeatures } from "@/lib/planFeatures";
 
 interface Props {
   trigger?: React.ReactNode;
@@ -50,11 +52,15 @@ export default function CreateNotificationDialog({ trigger, onSuccess }: Props) 
 
   const { data: res, isLoading } = useGetTargetUsersQuery(undefined, { skip: !open });
   const targets = res?.data || [];
-  console.log("Data",res);
+  const { data: userData } = useUserInfoQuery(undefined)
   const recipient = targets.find((t: any) => t.id === userId);
+  const plan = userData?.data?.subscription;
 
+  const permissions = getPlanFeatures(plan);
   const [create, { isLoading: sending }] = useCreateNotificationMutation();
-   console.log('userId',userId)
+  const sendersId = userData?.data?.id;
+  const supplierId = userData?.data?.supplierProfile?.id;
+  console.log('userId', userData)
   // Auto-title
   useEffect(() => {
     if (!title) {
@@ -106,6 +112,8 @@ export default function CreateNotificationDialog({ trigger, onSuccess }: Props) 
           targetName: recipient.name,
           targetEmail: recipient.email,
           targetRole: recipient.role,
+          senderUserId: sendersId,
+          supplierId: supplierId
         },
       }).unwrap();
 
@@ -143,6 +151,7 @@ export default function CreateNotificationDialog({ trigger, onSuccess }: Props) 
             <Send className="w-5 h-5" />
             Send Notification
           </DialogTitle>
+          <p>Your Limit : {permissions.notificationsSend} </p>
         </DialogHeader>
 
         <div className="space-y-4 py-4">

@@ -10,6 +10,8 @@ import { AlertCircle, MessageSquare, Plus, Filter, Trash, Edit2 } from "lucide-r
 import { useGetProblemsQuery, useUpdateProblemMutation, useDeleteProblemMutation } from "@/redux/features/problem/problem.api";
 import CreateProblemForm from "./CreateProblemForm";
 import { useNavigate } from "react-router-dom";
+import { useUserInfoQuery } from "@/redux/features/auth/auth.api";
+import { getPlanFeatures } from "@/lib/planFeatures";
 
 const statusColors = {
   OPEN: "bg-blue-100 text-blue-800",
@@ -61,6 +63,12 @@ export default function ProblemsList() {
     await updateProblem({ problemId, body: { status } });
     setIsStatusOpen(false);
   };
+  const { data: userData } = useUserInfoQuery(undefined);
+  const plan = userData?.data?.subscription;
+
+  const permissions = getPlanFeatures(plan);
+
+
 
   const handleDelete = async (problemId: string) => {
     if (confirm("Are you sure you want to delete this problem?")) {
@@ -77,7 +85,16 @@ export default function ProblemsList() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Problems & Issues</h1>
+          <h1 className="text-3xl font-bold">Problems & Issues   </h1>
+
+
+
+          <h1 className="text-sm font-bold">Report created Limit : {permissions.reportCreate}   </h1>
+          <h1 className="text-sm font-bold">Massage Limit : {permissions.messagesPerMonth}   </h1>
+
+
+
+
           <p className="text-muted-foreground mt-1">Manage reported issues with suppliers</p>
         </div>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>

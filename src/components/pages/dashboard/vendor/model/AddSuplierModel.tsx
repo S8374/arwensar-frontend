@@ -49,9 +49,10 @@ type SupplierFormData = z.infer<typeof supplierSchema>;
 interface AddSupplierModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  supplierCreateLimit: number | null;
 }
 
-export default function AddSupplierModal({ open, onOpenChange }: AddSupplierModalProps) {
+export default function AddSupplierModal({ open, onOpenChange, supplierCreateLimit }: AddSupplierModalProps) {
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [files, setFiles] = useState<File[]>([]);
@@ -89,12 +90,12 @@ export default function AddSupplierModal({ open, onOpenChange }: AddSupplierModa
         const uploaded = await minioUpload.uploadFile(file);
         console.log("Uploaded file", uploaded);
         contractDocument = uploaded;
-        documentType = file.type; 
+        documentType = file.type;
       }
 
       const payload = {
         name: data.name.trim(),
-        contact: data.contactPerson,                 
+        contact: data.contactPerson,
         contactPerson: data.contactPerson.trim(),
         email: data.email.toLowerCase().trim(),
         phone: data.phone?.trim() || "",
@@ -104,7 +105,7 @@ export default function AddSupplierModal({ open, onOpenChange }: AddSupplierModa
         contractEndDate: data.contractEndDate.toISOString().split("T")[0],
         contractDocument,
         documentType,
-        files: files.length > 0 ? files : undefined,  
+        files: files.length > 0 ? files : undefined,
       };
       console.log("Sending to backend:", payload);
 
@@ -140,12 +141,30 @@ export default function AddSupplierModal({ open, onOpenChange }: AddSupplierModa
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
-        <DialogHeader className="p-6 border-b">
-          <DialogTitle className="text-2xl font-bold">Add New Supplier</DialogTitle>
+        <DialogHeader className="p-6 border-b space-y-1">
+          <DialogTitle className="text-2xl font-semibold tracking-tight">
+            Add New Supplier
+          </DialogTitle>
+
           <p className="text-sm text-muted-foreground">
-            Enter supplier details manually or upload supporting documents
+            Supplier creation limit:{" "}
+            <span className="font-medium">
+              {supplierCreateLimit === null ? (
+                <span className="text-emerald-600">Unlimited</span>
+              ) : (
+                <span className="text-destructive">
+                  {supplierCreateLimit}
+                </span>
+              )}
+            </span>
+          </p>
+
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Provide supplier information manually or upload relevant supporting documents
+            to streamline the onboarding process.
           </p>
         </DialogHeader>
+
 
         {/* File Upload Section */}
         <div className="p-6 bg-muted/30 border-b">
@@ -198,10 +217,10 @@ export default function AddSupplierModal({ open, onOpenChange }: AddSupplierModa
             <div className="space-y-5">
               <div>
                 <Label>Supplier Name *</Label>
-                <Input 
-                  {...register("name")} 
-                  placeholder="Acme Corp" 
-                  className="mt-2" 
+                <Input
+                  {...register("name")}
+                  placeholder="Acme Corp"
+                  className="mt-2"
                   disabled={isLoading}
                 />
                 {errors.name && <p className="text-destructive text-xs mt-1">{errors.name.message}</p>}
@@ -209,10 +228,10 @@ export default function AddSupplierModal({ open, onOpenChange }: AddSupplierModa
 
               <div>
                 <Label>Contact Person *</Label>
-                <Input 
-                  {...register("contactPerson")} 
-                  placeholder="John Doe" 
-                  className="mt-2" 
+                <Input
+                  {...register("contactPerson")}
+                  placeholder="John Doe"
+                  className="mt-2"
                   disabled={isLoading}
                 />
                 {errors.contactPerson && <p className="text-destructive text-xs mt-1">{errors.contactPerson.message}</p>}
@@ -220,7 +239,7 @@ export default function AddSupplierModal({ open, onOpenChange }: AddSupplierModa
 
               <div>
                 <Label>Criticality Level *</Label>
-                <Select 
+                <Select
                   onValueChange={(v) => setValue("criticality", v)}
                   disabled={isLoading}
                 >
@@ -269,7 +288,7 @@ export default function AddSupplierModal({ open, onOpenChange }: AddSupplierModa
             <div className="space-y-5">
               <div>
                 <Label>Category *</Label>
-                <Select 
+                <Select
                   onValueChange={(v) => setValue("category", v)}
                   disabled={isLoading}
                 >
@@ -288,11 +307,11 @@ export default function AddSupplierModal({ open, onOpenChange }: AddSupplierModa
 
               <div>
                 <Label>Email *</Label>
-                <Input 
-                  {...register("email")} 
-                  type="email" 
-                  placeholder="contact@acme.com" 
-                  className="mt-2" 
+                <Input
+                  {...register("email")}
+                  type="email"
+                  placeholder="contact@acme.com"
+                  className="mt-2"
                   disabled={isLoading}
                 />
                 {errors.email && <p className="text-destructive text-xs mt-1">{errors.email.message}</p>}
@@ -300,10 +319,10 @@ export default function AddSupplierModal({ open, onOpenChange }: AddSupplierModa
 
               <div>
                 <Label>Phone (Optional)</Label>
-                <Input 
-                  {...register("phone")} 
-                  placeholder="+1 (555) 000-0000" 
-                  className="mt-2" 
+                <Input
+                  {...register("phone")}
+                  placeholder="+1 (555) 000-0000"
+                  className="mt-2"
                   disabled={isLoading}
                 />
               </div>
@@ -338,9 +357,9 @@ export default function AddSupplierModal({ open, onOpenChange }: AddSupplierModa
           </div>
 
           <div className="flex justify-end gap-3 pt-6 border-t">
-            <Button 
-              type="button" 
-              variant="outline" 
+            <Button
+              type="button"
+              variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >

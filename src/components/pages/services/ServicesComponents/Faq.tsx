@@ -5,7 +5,6 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { motion } from "framer-motion";
-import { ChevronDown } from "lucide-react";
 import { AnimatedContainer, AnimatedItem } from "@/lib/animation/AnimatedContainer";
 import { fadeInUp, staggerContainer } from "@/lib/animation/animations";
 
@@ -44,7 +43,7 @@ const faqData = [
 
 export default function FAQ() {
   return (
-    <section className="py-20 bg-gradient-to-b from-[#E9EFFD] to-white relative overflow-hidden">
+    <section id="section5" className="py-20 bg-gradient-to-b from-[#E9EFFD] to-white relative overflow-hidden">
       {/* Background Decorative Elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
@@ -120,15 +119,6 @@ export default function FAQ() {
                             {item.question}
                           </h3>
                         </div>
-
-                        {/* Chevron Icon */}
-                        <motion.div
-                          animate={{ rotate: 0 }}
-                          transition={{ duration: 0.3 }}
-                          className="flex-shrink-0 ml-4"
-                        >
-                          <ChevronDown className="w-5 h-5 text-muted-foreground group-data-[state=open]:rotate-180 group-data-[state=open]:text-chart-6 transition-all duration-300" />
-                        </motion.div>
                       </div>
                     </AccordionTrigger>
 

@@ -1,67 +1,57 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // src/lib/planFeatures.ts
+
 export type PlanFeatures = {
-    editSupplier: boolean;
-    fullAssessments: boolean;
-    complianceDashboard: boolean;
-    overallCompliance: boolean;
-    emailSupport: boolean;
-    prioritySupport: boolean;
-    standardAlertsAndReminders: boolean;
-    documentReviewsPerMonth: number;
-    reportsGeneratedPerMonth: number;
-    messagesPerMonth: number;
-    notificationsSend: number;
-    reportCreate: number;
+  editSupplier: boolean;
+  fullAssessments: boolean;
+  complianceDashboard: boolean;
+  overallCompliance: boolean;
+  emailSupport: boolean;
+  prioritySupport: boolean;
+  standardAlertsAndReminders: boolean;
+
+  apiAccess?: boolean;
+  customWorkflows?: boolean;
+  enterpriseSecurity?: boolean;
+  dedicatedAccountManager?: boolean;
+
+  documentReviewsPerMonth: number | null;
+  reportsGeneratedPerMonth: number | null;
+  messagesPerMonth: number | null;
+  notificationsSend: number | null;
+  reportCreate: number | null;
 };
 
 export function getPlanFeatures(subscription: any): PlanFeatures {
-    console.log("subscription object:", subscription);
+  const features =
+    subscription?.features ||
+    subscription?.plan?.features ||
+    {};
 
-    if (!subscription) {
-        console.log("No subscription found");
-        return getDefaultFeatures();
-    }
+  return {
+    editSupplier: !!features.editSupplier,
+    fullAssessments: !!features.fullAssessments,
+    complianceDashboard: !!features.complianceDashboard,
+    overallCompliance: !!features.overallCompliance,
+    emailSupport: !!features.emailSupport,
+    prioritySupport: !!features.prioritySupport,
+    standardAlertsAndReminders: !!features.standardAlertsAndReminders,
 
-    // Check if subscription has features directly (your current structure)
-    const features = subscription.features || {};
-    console.log("features object:", features);
+    apiAccess: !!features.apiAccess,
+    customWorkflows: !!features.customWorkflows,
+    enterpriseSecurity: !!features.enterpriseSecurity,
+    dedicatedAccountManager: !!features.dedicatedAccountManager,
 
-    // For backward compatibility, also check subscription.plan?.features
-    const planFeatures = subscription.plan?.features || {};
-
-    // Merge both feature sources (direct features take priority)
-    const allFeatures = { ...planFeatures, ...features };
-
-    return {
-        editSupplier: Boolean(allFeatures.editSupplier),
-        fullAssessments: Boolean(allFeatures.fullAssessments),
-        complianceDashboard: Boolean(allFeatures.complianceDashboard),
-        overallCompliance: Boolean(allFeatures.overallCompliance),
-        emailSupport: Boolean(allFeatures.emailSupport),
-        prioritySupport: Boolean(allFeatures.prioritySupport),
-        standardAlertsAndReminders: Boolean(allFeatures.standardAlertsAndReminders),
-        documentReviewsPerMonth: Number(allFeatures.documentReviewsPerMonth) || 0,
-        reportsGeneratedPerMonth: Number(allFeatures.reportsGeneratedPerMonth) || 0,
-        messagesPerMonth: Number(allFeatures.messagesPerMonth) || 0,
-        notificationsSend: Number(allFeatures.notificationsSend) || 0,
-        reportCreate: Number(allFeatures.reportCreate) || 0,
-    };
+    documentReviewsPerMonth: normalizeLimit(features.documentReviewsPerMonth),
+    reportsGeneratedPerMonth: normalizeLimit(features.reportsGeneratedPerMonth),
+    messagesPerMonth: normalizeLimit(features.messagesPerMonth),
+    notificationsSend: normalizeLimit(features.notificationsSend),
+    reportCreate: normalizeLimit(features.reportCreate),
+  };
 }
 
-function getDefaultFeatures(): PlanFeatures {
-    return {
-        editSupplier: false,
-        fullAssessments: false,
-        complianceDashboard: false,
-        overallCompliance: false,
-        emailSupport: false,
-        prioritySupport: false,
-        standardAlertsAndReminders: false,
-        documentReviewsPerMonth: 0,
-        reportsGeneratedPerMonth: 0,
-        messagesPerMonth: 0,
-        notificationsSend: 0,
-        reportCreate: 0,
-    };
+function normalizeLimit(value: any): number | null {
+  if (value === null) return null; // Unlimited
+  if (value === undefined) return 0;
+  return Number(value) || 0;
 }

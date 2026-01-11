@@ -48,6 +48,8 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import { format, formatDistanceToNow } from 'date-fns';
+import { useUserInfoQuery } from '@/redux/features/auth/auth.api';
+import { getPlanFeatures } from '@/lib/planFeatures';
 
 export default function VendorReportsPage() {
     const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
@@ -80,8 +82,6 @@ export default function VendorReportsPage() {
     const suppliers = suppliersData?.data || [];
     const stats = statistics?.data || {};
     const options = reportOptions?.data || {};
-    console.log("suppliers", suppliers);
-    console.log("reportsss", reports);
     // Filter reports based on active tab and search
     const filteredReports = reports.filter((report: any) => {
         const matchesTab = activeTab === 'all' || report.reportType === activeTab;
@@ -99,7 +99,10 @@ export default function VendorReportsPage() {
     const highRiskSuppliers = options?.highRiskSuppliers || 0;
     const overdueAssessments = options?.overdueAssessments || 0;
     const totalSuppliers = options?.totalSuppliers || suppliers.length || 0;
-
+    const { data: userData } = useUserInfoQuery(undefined);
+    const plan = userData?.data?.subscription;
+      const permissions = getPlanFeatures(plan);
+    
     // Report type icons
     const getReportTypeIcon = (type: string) => {
         switch (type) {
@@ -286,7 +289,8 @@ export default function VendorReportsPage() {
                 <div className="mb-8">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                         <div>
-                            <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Report Management</h1>
+                            <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Report Management </h1>
+                            <p className="text-gray-600 mt-2">Your Limit : {permissions.reportCreate} </p>
                             <p className="text-gray-600 mt-2">Generate, analyze, and manage reports for your suppliers</p>
                         </div>
                         <div className="flex items-center gap-3">

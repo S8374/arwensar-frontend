@@ -1,12 +1,30 @@
-
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import GoBackAndHomeButtons from "@/hooks/GoBackButton";
 import vandorSignin from "../../../../assets/Auth/signInVector.png";
 import CreateVendorAccountFrom from "@/components/modules/Authentication/CreateVendorAccountFrom";
 import { RouteLoadingIndicator } from "@/hooks/page-transition";
+import { useGetUserProfileQuery } from "@/redux/features/user/user.api";
+
 export default function SignInVendor() {
-    return(
-        <div>
-          <RouteLoadingIndicator/>
+  const navigate = useNavigate();
+  const { data: userData, isLoading } = useGetUserProfileQuery(undefined);
+  const user = userData?.data;
+
+  // Redirect if user already exists
+  useEffect(() => {
+    if (!isLoading && user) {
+      navigate("/"); // change to your dashboard route
+    }
+  }, [user, isLoading, navigate]);
+
+  // Show loading while fetching or redirecting
+  if (isLoading || user) {
+    return <RouteLoadingIndicator />;
+  }
+
+  // Render signup form only for non-logged-in users
+  return (
     <section className="min-h-screen bg-primary/10 py-12 lg:py-20">
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -42,6 +60,5 @@ export default function SignInVendor() {
         </div>
       </div>
     </section>
-        </div>
-    )
+  );
 }

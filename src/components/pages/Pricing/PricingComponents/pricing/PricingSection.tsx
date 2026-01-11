@@ -44,7 +44,7 @@ export default function PricingSection() {
           for your business
         </h2>
         <p className="mt-6 text-lg text-muted-foreground max-w-3xl mx-auto">
-          Start with a 30-day free trial. No credit card required.
+          Start with a 14-day free trial. No credit card required.
         </p>
 
         {/* Pricing Cards Grid */}

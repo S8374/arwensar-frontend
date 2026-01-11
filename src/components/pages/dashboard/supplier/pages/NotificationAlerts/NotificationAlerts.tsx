@@ -114,7 +114,7 @@ export default function NotificationsAlertsPage() {
   const [markAsRead] = useMarkNotificationAsReadMutation();
   console.log("unreadCountData",unreadCountData)
   const notifications: Notification[] = notificationsData?.data || [];
-  const unreadCount = unreadCountData?.count || 0; // always a number
+  const unreadCount : number = unreadCountData?.data?.count || 0; // always a number
 
 
   const unreadNotifications = notifications.filter(n => !n.isRead);

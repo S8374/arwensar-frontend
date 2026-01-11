@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Clock, CreditCard, Sparkles } from "lucide-react";
 import { useCreateCheckoutSessionMutation, useGetCurrentSubscriptionQuery } from "@/redux/features/payment/payment.api";
+import { NavLink } from "react-router-dom";
 
 interface SubscriptionTabProps {
   user: any;
@@ -152,8 +153,14 @@ export default function SubscriptionTab({ user }: SubscriptionTabProps) {
               </p>
 
               <div className="flex gap-3">
-                <Button variant="outline">Change Plan</Button>
-                <Button variant="destructive">Cancel Subscription</Button>
+                <NavLink to={"/pricing"}>
+                  <Button
+                    onClick={() => {
+                      document.getElementById("change-plan")?.scrollIntoView({ behavior: "smooth" });
+                    }}
+                    variant="outline">Change Plan</Button>
+                </NavLink>
+                {/* <Button variant="destructive">Cancel Subscription</Button> */}
               </div>
             </div>
           )}
