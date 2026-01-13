@@ -57,14 +57,7 @@ export default function PricingSection() {
                 price: String(plan.price) // 👈 FIX HERE
               }}
               onSelect={() => {
-                console.log("Selected Plan:", {
-                  id: plan.id,
-                  name: plan.name,
-                  price: plan.price,
-                  currency: plan.currency,
-                  stripePriceId: plan.stripePriceId,
-                  features: plan.features,
-                });
+
               }}
             />
           ))}

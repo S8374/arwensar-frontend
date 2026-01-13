@@ -57,8 +57,6 @@ export default function ReviewAssessmentModal({
     const { data: userData } = useUserInfoQuery(undefined);
     const plan = userData?.data?.subscription;
     const assainmentReviewLimit = plan?.plan?.assessmentLimit
-    console.log("Plan", plan)
-    console.log("selected submission", assainmentReviewLimit);
     const handleReview = async (
         status: "APPROVED" | "REJECTED" | "REQUIRES_ACTION"
     ) => {

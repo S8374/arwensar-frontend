@@ -51,7 +51,6 @@ export const useSendAlert = ({
       // ✅ Simulate async behavior (no API)
       await new Promise((resolve) => setTimeout(resolve, 800));
 
-      console.log("Alert submitted (local only):", payload);
 
       setData(payload);
       setIsSuccess(true);

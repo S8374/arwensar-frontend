@@ -54,6 +54,7 @@ import {
   useSendReportMutation,
 } from "@/redux/features/report/report.api";
 import { undefined } from "zod/v3";
+import toast from "react-hot-toast";
 
 
 /* ---------------- TYPES ---------------- */
@@ -93,9 +94,7 @@ export default function NotificationsAlerts() {
     isLoading: isLoadingNotifications,
     refetch: refetchNotifications,
   } = useGetNotificationsQuery();
-  console.log("notificationsResponse", notificationsResponse)
-  const { data: stats, refetch: refetchStats } = useGetNotificationStatsQuery();
-  console.log("notifications", stats)
+  const { refetch: refetchStats } = useGetNotificationStatsQuery();
   const { data: unreadCount, refetch: refetchUnreadCount } = useGetUnreadNotificationCountQuery();
 
   const [markAsRead] = useMarkNotificationAsReadMutation();
@@ -136,7 +135,7 @@ const { data: reportsResponse } = useGetReportsQuery(undefined); // ✅ correct
       refetchUnreadCount();
       setSelectedNotifications([]);
     } catch (error) {
-      console.log(error)
+       toast.error("Create Failed")
 
     }
   };
@@ -153,7 +152,7 @@ const { data: reportsResponse } = useGetReportsQuery(undefined); // ✅ correct
       refetchUnreadCount();
       setSelectedNotifications([]);
     } catch (error) {
-      console.log(error)
+      toast.error("Failed ")
     }
   };
 
@@ -168,8 +167,7 @@ const { data: reportsResponse } = useGetReportsQuery(undefined); // ✅ correct
       refetchStats();
       refetchUnreadCount();
     } catch (error) {
-      console.log(error)
-
+       toast.error("Create Failed")
     }
   };
 
@@ -183,7 +181,7 @@ const handleSendReport = async (reportId: string, recipientEmail?: string) => {
     await sendReport(payload).unwrap();
 
   } catch (error) {
-    console.log(error);
+       toast.error("Create Failed")
   }
 };
 

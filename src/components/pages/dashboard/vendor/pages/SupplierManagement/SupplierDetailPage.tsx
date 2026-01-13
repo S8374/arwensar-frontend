@@ -80,7 +80,6 @@ export default function SupplierDetailPage() {
   } = useGetSupplierByIdQuery(id!, { skip: !id });
 
   const [getProgress, { data: progressData, isLoading: loadingProgress }] = useLazyGetSingelSupplyerProgressQuery();
-  console.log("permissions",permissions.editSupplier);
   const supplier = supplierResponse?.data;
   const progress = progressData?.data;
 
@@ -117,7 +116,6 @@ export default function SupplierDetailPage() {
   }
 
   const nis2 = getNis2Status(supplier);
-  console.log("Supplier single getNis2Status", nis2);
 
   const contract = calculateContractStatus(supplier.contractEndDate);
 
@@ -198,7 +196,6 @@ export default function SupplierDetailPage() {
       {/* Modals */}
       <EditSupplierModal open={isEditOpen} onOpenChange={setIsEditOpen} supplier={supplier} />
       <SendAlertModal open={isAlertOpen} onOpenChange={setIsAlertOpen} supplierId={id!} supplierName={supplier.name} />
-      {/* <ViewContractModal open={isContractOpen} onOpenChange={setIsContractOpen} documentUrl={supplier.contractDocument || ""} supplierName={supplier.name} /> */}
     </div>
   );
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // components/assessment/AssessmentHistory.tsx
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -45,7 +46,6 @@ const getStatusIcon = (status: Assessment["status"]) => {
 export default function AssessmentHistory({ supplyer }: AssessmentHistoryProps) {
   const navigate = useNavigate();
   const submitedAssainment = supplyer?.data?.assessmentSubmissions;
-  console.log("Submit.................",submitedAssainment)
   // Remove the mock data at the top — it's unused now
   // Transform real data into Assessment format
   const assessments: Assessment[] = submitedAssainment?.map((a: any, index: number) => {
@@ -83,7 +83,6 @@ export default function AssessmentHistory({ supplyer }: AssessmentHistoryProps) 
       supplierId:a.supplierId
     };
   }) ?? [];
-  console.log("assainments..........", assessments);
   return (
     <div className="w-full space-y-6">
       {/* Header */}

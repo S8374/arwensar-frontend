@@ -64,7 +64,6 @@ const formatDate = (dateString: string) => {
   return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 };
 
-  console.log("alerts", alerts);
   if (alerts.length === 0) {
     return (
       <Card className="h-full flex flex-col">

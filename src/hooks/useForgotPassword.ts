@@ -8,7 +8,6 @@ import { toast } from "sonner";
 
 export const useForgotPassword = () => {
   const [forgotPassword, { isLoading, isSuccess, isError }] = useForgotPasswordMutation();
-  console.log("resetPassword",forgotPassword);
   const {
     register,
     handleSubmit,

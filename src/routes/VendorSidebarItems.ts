@@ -10,7 +10,7 @@ import ApiAccess from "@/components/pages/dashboard/vendor/pages/ApiAccsess/ApiA
 import CustomWorkflows from "@/components/pages/dashboard/vendor/pages/CustomWorkFlow/CustomWorkFlow";
 
 export const vendorSidebarItems: ISidebarItem[] = [
-  
+
 
   {
     title: "",
@@ -51,14 +51,14 @@ export const vendorSidebarItems: ISidebarItem[] = [
         icon: "Settings",
         component: ProblemsPage,
       },
-        {
+      {
         title: "Api Access",
         url: "/vendor/apiAccess",
         icon: "Link",
         component: ApiAccess,
       }
       ,
-        {
+      {
         title: "Custom Work Flow",
         url: "/vendor/customWorkFlow",
         icon: "Work",

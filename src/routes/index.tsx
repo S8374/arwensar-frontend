@@ -32,6 +32,7 @@ import PaymentSuccess from "@/components/pages/Pricing/PricingComponents/pricing
 import PaymentCancel from "@/components/pages/Pricing/PricingComponents/pricing/PaymentCancel";
 import QuickSecurityAssessment from "@/components/pages/dashboard/supplier/components/QuickSecurityAssessment";
 import PrivacyPolicy from "@/components/pages/PrivacyPolicy/PrivacyPolicy";
+import { adminSidebarItems } from "./AdminSidebarItems";
 
 export const router = createBrowserRouter([
     {
@@ -116,6 +117,17 @@ export const router = createBrowserRouter([
         ]
     },
     {
+        Component: withAuth(DashboardLayout, role.admin as TRole),
+        path: "/admin",
+        children: [
+            {
+                index: true,
+                element: <Navigate to="/admin/analytics" replace />
+            },
+            ...generateRoutes(adminSidebarItems),
+        ],
+    },
+    {
         path: "/problems/:problemId",
         Component: ProblemDetail,
     },
@@ -164,11 +176,11 @@ export const router = createBrowserRouter([
     // Add this to your router configuration
     {
         path: "/payment/success",
-        element: <PaymentSuccess />,
+        Component: PaymentSuccess,
     },
     {
         path: "/payment/cancel",
-        element: <PaymentCancel />,
+        Component: PaymentCancel,
     },
 
 ]);

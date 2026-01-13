@@ -108,7 +108,6 @@ export default function EvidenceUploadPage() {
 
   const categories: Category[] = categoriesData?.categories || FALLBACK_CATEGORIES;
   const documents = documentsData?.data || [];
-  console.log("Documents Data:", documentsData);
   // Drag & Drop Handlers
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();

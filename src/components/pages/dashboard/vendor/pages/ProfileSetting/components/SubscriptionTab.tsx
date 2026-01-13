@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Clock, CreditCard, Sparkles } from "lucide-react";
-import { useCreateCheckoutSessionMutation, useGetCurrentSubscriptionQuery } from "@/redux/features/payment/payment.api";
+import { useCreateCheckoutSessionMutation } from "@/redux/features/payment/payment.api";
 import { NavLink } from "react-router-dom";
 
 interface SubscriptionTabProps {
@@ -18,11 +18,9 @@ export default function SubscriptionTab({ user }: SubscriptionTabProps) {
 
   const [createCheckoutSession, { isLoading }] =
     useCreateCheckoutSessionMutation();
-  const { data } = useGetCurrentSubscriptionQuery();
   // const { } = useConfirmPaymentMutation();
   // const { } = useGetSessionStatusQuery
   // const { } = useCancelSubscriptionMutation()
-  console.log(data)
   /* ---------------- EMPTY STATE ---------------- */
   if (!plan) {
     return (

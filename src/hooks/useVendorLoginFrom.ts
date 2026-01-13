@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/hooks/useLoginForm.ts
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -55,7 +56,7 @@ export const useLoginForm = () => {
         }, 800);
       }
     } catch (err: any) {
-      console.log("Login error:", err);
+      toast.error("Login error:", err);
 
       const message = err?.data?.message || "Login failed. Please try again.";
 

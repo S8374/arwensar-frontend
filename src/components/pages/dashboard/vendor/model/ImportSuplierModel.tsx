@@ -16,11 +16,13 @@ import { Badge } from "@/components/ui/badge";
 import { Check, AlertCircle, Loader2, Upload, Video, File } from "lucide-react";
 import { useBulkImportSuppliersMutation } from "@/redux/features/vendor/vendor.api";
 import VideoModal from "../component/OverViewComponent/VideoModal";
+import { useUserInfoQuery } from "@/redux/features/auth/auth.api";
+import { getPlanFeatures } from "@/lib/planFeatures";
+import toast from "react-hot-toast";
 
 interface ImportSuppliersModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  supplierCreateLimit: number | null
 }
 
 interface ParsedSupplier {
@@ -32,20 +34,18 @@ interface ParsedSupplier {
   criticality: 'LOW' | 'MEDIUM' | 'HIGH';
   contractStartDate: string;
   contractEndDate: string;
-  errors?: string[];
+  errors?: any;
 }
 
 export default function ImportSuppliersModal({
   open,
   onOpenChange,
-  supplierCreateLimit
 }: ImportSuppliersModalProps) {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [parsedSuppliers, setParsedSuppliers] = useState<ParsedSupplier[]>([]);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [isPreview, setIsPreview] = useState(false);
   const [bulkImportSuppliers, { isLoading }] = useBulkImportSuppliersMutation();
-  console.log("parsedSuppliers", parsedSuppliers)
   const parseExcelFile = async (file: File) => {
     try {
       const buffer = await file.arrayBuffer();
@@ -161,7 +161,6 @@ export default function ImportSuppliersModal({
         setIsPreview(true);
       }
 
-      console.log(`✅ Parsed ${suppliers.length} suppliers from Excel`);
 
     } catch (error) {
       console.error("Error parsing Excel file:", error);
@@ -177,7 +176,9 @@ export default function ImportSuppliersModal({
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
-
+  const { data: userData } = useUserInfoQuery(undefined);
+  const plan = userData?.data?.subscription;
+  const limit = getPlanFeatures(plan);
   const formatDateForDisplay = (date: Date): string => {
     // Format as DD-MM-YYYY for display
     const year = date.getFullYear();
@@ -246,7 +247,6 @@ export default function ImportSuppliersModal({
 
   const handleImport = async () => {
     if (parsedSuppliers.length === 0 || validationErrors.length > 0) {
-      console.log("Cannot import: validation errors exist");
       return;
     }
 
@@ -264,13 +264,11 @@ export default function ImportSuppliersModal({
         };
       });
 
-      console.log("Suppliers to import:", suppliersToImport);
 
       const result = await bulkImportSuppliers({
         suppliers: suppliersToImport
       }).unwrap();
 
-      console.log("Bulk import successful:", result);
 
       // Show success summary
       if (result.successful > 0) {
@@ -284,7 +282,13 @@ export default function ImportSuppliersModal({
       setIsPreview(false);
       onOpenChange(false);
 
-    } catch (error) {
+    } catch (error: any) {
+      if (error.status === 402) {
+        toast.error(
+          "You’ve reached your report generation limit. Please upgrade your plan to continue.",
+          { duration: 5000 }
+        );
+      }
       console.error("Error during bulk import:", error);
       setValidationErrors([`Import failed: ${error}`]);
     }
@@ -327,11 +331,11 @@ export default function ImportSuppliersModal({
           <p className="text-sm text-muted-foreground">
             Supplier creation limit:{" "}
             <span className="font-medium">
-              {supplierCreateLimit === null ? (
+              {limit.supplierLimit === null ? (
                 <span className="text-emerald-600">Unlimited</span>
               ) : (
                 <span className="text-destructive">
-                  {supplierCreateLimit}
+                  {limit.supplierLimit}
                 </span>
               )}
             </span>

@@ -53,6 +53,7 @@ export default function CreateNotificationDialog({ trigger, onSuccess }: Props) 
   const { data: res, isLoading } = useGetTargetUsersQuery(undefined, { skip: !open });
   const targets = res?.data || [];
   const { data: userData } = useUserInfoQuery(undefined)
+  const role = userData?.data?.role
   const recipient = targets.find((t: any) => t.id === userId);
   const plan = userData?.data?.subscription;
 
@@ -60,7 +61,6 @@ export default function CreateNotificationDialog({ trigger, onSuccess }: Props) 
   const [create, { isLoading: sending }] = useCreateNotificationMutation();
   const sendersId = userData?.data?.id;
   const supplierId = userData?.data?.supplierProfile?.id;
-  console.log('userId', userData)
   // Auto-title
   useEffect(() => {
     if (!title) {
@@ -125,6 +125,7 @@ export default function CreateNotificationDialog({ trigger, onSuccess }: Props) 
       onSuccess?.();
     } catch {
       toast.error("Failed to send");
+
     }
   };
 
@@ -151,7 +152,18 @@ export default function CreateNotificationDialog({ trigger, onSuccess }: Props) 
             <Send className="w-5 h-5" />
             Send Notification
           </DialogTitle>
-          <p>Your Limit : {permissions.notificationsSend} </p>
+          {
+            role === "VENDOR" ? <span className="font-medium">
+              Notifications Send Limit :   {permissions?.notificationsSend === null ? (
+                <span className="text-emerald-600">Unlimited</span>
+              ) : (
+                <span className="text-destructive">
+                  {permissions?.notificationsSend}
+                </span>
+              )}
+            </span> : <p></p>
+          }
+
         </DialogHeader>
 
         <div className="space-y-4 py-4">

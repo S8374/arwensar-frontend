@@ -98,7 +98,6 @@ export default function PricingComparisonTable({
     };
 
     onPlanSelect?.(payload);
-    console.log("✅ Selected Plan:", payload);
   };
 
   if (isLoading) {

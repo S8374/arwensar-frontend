@@ -37,7 +37,6 @@ export default function DataSecurityAssessment() {
   const [savedMap, setSavedMap] = useState<Record<string, boolean>>({});
   const [savingQuestionId, setSavingQuestionId] = useState<string | null>(null); // Track which question is saving
   
-  console.log("savedMap", savedMap);
   const isEditable =
     submission &&
     ["DRAFT", "REJECTED", "REQUIRES_ACTION"].includes(submission.status);

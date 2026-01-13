@@ -14,15 +14,14 @@ export default function FileUploader({ onFilesUpload, className }: FileUploaderP
   const [files, setFiles] = useState<File[]>([]);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    console.log("Files dropped/selected:", acceptedFiles);
 
-    acceptedFiles.forEach((file, index) => {
-      console.log(`File ${index + 1}:`, {
-        name: file.name,
-        type: file.type,
-        size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
-      });
-    });
+    // acceptedFiles.forEach((file, index) => {
+    //   console.log(`File ${index + 1}:`, {
+    //     name: file.name,
+    //     type: file.type,
+    //     size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
+    //   });
+    // });
 
     setFiles(prev => [...prev, ...acceptedFiles]);
     if (onFilesUpload) {

@@ -31,6 +31,8 @@ import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
 import { useAddSupplierMutation } from "@/redux/features/vendor/vendor.api";
 import { useMinioUpload } from "@/lib/useMinioUpload";
+import { useUserInfoQuery } from "@/redux/features/auth/auth.api";
+import { getPlanFeatures } from "@/lib/planFeatures";
 
 // Zod Schema – Strong Validation
 const supplierSchema = z.object({
@@ -49,10 +51,9 @@ type SupplierFormData = z.infer<typeof supplierSchema>;
 interface AddSupplierModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  supplierCreateLimit: number | null;
 }
 
-export default function AddSupplierModal({ open, onOpenChange, supplierCreateLimit }: AddSupplierModalProps) {
+export default function AddSupplierModal({ open, onOpenChange }: AddSupplierModalProps) {
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [files, setFiles] = useState<File[]>([]);
@@ -88,7 +89,6 @@ export default function AddSupplierModal({ open, onOpenChange, supplierCreateLim
       if (files.length > 0) {
         const file = files[0]; // support one for now, easy to extend
         const uploaded = await minioUpload.uploadFile(file);
-        console.log("Uploaded file", uploaded);
         contractDocument = uploaded;
         documentType = file.type;
       }
@@ -107,7 +107,6 @@ export default function AddSupplierModal({ open, onOpenChange, supplierCreateLim
         documentType,
         files: files.length > 0 ? files : undefined,
       };
-      console.log("Sending to backend:", payload);
 
       await addSupplier(payload).unwrap();
 
@@ -118,13 +117,21 @@ export default function AddSupplierModal({ open, onOpenChange, supplierCreateLim
       setStartDate(undefined);
       setEndDate(undefined);
     } catch (err: any) {
-      console.log('Error:', err);
-      toast.error(err?.data?.message || "Failed to add supplier");
+      if (err?.status === 402) {
+        toast.error("Limit Expired");
+        return;
+      }
+      else {
+        toast.error(err?.data?.message || "Failed to add supplier");
+
+      }
     } finally {
       setIsUploading(false);
     }
   };
-
+  const { data: userData } = useUserInfoQuery(undefined);
+  const plan = userData?.data?.subscription;
+  const limit = getPlanFeatures(plan);
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
@@ -149,11 +156,11 @@ export default function AddSupplierModal({ open, onOpenChange, supplierCreateLim
           <p className="text-sm text-muted-foreground">
             Supplier creation limit:{" "}
             <span className="font-medium">
-              {supplierCreateLimit === null ? (
+              {limit.supplierLimit === null ? (
                 <span className="text-emerald-600">Unlimited</span>
               ) : (
                 <span className="text-destructive">
-                  {supplierCreateLimit}
+                  {limit.supplierLimit}
                 </span>
               )}
             </span>

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Dialog,
   DialogContent,
@@ -29,7 +30,6 @@ interface Props {
 export default function DocumentApproveModal({
   open,
   onClose,
-  submissionID,
 }: Props) {
   const [status, setStatus] = useState("");
   const [report, setReport] = useState("");
@@ -54,13 +54,6 @@ export default function DocumentApproveModal({
     if (!status) return alert("Please select a status");
 
     // Simulate submitting data
-    const submissionData = {
-      submissionID,
-      status,
-      report,
-      file: fileUrl,
-    };
-    console.log("Submitted data:", submissionData);
 
     alert("Assessment reviewed successfully ✅");
 

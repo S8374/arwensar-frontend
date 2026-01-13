@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -38,7 +39,6 @@ export const useUpdatePassword = () => {
   }, [token, navigate]);
 
   const onSubmit = async (data: UpdatePasswordData) => {
-    console.log("✅ SUBMIT DATA", data);
 
     try {
       await resetPassword({

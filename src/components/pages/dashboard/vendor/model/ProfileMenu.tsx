@@ -112,7 +112,7 @@ export default function ProfileMenu() {
         dashboardPath = "/supplier/analytics";
         break;
       case "ADMIN":
-        dashboardPath = "/admin/dashboard";
+        dashboardPath = "/admin/analytics";
         break;
       default:
         dashboardPath = "/dashboard";

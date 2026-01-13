@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { useAddContactMutation } from "@/redux/features/contact/contact.api";
 import { contactFormSchema, type ContactFormData } from "@/validation/contactValidation";
@@ -24,9 +25,8 @@ export const useContactForm = () => {
     },
   });
 
-  const onSubmit = async (data: ContactFormData) => {
+  const onSubmit = async (_data: ContactFormData) => {
     try {
-      console.log("Form data submitted:", data);
       // Uncomment the next line if you want to actually send the data to the API
       // await addContact(data).unwrap();
       reset();

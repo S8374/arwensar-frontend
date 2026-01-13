@@ -7,7 +7,7 @@ import { baseApi } from "@/redux/baseApi";
 export const adminApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // ================= DASHBOARD =================
-    getDashboardStats: builder.query<any, void>({
+    getAdminDashboardStats: builder.query<any, void>({
       query: () => ({
         url: "/admin/dashboard",
         method: "GET",
@@ -29,7 +29,7 @@ export const adminApi = baseApi.injectEndpoints({
       query: ({ planId, ...data }) => ({
         url: `/admin/plans/${planId}`,
         method: "PATCH",
-        body: data,
+      data: data,
       }),
       invalidatesTags: ["plan"],
     }),
@@ -66,7 +66,30 @@ export const adminApi = baseApi.injectEndpoints({
       }),
       providesTags: ["assessment"],
     }),
+    // ─── NEW: Update assessment ───
+    updateAssessment: builder.mutation<any, { assessmentId: string; data: any }>({
+      query: ({ assessmentId, data }) => ({
+        url: `/admin/assessments/${assessmentId}`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: (result, error, { assessmentId }) => [
+        { type: "assessment", id: assessmentId },
+        "assessment",
+      ],
+    }),
 
+    // ─── NEW: Delete (deactivate) assessment ───
+    deleteAssessment: builder.mutation<void, string>({
+      query: (assessmentId) => ({
+        url: `/admin/assessments/${assessmentId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (result, error, assessmentId) => [
+        { type: "assessment", id: assessmentId },
+        "assessment",
+      ],
+    }),
     // ================= USERS =================
     getAllUsers: builder.query<any, void>({
       query: () => ({
@@ -93,14 +116,16 @@ export const adminApi = baseApi.injectEndpoints({
       invalidatesTags: ["User"],
     }),
 
-    toggleUserBlock: builder.mutation<void, string>({
-      query: (userId) => ({
-        url: `/admin/user/${userId}/block`,
-        method: "PATCH",
-      }),
-      invalidatesTags: ["User"],
-    }),
+toggleUserBlock: builder.mutation<void, { userId: string; block: boolean }>({
+  query: ({ userId, block }) => ({
+    url: `/admin/user/${userId}/block`,
+    method: "PATCH",
+    data: { block }, // <-- send block status here
+  }),
+  invalidatesTags: ["User"],
+})
 
+,
     permanentDeleteUser: builder.mutation<void, string>({
       query: (userId) => ({
         url: `/admin/users/permanent/${userId}`,
@@ -113,7 +138,7 @@ export const adminApi = baseApi.injectEndpoints({
       query: (data) => ({
         url: "/admin/users/bulk-delete",
         method: "POST",
-        body: data,
+        data: data,
       }),
       invalidatesTags: ["User"],
     }),
@@ -131,7 +156,7 @@ export const adminApi = baseApi.injectEndpoints({
       query: (data) => ({
         url: "/admin/users/bulk-block",
         method: "POST",
-        body: data,
+        data: data,
       }),
       invalidatesTags: ["User"],
     }),
@@ -140,7 +165,7 @@ export const adminApi = baseApi.injectEndpoints({
       query: (data) => ({
         url: "/admin/users/bulk-verify",
         method: "POST",
-        body: data,
+        data: data,
       }),
       invalidatesTags: ["User"],
     }),
@@ -199,7 +224,7 @@ export const adminApi = baseApi.injectEndpoints({
 /* ===================== EXPORT HOOKS ===================== */
 
 export const {
-  useGetDashboardStatsQuery,
+  useGetAdminDashboardStatsQuery,
 
   useCreatePlanMutation,
   useUpdatePlanMutation,
@@ -208,6 +233,8 @@ export const {
 
   useCreateAssessmentMutation,
   useGetAllAssessmentsQuery,
+  useUpdateAssessmentMutation,
+  useDeleteAssessmentMutation,
 
   useGetAllUsersQuery,
   useUpdateUserMutation,

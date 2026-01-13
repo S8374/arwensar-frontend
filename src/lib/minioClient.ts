@@ -17,7 +17,6 @@ const ensureBucket = async () => {
     const exists = await minioClient.bucketExists(BUCKET_NAME);
     if (!exists) {
       await minioClient.makeBucket(BUCKET_NAME, 'us-east-1');
-      console.log(`Bucket ${BUCKET_NAME} created successfully`);
       
       // Set bucket policy for public read access to uploaded files
       const policy = {
@@ -33,7 +32,6 @@ const ensureBucket = async () => {
       };
       
       await minioClient.setBucketPolicy(BUCKET_NAME, JSON.stringify(policy));
-      console.log('Bucket policy set for public read access');
     }
   } catch (error) {
     console.error('Error ensuring bucket exists:', error);

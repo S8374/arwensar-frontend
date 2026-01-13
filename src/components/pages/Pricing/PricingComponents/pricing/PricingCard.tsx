@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 
 import { useCreateCheckoutSessionMutation } from "@/redux/features/payment/payment.api";
 import { useUserInfoQuery } from "@/redux/features/auth/auth.api";
+import toast from "react-hot-toast";
 
 /* ---------------- TYPES ---------------- */
 type PlanFeatures = Record<string, boolean | number | null>;
@@ -76,7 +77,7 @@ export default function PricingCard({ plan, onSelect }: PricingCardProps) {
   const subscription = userInfo?.data?.subscription;
   const subscriptionStatus = subscription?.status;
   const currentPlanId = subscription?.plan?.id;
-
+  const role = userInfo?.data?.role;
   const isAuthenticated = !!userInfo && !isAuthError;
   const isCurrentPlan = currentPlanId === plan.id;
   const isActivePlan = isCurrentPlan && subscriptionStatus === "ACTIVE";
@@ -106,6 +107,13 @@ export default function PricingCard({ plan, onSelect }: PricingCardProps) {
   /* ---------- HANDLERS ---------- */
   const handlePlanClick = async () => {
     onSelect?.();
+    // ❌ SUPPLIER cannot buy plans
+    if (role === "SUPPLIER" || role === "ADMIN" ) {
+      toast.error(
+         "You are not permitted to purchase a subscription plan.",
+      );
+      return;
+    }
 
     if (!isAuthenticated) {
       navigate("/loginvendor", {

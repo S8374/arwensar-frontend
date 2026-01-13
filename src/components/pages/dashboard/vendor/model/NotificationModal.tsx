@@ -61,7 +61,6 @@ export default function NotificationBell() {
   const { data: unreadData } = useGetUnreadNotificationCountQuery(undefined, {
     pollingInterval: 60000, // Update badge every minute
   });
-  console.log("unreadData",unreadData);
   const [markAsRead] = useMarkNotificationAsReadMutation();
   const [clearAll] = useClearAllNotificationsMutation();
 

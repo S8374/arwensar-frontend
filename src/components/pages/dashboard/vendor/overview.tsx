@@ -25,14 +25,8 @@ export default function VendorDashboard() {
   const stats = data?.data;
 
 
-  const supplierCreateLimit = plan?.plan?.supplierLimit;
 
-  
-  console.log("Plan", plan)
-  console.log("permissions.complianceDashboard ", permissions)
-  console.log("Supplier limit", supplierCreateLimit)
 
-  
   if (isLoading) {
     return <DashboardSkeleton />;
   }
@@ -117,12 +111,12 @@ export default function VendorDashboard() {
       {/* Supplier Table - Enhanced with glass effect */}
       <Card className=" border-0 bg-linear-to-br from-white to-gray-50/50 dark:from-gray-900 dark:to-gray-800/50 backdrop-blur-sm">
         <CardContent className="p-6">
-          <SupplierTable  supplierCreateLimit={supplierCreateLimit} />
+          <SupplierTable  />
         </CardContent>
       </Card>
 
       {/* Modal */}
-      <AddSupplierModal supplierCreateLimit={supplierCreateLimit} open={isModalOpen} onOpenChange={setIsModalOpen} />
+      <AddSupplierModal  open={isModalOpen} onOpenChange={setIsModalOpen} />
     </div>
   );
 }

@@ -1,5 +1,8 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // src/lib/planFeatures.ts
+
+import {  useGetMyUsageQuery } from "@/redux/features/myUsesLimit/my.uses.limit";
 
 export type PlanFeatures = {
   editSupplier: boolean;
@@ -20,9 +23,14 @@ export type PlanFeatures = {
   messagesPerMonth: number | null;
   notificationsSend: number | null;
   reportCreate: number | null;
+  supplierLimit : number | null
 };
 
+
 export function getPlanFeatures(subscription: any): PlanFeatures {
+  const {data:Limit} =useGetMyUsageQuery(undefined) ;
+  const LimitData = Limit?.data?.limits  ;
+  console.log("My Limit Data",LimitData)
   const features =
     subscription?.features ||
     subscription?.plan?.features ||
@@ -42,16 +50,16 @@ export function getPlanFeatures(subscription: any): PlanFeatures {
     enterpriseSecurity: !!features.enterpriseSecurity,
     dedicatedAccountManager: !!features.dedicatedAccountManager,
 
-    documentReviewsPerMonth: normalizeLimit(features.documentReviewsPerMonth),
-    reportsGeneratedPerMonth: normalizeLimit(features.reportsGeneratedPerMonth),
-    messagesPerMonth: normalizeLimit(features.messagesPerMonth),
-    notificationsSend: normalizeLimit(features.notificationsSend),
-    reportCreate: normalizeLimit(features.reportCreate),
+    documentReviewsPerMonth: normalizeLimit(LimitData?.documentReviewsUsed),
+    reportsGeneratedPerMonth: normalizeLimit(LimitData?.reportsGeneratedUsed),
+    messagesPerMonth: normalizeLimit(LimitData?.messagesUsed),
+    notificationsSend: normalizeLimit(LimitData?.notificationsSend),
+    reportCreate: normalizeLimit(LimitData?.reportCreate),
+    supplierLimit: normalizeLimit(LimitData?.suppliersUsed),
   };
 }
 
 function normalizeLimit(value: any): number | null {
   if (value === null) return null; // Unlimited
-  if (value === undefined) return 0;
   return Number(value) || 0;
 }

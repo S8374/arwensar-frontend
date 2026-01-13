@@ -65,6 +65,7 @@ export default function ProblemsList() {
   };
   const { data: userData } = useUserInfoQuery(undefined);
   const plan = userData?.data?.subscription;
+  const role = userData?.data?.role;
 
   const permissions = getPlanFeatures(plan);
 
@@ -87,12 +88,37 @@ export default function ProblemsList() {
         <div>
           <h1 className="text-3xl font-bold">Problems & Issues   </h1>
 
-
-
-          <h1 className="text-sm font-bold">Report created Limit : {permissions.reportCreate}   </h1>
-          <h1 className="text-sm font-bold">Massage Limit : {permissions.messagesPerMonth}   </h1>
-
-
+          {
+            role === "VENDOR" ?
+              <div>
+                <p className="text-sm text-muted-foreground">
+                  Discussion Massage Create Limit:{" "}
+                  <span className="font-medium">
+                    {permissions?.reportCreate === null ? (
+                      <span className="text-emerald-600">Unlimited</span>
+                    ) : (
+                      <span className="text-destructive">
+                        {permissions?.reportCreate}
+                      </span>
+                    )}
+                  </span>
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Massage  Limit:{" "}
+                  <span className="font-medium">
+                    {permissions?.messagesPerMonth === null ? (
+                      <span className="text-emerald-600">Unlimited</span>
+                    ) : (
+                      <span className="text-destructive">
+                        {permissions?.messagesPerMonth}
+                      </span>
+                    )}
+                  </span>
+                </p>
+              </div>
+              :
+              <p></p>
+          }
 
 
           <p className="text-muted-foreground mt-1">Manage reported issues with suppliers</p>
@@ -101,12 +127,12 @@ export default function ProblemsList() {
           <DialogTrigger asChild>
             <Button size="lg" className="gap-2">
               <Plus className="w-5 h-5" />
-              Report New Problem
+              Create Discussion Massage
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Report a New Problem</DialogTitle>
+              <DialogTitle>New Problem</DialogTitle>
             </DialogHeader>
             <CreateProblemForm onSuccess={() => setIsCreateOpen(false)} />
           </DialogContent>

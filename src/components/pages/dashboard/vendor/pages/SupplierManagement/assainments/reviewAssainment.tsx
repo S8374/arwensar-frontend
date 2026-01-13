@@ -15,7 +15,6 @@ import {
 //{assainmentId}
 export default function ReviewAssainment() {
     const { assessmentId } = useParams<{ assessmentId: string }>();
-    console.log("assainment Id", assessmentId)
 
     const { data: assessmentData, isLoading: loadingAssessment } = useGetAssessmentByIdQuery(assessmentId!);
 

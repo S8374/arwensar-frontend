@@ -25,6 +25,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useDeleteSupplierMutation } from "@/redux/features/admin/admin.api";
 
 const getRiskBadgeVariant = (criticality: string) => {
   switch (criticality?.toUpperCase()) {
@@ -37,9 +38,7 @@ const getRiskBadgeVariant = (criticality: string) => {
       return "bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800";
   }
 };
-interface SupplierTableProps {
-  supplierCreateLimit: number | null;
-}
+
 const getRiskLabel = (criticality: string) => {
   switch (criticality?.toUpperCase()) {
     case "HIGH": return "High Risk";
@@ -48,9 +47,7 @@ const getRiskLabel = (criticality: string) => {
   }
 };
 
-export default function SupplierTable({
-  supplierCreateLimit,
-}: SupplierTableProps) {
+export default function SupplierTable() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [riskFilter, setRiskFilter] = useState("all");
@@ -60,6 +57,8 @@ export default function SupplierTable({
   const suppliers = data?.data || [];
   const [resendInvitation, { isLoading: isResending }] =
     useResendSupplierInvitationMutation();
+  const [deleteSupplier, { isLoading: isDeleting }] =
+    useDeleteSupplierMutation();
 
   // Filter suppliers
   const filteredSuppliers = suppliers.filter((s: any) => {
@@ -84,6 +83,23 @@ export default function SupplierTable({
       alert("Failed to resend invitation");
     }
   };
+  const handleDeleteSupplier = async (supplierId: string) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this supplier? This action cannot be undone."
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await deleteSupplier(supplierId).unwrap();
+      alert("Supplier deleted successfully");
+    } catch (error: any) {
+      alert(
+        error?.data?.message || "Failed to delete supplier. Please try again."
+      );
+    }
+  };
+
 
   if (isLoading) {
     return (
@@ -325,6 +341,13 @@ export default function SupplierTable({
                               >
                                 Resend Invitation
                               </DropdownMenuItem>
+                            
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteSupplier(s.id)}
+                                disabled={isResending && isDeleting}
+                              >
+                                Delete Supplier
+                              </DropdownMenuItem>
 
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -425,7 +448,7 @@ export default function SupplierTable({
         </CardContent>
       </Card>
 
-      <ImportSuppliersModal supplierCreateLimit={supplierCreateLimit} open={isModalOpen} onOpenChange={setIsModalOpen} />
+      <ImportSuppliersModal open={isModalOpen} onOpenChange={setIsModalOpen} />
     </>
   );
 }

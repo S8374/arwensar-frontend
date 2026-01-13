@@ -24,8 +24,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const data = {
     navMain: getSidebarItems(userData.data.role),
   };
+  console.log("navMain",data)
   const location = useLocation();
-  console.log("userData ssss",userData)
   return (
     <Sidebar {...props} className="border-r bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
       <SidebarHeader className="h-16 border-b px-6">
@@ -107,10 +107,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         ))}
       </SidebarContent>
 
-      {/* Profile Section
-      <div className="mt-auto border-t bg-background/80 backdrop-blur">
-        <ProfileMenu />
-      </div> */}
+
 
       <SidebarRail />
     </Sidebar>

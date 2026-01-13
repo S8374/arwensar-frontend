@@ -1,9 +1,12 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/immutability */
 // src/hooks/useVendorFormSignin.ts
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCreateVendorMutation } from "@/redux/features/auth/auth.api";
 import { vendorFormSchema, type VendorFormData } from "@/validation/vendorValidation";
+import toast from "react-hot-toast";
 
 export const useVendorFormSignin = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -36,7 +39,6 @@ export const useVendorFormSignin = () => {
 
   const onSubmit = async (data: VendorFormData) => {
     try {
-      console.log("Submitting vendor data:", data);
       
       // Prepare the data in the format backend expects
       const payload = {
@@ -52,10 +54,8 @@ export const useVendorFormSignin = () => {
         termsAccepted: data.termsAccepted,
       };
 
-      console.log("Payload to send:", payload);
       
       const result = await createVendor(payload).unwrap();
-      console.log("API response:", result);
 
       // CHECK IF USER NOT VERIFIED
       if (result?.data?.user?.isVerified === false) {
@@ -65,8 +65,8 @@ export const useVendorFormSignin = () => {
       }
 
       reset();
-    } catch (error) {
-      console.error("Failed to create vendor:", error);
+    } catch (error : any) {
+      toast.error("Failed to create vendor:",error.massage)
     }
   };
 

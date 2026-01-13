@@ -31,16 +31,13 @@ export const withAuth = (Component: ComponentType, requiredRole?: TRole) => {
     const userEmail = user?.email;
     const isVerified = user?.isVerified;
 
-
-
-    console.log("Auth Debug:", {
+    console.log(
+      user,
       userRole,
-      requiredRole,
-      hasEmail: !!userEmail,
-      isVerified,
-
-      currentPath: location.pathname
-    });
+      userEmail,
+      requiredRole
+    )
+console.log("Requerd Role",requiredRole);
 
     // ✅ Not logged in
     if (!userEmail) {
@@ -55,7 +52,6 @@ export const withAuth = (Component: ComponentType, requiredRole?: TRole) => {
 
     // ✅ Role mismatch
     if (requiredRole && requiredRole !== userRole) {
-      console.log("requiredRole", requiredRole);
       return <Navigate to="/unauthorized" replace />;
     }
 

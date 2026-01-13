@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,7 +13,19 @@ export default function ApiAccess() {
   const plan = userData?.data?.subscription;
 
   const permissions = getPlanFeatures(plan);
-  const apiLink = "https://api.yourdomain.com/v1";
+  const apiLink = "https://dev.api.cybernark.com";
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(apiLink)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000); // reset after 2 seconds
+      })
+      .catch(() => {
+        alert("Failed to copy!");
+      });
+  };
 
   return (
     <div className="space-y-6">
@@ -43,9 +56,10 @@ export default function ApiAccess() {
               {/* API Link Display */}
               <div className="flex items-center gap-2">
                 <Input value={apiLink} readOnly />
-                <Button variant="outline" size="icon">
+                <Button variant="outline" size="icon" onClick={handleCopy}>
                   <Copy className="h-4 w-4" />
                 </Button>
+                {copied && <span className="text-sm text-green-500">Copied!</span>}
               </div>
 
               {/* Status */}

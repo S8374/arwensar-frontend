@@ -98,7 +98,7 @@ export default function CreateProblemForm({ onSuccess }: { onSuccess: () => void
       try {
         attachmentUrls = await uploadFiles(selectedFiles);
       } catch (err) {
-            
+
         return; // Error already handled in hook
       }
     }
@@ -122,7 +122,10 @@ export default function CreateProblemForm({ onSuccess }: { onSuccess: () => void
       toast.success("Problem reported successfully!");
       onSuccess();
     } catch (err: any) {
-      toast.error(err?.data?.message || "Failed to report problem");
+
+        toast.error(err?.data?.message || "Failed to report problem");
+
+      
     }
   };
 
@@ -222,7 +225,7 @@ export default function CreateProblemForm({ onSuccess }: { onSuccess: () => void
       {/* File Attachments */}
       <div className="space-y-4">
         <Label>Attachments (Optional)</Label>
-        
+
         {/* Upload Area */}
         <label className="block">
           <div className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all

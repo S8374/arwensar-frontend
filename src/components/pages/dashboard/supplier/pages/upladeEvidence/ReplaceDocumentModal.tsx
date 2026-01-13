@@ -44,7 +44,6 @@ export function SimpleReplaceModal({
     try {
       // ✅ Call the upload function returned by the hook
       const fileUrl = await minioUploadHook.uploadFile(selectedFile);
-      console.log("file url",fileUrl);
       // Prepare payload for document update
       const updatePayload = {
         documentId: document.id,

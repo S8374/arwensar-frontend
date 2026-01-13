@@ -8,10 +8,10 @@ export type GenerateReportPayload = {
   title: string;
   description?: string;
   reportType:
-    | "RISK_ASSESSMENT"
-    | "COMPLIANCE_REPORT"
-    | "SUPPLIER_EVALUATION"
-    | "FINANCIAL_ANALYSIS";
+  | "RISK_ASSESSMENT"
+  | "COMPLIANCE_REPORT"
+  | "SUPPLIER_EVALUATION"
+  | "FINANCIAL_ANALYSIS";
   vendorId?: string;
   supplierId?: string;
   parameters?: Record<string, any>;

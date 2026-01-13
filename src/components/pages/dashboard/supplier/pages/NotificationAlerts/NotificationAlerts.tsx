@@ -110,9 +110,7 @@ export default function NotificationsAlertsPage() {
   const { data: unreadCountData } = useGetUnreadNotificationCountQuery(undefined, {
     pollingInterval: 60000,
   });
-  console.log("notificationsData", notificationsData);
   const [markAsRead] = useMarkNotificationAsReadMutation();
-  console.log("unreadCountData",unreadCountData)
   const notifications: Notification[] = notificationsData?.data || [];
   const unreadCount : number = unreadCountData?.data?.count || 0; // always a number
 

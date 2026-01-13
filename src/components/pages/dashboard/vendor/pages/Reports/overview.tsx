@@ -46,10 +46,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { toast } from 'sonner';
 import { format, formatDistanceToNow } from 'date-fns';
 import { useUserInfoQuery } from '@/redux/features/auth/auth.api';
 import { getPlanFeatures } from '@/lib/planFeatures';
+import FeatureRestricted from '@/components/upgrade/FeatureRestricted';
+import toast from 'react-hot-toast';
 
 export default function VendorReportsPage() {
     const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
@@ -101,8 +102,8 @@ export default function VendorReportsPage() {
     const totalSuppliers = options?.totalSuppliers || suppliers.length || 0;
     const { data: userData } = useUserInfoQuery(undefined);
     const plan = userData?.data?.subscription;
-      const permissions = getPlanFeatures(plan);
-    
+    const permissions = getPlanFeatures(plan);
+   console.log(permissions)
     // Report type icons
     const getReportTypeIcon = (type: string) => {
         switch (type) {
@@ -146,7 +147,6 @@ export default function VendorReportsPage() {
                     endDate: new Date().toISOString()
                 }
             };
-            console.log("payloade.....................", payload);
             const result = await generateReport(payload).unwrap();
             toast.success(`Report "${result.data?.title}" generated successfully!`);
             setReportTitle('');
@@ -161,16 +161,44 @@ export default function VendorReportsPage() {
     const handleGenerateVendorSummary = async () => {
         try {
             const payload = {
-                title: `Vendor Summary - ${format(new Date(), 'MMM yyyy')}`,
-                reportType: 'RISK_ASSESSMENT',
-                description: 'Comprehensive vendor summary report for all suppliers'
+                title: `Vendor Summary - ${format(new Date(), "MMM yyyy")}`,
+                reportType: "RISK_ASSESSMENT",
+                description: "Comprehensive vendor summary report for all suppliers",
             };
 
             const result = await generateReport(payload).unwrap();
-            toast.success(`Vendor summary report "${result.data?.title}" generated!`);
+
+            toast.success(
+                `Vendor summary report "${result.data?.title}" generated successfully.`
+            );
+
             refetchReports();
         } catch (error: any) {
-            toast.error(error?.data?.message || 'Failed to generate vendor summary');
+            console.log("error", error);
+
+            const status = error?.status;
+
+            let parsedMessage = "Failed to generate vendor summary.";
+
+            // ✅ Parse JSON-string message safely
+            if (typeof error?.data?.message === "string") {
+                try {
+                    const parsed = JSON.parse(error.data.message);
+                    parsedMessage = parsed.message || parsedMessage;
+                } catch {
+                    parsedMessage = error.data.message;
+                }
+            }
+
+
+            if (status === 402) {
+                toast.error(
+                    "You’ve reached your report generation limit. Please upgrade your plan to continue.",
+                    { duration: 5000 }
+                );
+            }
+
+            toast.error(parsedMessage, { duration: 4000 });
         }
     };
 
@@ -190,7 +218,14 @@ export default function VendorReportsPage() {
             toast.success(`Generated ${result.data?.reports?.length || 0} reports`);
             refetchReports();
         } catch (error: any) {
-            toast.error(error?.data?.message || 'Failed to bulk generate reports');
+            if (error?.status === 402) {
+                toast.error("Limit Expired");
+                return;
+            }
+            else {
+                toast.error(error?.data?.message || 'Failed to bulk generate reports');
+
+            }
         }
     };
 
@@ -290,7 +325,18 @@ export default function VendorReportsPage() {
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                         <div>
                             <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Report Management </h1>
-                            <p className="text-gray-600 mt-2">Your Limit : {permissions.reportCreate} </p>
+                            <p className="text-sm text-muted-foreground">
+                                Your reportsGeneratedPerMonth   limit :{" "}
+                                <span className="font-medium">
+                                    {permissions.reportsGeneratedPerMonth === null ? (
+                                        <span className="text-emerald-600">Unlimited</span>
+                                    ) : (
+                                        <span className="text-destructive">
+                                            {permissions.reportsGeneratedPerMonth}
+                                        </span>
+                                    )}
+                                </span>
+                            </p>
                             <p className="text-gray-600 mt-2">Generate, analyze, and manage reports for your suppliers</p>
                         </div>
                         <div className="flex items-center gap-3">
@@ -519,116 +565,127 @@ export default function VendorReportsPage() {
                     </Card>
 
                     {/* Quick Actions Card */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Send className="h-5 w-5 text-green-600" />
-                                Quick Actions
-                            </CardTitle>
-                            <CardDescription>
-                                Send, view, or manage existing reports
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="email">Send Report via Email</Label>
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    placeholder="recipient@company.com"
-                                    value={emailToSend}
-                                    onChange={(e) => setEmailToSend(e.target.value)}
-                                />
-                            </div>
 
-                            <div className="space-y-2">
-                                <Label>Select Report</Label>
-                                <Select
-                                    value={selectedReportId || ''}
-                                    onValueChange={(value) => setSelectedReportId(value || null)}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Choose a report" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {recentReports.slice(0, 5).map((report: any) => (
-                                            <SelectItem key={report.id} value={report.id}>
-                                                <div className="flex items-center justify-between w-full">
-                                                    <span className="truncate">{report.title}</span>
-                                                    <Badge variant={getStatusVariant(report.status)} className="ml-2 text-xs">
-                                                        {report.status}
-                                                    </Badge>
-                                                </div>
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3">
-                                <Button
-                                    onClick={() => selectedReportId && handleSendReport(selectedReportId)}
-                                    disabled={!selectedReportId || !emailToSend || sending}
-                                    className="w-full"
-                                >
-                                    {sending ? (
-                                        <>
-                                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                            Sending...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Mail className="h-4 w-4 mr-2" />
-                                            Send
-                                        </>
-                                    )}
-                                </Button>
-
-                                <Button
-                                    onClick={() => selectedReportId && handleViewReport(selectedReportId)}
-                                    disabled={!selectedReportId || downloading}
-                                    variant="outline"
-                                    className="w-full"
-                                >
-                                    {downloading ? (
-                                        <>
-                                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                            Downloading...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Download className="h-4 w-4 mr-2" />
-                                            Download
-                                        </>
-                                    )}
-                                </Button>
-                            </div>
-
-                            {selectedReportId && reportDetails?.data && (
-                                <div className="pt-4 border-t">
-                                    <p className="text-sm font-medium mb-2">Selected Report:</p>
-                                    <div className="space-y-2">
-                                        <p className="text-sm font-medium truncate">{reportDetails.data.title}</p>
-                                        <div className="flex flex-wrap gap-2">
-                                            <Badge variant="outline" className="text-xs">
-                                                {getReportTypeIcon(reportDetails.data.reportType)}
-                                                {reportDetails.data.reportType}
-                                            </Badge>
-                                            <Badge variant={getStatusVariant(reportDetails.data.status)} className="text-xs">
-                                                {reportDetails.data.status}
-                                            </Badge>
-                                            <Badge variant="secondary" className="text-xs">
-                                                {formatFileSize(reportDetails.data.fileSize)}
-                                            </Badge>
-                                        </div>
-                                        <p className="text-xs text-gray-500">
-                                            Created {formatDistanceToNow(new Date(reportDetails.data.createdAt), { addSuffix: true })}
-                                        </p>
-                                    </div>
+                    {
+                        permissions?.emailSupport ? <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Send className="h-5 w-5 text-green-600" />
+                                    Quick Actions
+                                </CardTitle>
+                                <CardDescription>
+                                    Send, view, or manage existing reports
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="email">Send Report via Email</Label>
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        placeholder="recipient@company.com"
+                                        value={emailToSend}
+                                        onChange={(e) => setEmailToSend(e.target.value)}
+                                    />
                                 </div>
-                            )}
-                        </CardContent>
-                    </Card>
+
+                                <div className="space-y-2">
+                                    <Label>Select Report</Label>
+                                    <Select
+                                        value={selectedReportId || ''}
+                                        onValueChange={(value) => setSelectedReportId(value || null)}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Choose a report" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {recentReports.slice(0, 5).map((report: any) => (
+                                                <SelectItem key={report.id} value={report.id}>
+                                                    <div className="flex items-center justify-between w-full">
+                                                        <span className="truncate">{report.title}</span>
+                                                        <Badge variant={getStatusVariant(report.status)} className="ml-2 text-xs">
+                                                            {report.status}
+                                                        </Badge>
+                                                    </div>
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <Button
+                                        onClick={() => selectedReportId && handleSendReport(selectedReportId)}
+                                        disabled={!selectedReportId || !emailToSend || sending}
+                                        className="w-full"
+                                    >
+                                        {sending ? (
+                                            <>
+                                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                                Sending...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Mail className="h-4 w-4 mr-2" />
+                                                Send
+                                            </>
+                                        )}
+                                    </Button>
+
+                                    <Button
+                                        onClick={() => selectedReportId && handleViewReport(selectedReportId)}
+                                        disabled={!selectedReportId || downloading}
+                                        variant="outline"
+                                        className="w-full"
+                                    >
+                                        {downloading ? (
+                                            <>
+                                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                                Downloading...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Download className="h-4 w-4 mr-2" />
+                                                Download
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
+
+                                {selectedReportId && reportDetails?.data && (
+                                    <div className="pt-4 border-t">
+                                        <p className="text-sm font-medium mb-2">Selected Report:</p>
+                                        <div className="space-y-2">
+                                            <p className="text-sm font-medium truncate">{reportDetails.data.title}</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                <Badge variant="outline" className="text-xs">
+                                                    {getReportTypeIcon(reportDetails.data.reportType)}
+                                                    {reportDetails.data.reportType}
+                                                </Badge>
+                                                <Badge variant={getStatusVariant(reportDetails.data.status)} className="text-xs">
+                                                    {reportDetails.data.status}
+                                                </Badge>
+                                                <Badge variant="secondary" className="text-xs">
+                                                    {formatFileSize(reportDetails.data.fileSize)}
+                                                </Badge>
+                                            </div>
+                                            <p className="text-xs text-gray-500">
+                                                Created {formatDistanceToNow(new Date(reportDetails.data.createdAt), { addSuffix: true })}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card> :
+                            <FeatureRestricted
+                                title=" Email Support Premium"
+                                description="Buy A plan to find It"
+                                requiredPlan="premium"
+                                feature="compliance_dashboard"
+                                className="h-full"
+                            />
+                    }
+
                 </div>
 
                 {/* Reports Table */}

@@ -66,7 +66,7 @@ export default function SendAlertModal({
             Send Alert {supplierName ? `to ${supplierName}` : "to Supplier"}
           </DialogTitle>
           <p className="text-xs sm:text-sm text-muted-foreground -mt-1">
-            Notify the supplier about important updates or issues.
+            Notify the supplier about important updates or issues. sss
           </p>
         </DialogHeader>
 

@@ -11,9 +11,7 @@ interface Props {
 
 export default function ComplianceDonutChart({ data }: Props) {
   const [date, setDate] = useState<Date | undefined>(new Date());
-  console.log("Data....",data)
   const total = data.reduce((sum, item) => sum + item.value, 0);
-  console.log("Total....", total);
   return (
     <Card className="h-full flex flex-col border-0 shadow-xl bg-linear-to-br from-white to-gray-50/50 dark:from-gray-900 dark:to-gray-800/50">
       <CardHeader className="flex flex-row items-center justify-between pb-4 space-y-0 shrink-0">
