@@ -3,20 +3,20 @@
 // src/components/NotificationSetting.tsx
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { 
-  Mail, 
-  AlertTriangle, 
-  FileText, 
-  CheckCircle2, 
-  Loader2, 
+import {
+  Mail,
+  AlertTriangle,
+  FileText,
+  CheckCircle2,
+  Loader2,
   MessageSquare,
   Calendar,
   CreditCard
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { 
-  useGetNotificationPreferencesQuery, 
-  useUpdateNotificationPreferencesMutation 
+import {
+  useGetNotificationPreferencesQuery,
+  useUpdateNotificationPreferencesMutation
 } from "@/redux/features/user/user.api";
 import { toast } from "sonner";
 
@@ -61,7 +61,7 @@ export default function NotificationSetting() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       await updatePreferences(preferences).unwrap();
       toast.success("Notification preferences saved successfully!");
@@ -83,7 +83,27 @@ export default function NotificationSetting() {
 
   return (
     <div className="w-full mx-auto space-y-8 py-8">
-      
+      {/* Save Button */}
+      <div className="flex justify-start pt-8">
+        <Button
+          type="submit"
+          size="lg"
+          disabled={isSaving}
+          className="px-10 bg-chart-6 hover:bg-chart-6/90 shadow-lg"
+        >
+          {isSaving ? (
+            <>
+              <Loader2 className="w-5 h-5 mr-3 animate-spin" />
+              Saving Changes...
+            </>
+          ) : (
+            <>
+              <CheckCircle2 className="w-5 h-5 mr-3" />
+              Save Preferences
+            </>
+          )}
+        </Button>
+      </div>
 
       {/* Loading State */}
       {isLoadingPrefs ? (

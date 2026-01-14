@@ -1,10 +1,34 @@
-import image1 from "../../../../assets/home/image1.png";
+import image1 from "../../../../assets/home/image6.png";
 import { motion } from "framer-motion";
 import { AnimatedContainer, AnimatedItem } from "@/lib/animation/AnimatedContainer";
 import { AnimatedButton } from "@/lib/animation/AnimatedButton";
 import { fadeInUp, slideInRight, staggerContainer } from "@/lib/animation/animations";
+import { useState, useEffect } from "react";
 
 export default function AboutHero() {
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [containerHeight, setContainerHeight] = useState("auto");
+
+  // Adjust container height based on viewport
+  useEffect(() => {
+    const updateHeight = () => {
+      if (window.innerWidth >= 1024) {
+        // Desktop: Fixed height
+        setContainerHeight("500px");
+      } else if (window.innerWidth >= 768) {
+        // Tablet: Medium height
+        setContainerHeight("400px");
+      } else {
+        // Mobile: Auto height
+        setContainerHeight("auto");
+      }
+    };
+
+    updateHeight();
+    window.addEventListener('resize', updateHeight);
+    return () => window.removeEventListener('resize', updateHeight);
+  }, []);
+
   return (
     <AnimatedContainer className="bg-gradient-to-b from-primary/75 via-primary/45 to-transparent text-foreground pt-32 md:pt-44 lg:pt-52 mb-8 overflow-hidden">
       {/* Decorative Background Elements */}
@@ -91,14 +115,11 @@ export default function AboutHero() {
                     </motion.svg>
                   </div>
                 </AnimatedButton>
-
               </motion.div>
             </AnimatedItem>
-
-        
           </motion.div>
 
-          {/* RIGHT IMAGE */}
+          {/* RIGHT IMAGE - Flexible Display */}
           <motion.div
             variants={slideInRight}
             initial="hidden"
@@ -110,8 +131,13 @@ export default function AboutHero() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3, duration: 0.6 }}
               whileHover={{ scale: 1.03 }}
-              className="relative w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl"
+              className="relative w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-2xl"
             >
+              {/* Loading Skeleton */}
+              {!imageLoaded && (
+                <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse rounded-2xl" />
+              )}
+
               {/* Floating Elements */}
               <motion.div
                 animate={{ y: [0, -10, 0] }}
@@ -133,21 +159,32 @@ export default function AboutHero() {
                 className="absolute -bottom-4 -left-4 w-16 h-16 bg-primary/20 rounded-full blur-xl"
               />
 
-              {/* Main Image */}
+              {/* Main Image Container */}
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 className="relative"
               >
-                <img
-                  src={image1}
-                  alt="CyberNark illustration"
-                  className="w-full h-auto object-contain drop-shadow-2xl rounded-2xl border-2 border-white/20 bg-gradient-to-br from-white/10 to-transparent backdrop-blur-sm"
-                  style={{
-                    maxHeight: '400px',
-                    height: 'auto'
-                  }}
-                />
+                <div 
+                  className="relative w-full flex items-center justify-center overflow-hidden rounded-2xl border-2 border-white/20 bg-gradient-to-br from-white/10 to-transparent backdrop-blur-sm p-4"
+                  style={{ height: containerHeight }}
+                >
+                  <img
+                    src={image1}
+                    alt="CyberNark illustration"
+                    className={`w-auto h-auto max-w-full max-h-full object-contain transition-opacity duration-300 ${
+                      imageLoaded ? "opacity-100" : "opacity-0"
+                    }`}
+                    onLoad={() => setImageLoaded(true)}
+                    loading="lazy"
+                    style={{
+                      width: 'auto',
+                      height: 'auto',
+                      maxWidth: '100%',
+                      maxHeight: '100%'
+                    }}
+                  />
+                </div>
 
                 {/* Image Glow Effect */}
                 <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-chart-6/10 to-primary/10 blur-2xl -z-10" />
@@ -157,36 +194,7 @@ export default function AboutHero() {
         </motion.div>
       </div>
 
-      {/* Animated Scroll Indicator */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1 }}
-        className="absolute bottom-8 left-1/2 transform -translate-x-1/2 hidden lg:block"
-      >
-        <motion.div
-          animate={{ y: [0, 10, 0] }}
-          transition={{
-            repeat: Infinity,
-            duration: 2,
-            ease: "easeInOut"
-          }}
-          className="flex flex-col items-center gap-2"
-        >
-          <div className="text-xs text-muted-foreground">Scroll to explore</div>
-          <div className="w-6 h-10 border-2 border-border rounded-full flex justify-center">
-            <motion.div
-              animate={{ y: [0, 12, 0] }}
-              transition={{
-                repeat: Infinity,
-                duration: 1.5,
-                ease: "easeInOut"
-              }}
-              className="w-1 h-3 bg-chart-6 rounded-full mt-2"
-            />
-          </div>
-        </motion.div>
-      </motion.div>
+      
     </AnimatedContainer>
   );
 }

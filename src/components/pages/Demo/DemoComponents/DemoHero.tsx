@@ -26,15 +26,21 @@ export default function DemoHero() {
             </AnimatedItem>
           </div>
 
-          {/* RIGHT IMAGE */}
+          {/* RIGHT IMAGE - Simple Version */}
           <AnimatedItem delay={0.2} className="flex-1 flex justify-center lg:justify-end w-full">
-            <div className="relative group w-full max-w-[280px] sm:max-w-[320px] md:max-w-[380px] lg:max-w-[440px] xl:max-w-[500px]">
-              <div className="absolute -inset-4 bg-gradient-to-r from-chart-6/20 to-primary/20 rounded-full blur-xl opacity-70 group-hover:opacity-100 transition-opacity duration-500" />
-              <img
-                src={image1}
-                alt="CyberNark illustration"
-                className="relative w-full h-auto object-contain group-hover:scale-105 transition-transform duration-500"
-              />
+            <div className="relative w-full max-w-full lg:max-w-[500px] xl:max-w-[600px]">
+              <div className="relative w-full p-4">
+                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-chart-6/5 to-primary/5 p-2">
+                  <img
+                    src={image1}
+                    alt="CyberNark illustration"
+                    className="w-full h-auto max-w-full object-contain"
+                    loading="lazy"
+                  />
+                </div>
+                {/* Glow Effect */}
+                <div className="absolute inset-0 -z-10 bg-gradient-to-r from-chart-6/20 to-primary/20 blur-2xl opacity-50" />
+              </div>
             </div>
           </AnimatedItem>
         </div>

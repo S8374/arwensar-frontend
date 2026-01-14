@@ -17,7 +17,7 @@ export default function ComplianceCard({ feature}: { feature: Compliance}) {
 
             {/* Image */}
             <div className="relative h-64 overflow-hidden  p-4">
-                <div className="rounded-2xl shadow-xl overflow-hidden border ">
+                <div className="rounded-2xl  overflow-hidden border ">
                     <img
                         src={feature.image}
                         alt={feature.title}

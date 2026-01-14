@@ -6,8 +6,15 @@ import { AnimatedContainer, AnimatedItem } from '@/lib/animation/AnimatedContain
 import { AnimatedCard } from '@/lib/animation/AnimatedCard';
 import { motion } from 'framer-motion';
 import { fadeInUp, staggerContainer } from '@/lib/animation/animations';
+import { useState } from 'react';
 
 export default function ServicesHero() {
+  const [loadedImages, setLoadedImages] = useState<number[]>([]);
+
+  const handleImageLoad = (id: number) => {
+    setLoadedImages(prev => [...prev, id]);
+  };
+
   const heroData = {
     title: "See how CyberNark simplifies supplier risk management",
     description: "Everything you need to assess, monitor, and manage supplier risks in one secure platform.",
@@ -17,17 +24,26 @@ export default function ServicesHero() {
       { id: 3, title: "Compliance Rate", value: "98%", change: "+5%", color: "green" }
     ],
     images: [
-      { id: 1, src: image1, alt: "Supplier risk management dashboard" },
-      { id: 2, src: image2, alt: "Vendor assessment interface" },
-      { id: 3, src: image3, alt: "Compliance tracking" },
-      { id: 4, src: image4, alt: "Risk analytics" }
+      { id: 1, src: image1, alt: "Supplier risk management dashboard", aspectRatio: "16:9" },
+      { id: 2, src: image2, alt: "Vendor assessment interface", aspectRatio: "16:9" },
+      { id: 3, src: image3, alt: "Compliance tracking", aspectRatio: "16:9" },
+      { id: 4, src: image4, alt: "Risk analytics", aspectRatio: "16:9" }
     ]
+  };
+
+  const getAspectRatioClass = (aspectRatio: string) => {
+    switch (aspectRatio) {
+      case "4:3": return "aspect-[4/3]";
+      case "3:4": return "aspect-[3/4]";
+      case "1:1": return "aspect-square";
+      default: return "aspect-video"; // 16:9
+    }
   };
 
   return (
     <AnimatedContainer className="w-full bg-background relative text-foreground">
       {/* Main Content */}
-      <div className="w-full relative bg-gradient-to-b from-primary/75 via-primary/45 to-transparent mb-8 overflow-hidden pt-16 md:pt-16 lg:pt-24">
+      <div className="w-full relative bg-linear-to-b pb-10 from-primary/75 via-primary/45 to-transparent mb-8 overflow-hidden pt-16 md:pt-16 lg:pt-24">
         {/* Background Circle */}
         <div className="absolute inset-0 rounded-full border border-foreground/0" />
 
@@ -41,8 +57,8 @@ export default function ServicesHero() {
 
             {/* Left Content - Text */}
             <div className="w-full lg:w-1/2 space-y-6">
-              {/* Left Content - Text */}
-             
+              {/* Title and Description */}
+              <div className="space-y-4 sm:space-y-6">
                 <AnimatedItem>
                   <motion.h1
                     variants={fadeInUp}
@@ -64,6 +80,7 @@ export default function ServicesHero() {
                     {heroData.description}
                   </motion.p>
                 </AnimatedItem>
+              </div>
 
               {/* Stats Cards */}
               <AnimatedItem delay={0.2}>
@@ -118,7 +135,13 @@ export default function ServicesHero() {
                     custom={index}
                     whileHover={{ y: -5, scale: 1.02 }}
                     transition={{ type: "spring", stiffness: 300 }}
+                    className="relative"
                   >
+                    {/* Loading Skeleton */}
+                    {!loadedImages.includes(image.id) && (
+                      <div className={`absolute inset-0 ${getAspectRatioClass(image.aspectRatio)} bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse rounded-lg`} />
+                    )}
+
                     <AnimatedCard
                       className="rounded-lg border border-border/50 overflow-hidden"
                       whileHover={{ scale: 1.05 }}
@@ -126,12 +149,14 @@ export default function ServicesHero() {
                       <motion.div
                         whileHover={{ scale: 1.1 }}
                         transition={{ duration: 0.3 }}
-                        className="overflow-hidden"
+                        className={`overflow-hidden ${getAspectRatioClass(image.aspectRatio)}`}
                       >
                         <img
                           src={image.src}
                           alt={image.alt}
-                          className="w-full h-40 sm:h-48 lg:h-56 xl:h-64 object-cover transition-transform duration-300"
+                          className="w-full h-full object-contain transition-transform duration-300"
+                          onLoad={() => handleImageLoad(image.id)}
+                          loading="lazy"
                         />
                       </motion.div>
                     </AnimatedCard>
@@ -147,7 +172,13 @@ export default function ServicesHero() {
                     custom={index + 2}
                     whileHover={{ y: -5, scale: 1.02 }}
                     transition={{ type: "spring", stiffness: 300 }}
+                    className="relative"
                   >
+                    {/* Loading Skeleton */}
+                    {!loadedImages.includes(image.id) && (
+                      <div className={`absolute inset-0 ${getAspectRatioClass(image.aspectRatio)} bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse rounded-lg`} />
+                    )}
+
                     <AnimatedCard
                       className="rounded-lg border border-border/50 overflow-hidden"
                       whileHover={{ scale: 1.05 }}
@@ -155,12 +186,14 @@ export default function ServicesHero() {
                       <motion.div
                         whileHover={{ scale: 1.1 }}
                         transition={{ duration: 0.3 }}
-                        className="overflow-hidden"
+                        className={`overflow-hidden ${getAspectRatioClass(image.aspectRatio)}`}
                       >
                         <img
                           src={image.src}
                           alt={image.alt}
-                          className="w-full h-40 sm:h-48 lg:h-56 xl:h-64 object-cover transition-transform duration-300"
+                          className="w-full h-full object-contain transition-transform duration-300"
+                          onLoad={() => handleImageLoad(image.id)}
+                          loading="lazy"
                         />
                       </motion.div>
                     </AnimatedCard>

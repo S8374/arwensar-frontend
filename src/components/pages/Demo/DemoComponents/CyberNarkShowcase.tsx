@@ -1,6 +1,6 @@
 import { CardContent, CardHeader } from "@/components/ui/card";
 import image1 from "../../../../assets/home/image1.png";
-import image2 from "../../../../assets/home/image1.png";
+import image2 from "../../../../assets/home/image2.png";
 import image3 from "../../../../assets/home/dataevidence.png";
 import image4 from "../../../../assets/home/datacenter.png";
 import { AnimatedContainer, AnimatedItem, AnimatedSection } from "@/lib/animation/AnimatedContainer";

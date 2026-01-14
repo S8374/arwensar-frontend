@@ -3,6 +3,7 @@ import { ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { AnimatedContainer, AnimatedItem } from "@/lib/animation/AnimatedContainer";
 import { slideInRight, slideInLeft, staggerContainer } from "@/lib/animation/animations";
+import { useState } from "react";
 
 interface Feature {
   icon?: React.ReactNode;
@@ -23,6 +24,7 @@ interface ReusableComponentProps {
   reverse?: boolean;
   className?: string;
   onButtonClick?: () => void;
+  showImageFrame?: boolean;
 }
 
 export default function ReusableComponent({
@@ -38,8 +40,11 @@ export default function ReusableComponent({
   buttonSize = "md",
   reverse = false,
   className = "",
-  onButtonClick
+  onButtonClick,
+  showImageFrame = true
 }: ReusableComponentProps) {
+  const [imageLoaded, setImageLoaded] = useState(false);
+  
   const buttonStyles = {
     primary: "bg-primary text-white hover:bg-primary/95 border shadow-lg",
     secondary: "bg-gray-600 text-white hover:bg-gray-700 border-gray-600 shadow-lg",
@@ -69,21 +74,48 @@ export default function ReusableComponent({
         className
       )}
     >
-      {/* Image Section */}
+      {/* Image Section - Flexible */}
       <AnimatedContainer
         variants={reverse ? slideInRight : slideInLeft}
-        className="relative flex flex-col border-2 shadow-sm rounded-lg w-full lg:w-1/2 xl:w-2/5 max-w-lg lg:max-w-none overflow-hidden"
+        className={cn(
+          "w-full lg:w-1/2 xl:w-2/5 max-w-lg lg:max-w-none",
+          showImageFrame && "border-2 shadow-sm rounded-lg overflow-hidden"
+        )}
       >
         <motion.div
-          whileHover={{ scale: 1.02 }}
+          whileHover={{ scale: showImageFrame ? 1.02 : 1.01 }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
-          className="relative w-full aspect-video lg:aspect-square xl:aspect-video overflow-hidden text-foreground rounded-md"
+          className="relative w-full"
         >
-          <img
-            src={imageSrc}
-            alt={imageAlt}
-            className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
-          />
+          {/* Loading Skeleton */}
+          {!imageLoaded && (
+            <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse rounded-lg" />
+          )}
+          
+          {/* Image that shows fully */}
+          <div className="relative w-full overflow-hidden rounded-lg">
+            <img
+              src={imageSrc}
+              alt={imageAlt}
+              className={cn(
+                "w-full h-auto max-h-[600px] object-contain transition-transform duration-700 hover:scale-105",
+                imageLoaded ? "opacity-100" : "opacity-0",
+                "mx-auto" // Center the image
+              )}
+              onLoad={() => setImageLoaded(true)}
+              loading="lazy"
+              // Preserve aspect ratio while showing full image
+              style={{ 
+                maxWidth: '100%',
+                height: 'auto'
+              }}
+            />
+          </div>
+          
+          {/* Optional Hover Overlay */}
+          {showImageFrame && (
+            <div className="absolute inset-0 bg-gradient-to-t from-black/5 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+          )}
         </motion.div>
       </AnimatedContainer>
 

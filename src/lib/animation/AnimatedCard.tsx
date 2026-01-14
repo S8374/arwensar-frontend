@@ -40,29 +40,29 @@ interface FeatureCardProps {
 
 export function FeatureCard({ title, description, image, imageAlt = title }: FeatureCardProps) {
   return (
-    <AnimatedCard className="group relative overflow-hidden border bg-background backdrop-blur-sm transition-all duration-300 hover:shadow-xl sm:hover:shadow-2xl hover:border">
-      {/* Subtle glow background */}
-      <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-        <div className="absolute -top-16 -left-16 sm:-top-32 sm:-left-32 w-48 h-48 sm:w-96 sm:h-96 rounded-full bg-background blur-2xl sm:blur-3xl" />
-        <div className="absolute -bottom-16 -right-16 sm:-bottom-32 sm:-right-32 w-48 h-48 sm:w-96 sm:h-96 rounded-full bg-background blur-2xl sm:blur-3xl" />
-      </div>
+    <AnimatedCard 
+      className="group relative overflow-hidden border bg-background/80 backdrop-blur-sm transition-all duration-300 hover:shadow-2xl hover:border-primary/50 h-full flex flex-col"
+    >
+      {/* Subtle gradient overlay on hover */}
+      <div className="pointer-events-none absolute inset-0 bg-linear-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-      <CardHeader className="pb-3 sm:pb-4">
+      <CardHeader className="pb-4 relative overflow-hidden">
         <motion.div
-          className="relative aspect-4/3 w-full overflow-hidden rounded-lg sm:rounded-xl border bg-muted/50"
-          whileHover={{ scale: 1.03 }}
+          className="relative aspect-video w-full overflow-hidden  border bg-muted/30"
+          whileHover={{ scale: 1.05 }}
           transition={{ type: "spring", stiffness: 400, damping: 25 }}
         >
           <img
             src={image}
             alt={imageAlt}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-110"
+            loading="lazy" // Improve performance
           />
         </motion.div>
       </CardHeader>
 
-      <CardContent className="space-y-3 sm:space-y-4">
-        <CardTitle className="text-xl sm:text-2xl font-semibold text-foreground">
+      <CardContent className="flex-grow space-y-3 sm:space-y-4 px-6 pb-6">
+        <CardTitle className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
           {title}
         </CardTitle>
         <CardDescription className="text-sm sm:text-base leading-relaxed text-muted-foreground">

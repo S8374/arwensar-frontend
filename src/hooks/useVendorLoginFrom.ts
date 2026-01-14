@@ -56,28 +56,39 @@ export const useLoginForm = () => {
         }, 800);
       }
     } catch (err: any) {
-      toast.error("Login error:", err);
+  console.log("LOGIN ERROR 👉", err);
 
-      const message = err?.data?.message || "Login failed. Please try again.";
+  const message =
+    err?.data?.message ||
+    err?.error ||
+    err?.message ||
+    "Login failed";
 
-      // Detect unverified email case
-      if (err?.status === 403 && message.toLowerCase().includes("verify your email")) {
-        toast.error("Please verify your email to continue.", {
-          duration: 6000,
-        });
+  // 🔐 Wrong email or password
+  if (err?.status === 401) {
+    toast.error("Incorrect  password", {
+      position: "top-center",
+      duration: 4000,
+    });
+    return;
+  }
 
-        // Redirect to OTP verification page with encoded email
-        const encodedEmail = encodeURIComponent(data.email.trim().toLowerCase());
-        window.location.href = `/verify/${encodeURIComponent(encodedEmail)}`;
-        return;
-      }
+  // 📧 Email not verified
+  if (
+    err?.status === 403 &&
+    message.toLowerCase().includes("verify")
+  ) {
+    toast.error("Please verify your email to continue.", {
+      duration: 6000,
+    });
 
-      // All other errors
-      toast.error(message, {
-        position: "top-center",
-        duration: 5000,
-      });
-    }
+    const encodedEmail = encodeURIComponent(data.email.trim().toLowerCase());
+    window.location.href = `/verify/${encodedEmail}`;
+    return;
+  }
+
+}
+
   };
 
   // Helper to safely update terms + trigger validation

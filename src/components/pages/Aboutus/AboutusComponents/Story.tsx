@@ -3,8 +3,11 @@ import { motion } from "framer-motion";
 import { AnimatedContainer, AnimatedItem, AnimatedSection } from "@/lib/animation/AnimatedContainer";
 import { fadeInUp, slideInLeft, slideInRight, staggerContainer } from "@/lib/animation/animations";
 import { Target, Eye, Shield, Zap, Users, Quote } from "lucide-react";
+import { useState } from "react";
 
 export default function Story() {
+    const [imageLoaded, setImageLoaded] = useState(false);
+    
     const missionPoints = [
         { icon: <Shield className="w-5 h-5" />, text: "simplifies NIS2 and security compliance" },
         { icon: <Zap className="w-5 h-5" />, text: "automates assessments, scoring, and monitoring" },
@@ -112,7 +115,7 @@ export default function Story() {
                     </div>
                 </AnimatedSection>
 
-                {/* Image */}
+                {/* Image Section - FIXED */}
                 <AnimatedItem className="mt-12 lg:mt-16">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -121,12 +124,33 @@ export default function Story() {
                         whileHover={{ scale: 1.02 }}
                         className="relative w-full max-w-[1130px] mx-auto"
                     >
-                        <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-primary/20 to-chart-6/20 blur-xl -z-10" />
-                        <img
-                            className="w-full h-auto aspect-1130/775 rounded-2xl object-cover border-2 border-border/50 shadow-2xl"
-                            src={image1}
-                            alt="CyberNark platform overview"
-                        />
+                        {/* Loading Skeleton */}
+                        {!imageLoaded && (
+                            <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse" />
+                        )}
+
+                        {/* Glow Effect */}
+                        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-primary/20 to-chart-6/20 blur-xl -z-10" />
+                        
+                        {/* Image Container */}
+                        <div className="relative w-full rounded-2xl border-2 border-border/50 shadow-2xl overflow-hidden bg-gradient-to-br from-white/5 to-transparent backdrop-blur-sm p-4">
+                            <img
+                                className={`w-full h-auto object-contain max-h-[600px] transition-opacity duration-300 ${
+                                    imageLoaded ? 'opacity-100' : 'opacity-0'
+                                }`}
+                                src={image1}
+                                alt="CyberNark platform overview"
+                                onLoad={() => setImageLoaded(true)}
+                                loading="lazy"
+                                style={{
+                                    width: '100%',
+                                    height: 'auto',
+                                    maxWidth: '100%'
+                                }}
+                            />
+                        </div>
+
+                        {/* Animated Dots */}
                         <motion.div
                             animate={{ y: [0, -5, 0] }}
                             transition={{ repeat: Infinity, duration: 2 }}

@@ -20,7 +20,7 @@ export const adminApi = baseApi.injectEndpoints({
       query: (data) => ({
         url: "/admin/plans",
         method: "POST",
-        body: data,
+        data: data,
       }),
       invalidatesTags: ["plan"],
     }),
@@ -29,7 +29,7 @@ export const adminApi = baseApi.injectEndpoints({
       query: ({ planId, ...data }) => ({
         url: `/admin/plans/${planId}`,
         method: "PATCH",
-      data: data,
+        data: data,
       }),
       invalidatesTags: ["plan"],
     }),
@@ -51,10 +51,10 @@ export const adminApi = baseApi.injectEndpoints({
 
     // ================= ASSESSMENTS =================
     createAssessment: builder.mutation<any, any>({
-      query: (data) => ({
+      query: (body) => ({
         url: "/admin/assessments",
         method: "POST",
-        body: data,
+        data: body,
       }),
       invalidatesTags: ["assessment"],
     }),
@@ -71,9 +71,9 @@ export const adminApi = baseApi.injectEndpoints({
       query: ({ assessmentId, data }) => ({
         url: `/admin/assessments/${assessmentId}`,
         method: "PATCH",
-        body: data,
+        data: data,
       }),
-      invalidatesTags: (result, error, { assessmentId }) => [
+      invalidatesTags: (_result, _error, { assessmentId }) => [
         { type: "assessment", id: assessmentId },
         "assessment",
       ],
@@ -85,7 +85,7 @@ export const adminApi = baseApi.injectEndpoints({
         url: `/admin/assessments/${assessmentId}`,
         method: "DELETE",
       }),
-      invalidatesTags: (result, error, assessmentId) => [
+      invalidatesTags: (_result, _error, assessmentId) => [
         { type: "assessment", id: assessmentId },
         "assessment",
       ],
@@ -116,16 +116,16 @@ export const adminApi = baseApi.injectEndpoints({
       invalidatesTags: ["User"],
     }),
 
-toggleUserBlock: builder.mutation<void, { userId: string; block: boolean }>({
-  query: ({ userId, block }) => ({
-    url: `/admin/user/${userId}/block`,
-    method: "PATCH",
-    data: { block }, // <-- send block status here
-  }),
-  invalidatesTags: ["User"],
-})
+    toggleUserBlock: builder.mutation<void, { userId: string; block: boolean }>({
+      query: ({ userId, block }) => ({
+        url: `/admin/user/${userId}/block`,
+        method: "PATCH",
+        data: { block }, // <-- send block status here
+      }),
+      invalidatesTags: ["User"],
+    })
 
-,
+    ,
     permanentDeleteUser: builder.mutation<void, string>({
       query: (userId) => ({
         url: `/admin/users/permanent/${userId}`,
@@ -218,6 +218,13 @@ toggleUserBlock: builder.mutation<void, { userId: string; block: boolean }>({
         method: "POST",
       }),
     }),
+    getUserById: builder.query<any, string>({
+      query: (userId) => ({
+        url: `/admin/${userId}`,
+        method: "GET",
+      }),
+      providesTags: (_r, _e, id) => [{ type: "User", id }],
+    })
   }),
 });
 
@@ -230,12 +237,11 @@ export const {
   useUpdatePlanMutation,
   useDeletePlanMutation,
   useGetPlanByIdQuery,
-
+  useGetUserByIdQuery,
   useCreateAssessmentMutation,
   useGetAllAssessmentsQuery,
   useUpdateAssessmentMutation,
   useDeleteAssessmentMutation,
-
   useGetAllUsersQuery,
   useUpdateUserMutation,
   useDeleteUserMutation,

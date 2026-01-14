@@ -7,7 +7,7 @@ import { AnimatedContainer, AnimatedItem } from "@/lib/animation/AnimatedContain
 export const FeaturesSection = () => {
   const features = [
     {
-      title: "Suppliers",
+      title: "Vendor",
       description: "Complete overview of your supplier ecosystem with real-time status tracking",
       image: image1,
     },
