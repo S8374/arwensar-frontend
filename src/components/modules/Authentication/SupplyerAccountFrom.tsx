@@ -10,8 +10,8 @@ import { AlertCircle, CheckCircle2, Eye, EyeOff, Loader2, Building2, Mail, User,
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { toast } from "sonner";
 import { useCompleteSupplierRegistrationMutation, useVerifyInvitationQuery } from "@/redux/features/supplyer/supplyer.api";
+import toast from "react-hot-toast";
 
 const supplierRegistrationSchema = z.object({
   password: z.string()
@@ -43,7 +43,7 @@ export default function SignInSupplyer() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const token = searchParams.get('token');
-  
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [invitationData, setInvitationData] = useState<InvitationData | null>(null);
@@ -77,7 +77,7 @@ export default function SignInSupplyer() {
         // Trigger the query manually if it hasn't run
         if (!verificationResult && !isVerifyingQuery) {
           const result = await refetch().unwrap();
-          
+
           if (result.data?.success && result.data.data) {
             setInvitationData(result.data.data.supplier || result.data.data);
           } else {
@@ -91,7 +91,6 @@ export default function SignInSupplyer() {
             setVerificationError(verificationResult.message || "Invalid invitation link");
           }
         }
-        
         setIsVerifying(false);
       } catch (err: any) {
         const errorMessage = err?.data?.message || err?.message || "This invitation link is invalid or has expired";
@@ -104,6 +103,24 @@ export default function SignInSupplyer() {
     verifyToken();
   }, [token, verificationResult, isVerifyingQuery, refetch]);
 
+  // const onSubmit = async (data: SupplierRegistrationFormData) => {
+  //   if (!token) return;
+
+  //   try {
+  //     const result = await completeRegistration({
+  //       password: data.password,
+  //       confirmPassword: data.confirmPassword,
+  //       invitationToken: token,
+  //     }).unwrap();
+
+  //     if (result.success) {
+  //       toast.success("Account created successfully! Redirecting to login...");
+  //     }
+  //   } catch (err: any) {
+  //     console.error("Registration error:", err.status);
+  //     toast.error(err?.data?.message || "Registration failed. Please try again.");
+  //   }
+  // };
   const onSubmit = async (data: SupplierRegistrationFormData) => {
     if (!token) return;
 
@@ -113,20 +130,27 @@ export default function SignInSupplyer() {
         confirmPassword: data.confirmPassword,
         invitationToken: token,
       }).unwrap();
-      
+
       if (result.success) {
         toast.success("Account created successfully! Redirecting to login...");
       }
     } catch (err: any) {
-      toast.error(err?.data?.message || "Registration failed. Please try again.");
+      console.error("Registration error:", err);
+
+      // Check for 400 and email exists
+      if (err?.status === 400) {
+        toast.error("This email is already registered. Please Try Another Email instead.");
+      } else {
+        toast.error(err?.data?.message || "Registration failed. Please try again.");
+      }
     }
   };
 
   const getVendorName = () => {
     if (!invitationData?.vendor) return "your partner company";
-    return invitationData.vendor.companyName || 
-           `${invitationData.vendor.firstName || ''} ${invitationData.vendor.lastName || ''}`.trim() || 
-           "your partner company";
+    return invitationData.vendor.companyName ||
+      `${invitationData.vendor.firstName || ''} ${invitationData.vendor.lastName || ''}`.trim() ||
+      "your partner company";
   };
 
   // Loading State
@@ -155,7 +179,7 @@ export default function SignInSupplyer() {
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-3">Invitation Invalid</h2>
             <p className="text-gray-600 mb-8 max-w-sm mx-auto">{verificationError}</p>
-            <Button 
+            <Button
               onClick={() => navigate('/')}
               size="lg"
               className="bg-primary hover:bg-primary/90"
@@ -184,7 +208,7 @@ export default function SignInSupplyer() {
             <p className="text-sm text-gray-500 mb-8">
               You will be redirected to login in a moment...
             </p>
-            <Button 
+            <Button
               onClick={() => navigate('/loginvendor')}
               size="lg"
               className="bg-primary hover:bg-primary/90"
@@ -207,7 +231,7 @@ export default function SignInSupplyer() {
           </div>
           <CardTitle className="text-2xl font-bold">Complete Your Supplier Registration</CardTitle>
           <CardDescription className="text-base mt-3">
-            You've been invited by <span className="font-semibold text-primary">{getVendorName()}</span> 
+            You've been invited by <span className="font-semibold text-primary">{getVendorName()}</span>
             {" "}to join their supply chain network.
           </CardDescription>
         </CardHeader>
@@ -238,7 +262,7 @@ export default function SignInSupplyer() {
             </div>
           )}
 
-       
+
 
 
           {/* Registration Form */}

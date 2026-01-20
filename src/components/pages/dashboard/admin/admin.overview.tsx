@@ -39,7 +39,7 @@ export default function AdminDashboard() {
         {/* Header */}
         <div className="pt-8">
           <h1 className="text-4xl font-bold tracking-tight ">
-            Dashboard Overview
+          Admin  Dashboard Overview
           </h1>
           <p className="mt-2 text-lg text-gray-600 dark:text-gray-400">
             Real-time insights into your platform performance

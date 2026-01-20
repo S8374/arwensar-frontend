@@ -2,7 +2,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // src/lib/planFeatures.ts
 
-import {  useGetMyUsageQuery } from "@/redux/features/myUsesLimit/my.uses.limit";
+import { useUserInfoQuery } from "@/redux/features/auth/auth.api";
+import { useGetMyUsageQuery } from "@/redux/features/myUsesLimit/my.uses.limit";
 
 export type PlanFeatures = {
   editSupplier: boolean;
@@ -23,14 +24,15 @@ export type PlanFeatures = {
   messagesPerMonth: number | null;
   notificationsSend: number | null;
   reportCreate: number | null;
-  supplierLimit : number | null
+  supplierLimit: number | null
 };
 
 
 export function getPlanFeatures(subscription: any): PlanFeatures {
-  const {data:Limit} =useGetMyUsageQuery(undefined) ;
-  const LimitData = Limit?.data?.limits  ;
-  console.log("My Limit Data",LimitData)
+  const { data: Limit } = useGetMyUsageQuery(undefined);
+  const { data: userInfo } = useUserInfoQuery(undefined);
+  console.log("userInfo in plan features", userInfo);
+  const LimitData = Limit?.data?.limits;
   const features =
     subscription?.features ||
     subscription?.plan?.features ||

@@ -3,17 +3,21 @@ import StatsCards from "../../../component/OverViewComponent/StatsCards";
 import SupplierTable from "../../../component/OverViewComponent/SupplierTable";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useGetUserProfileQuery } from "@/redux/features/user/user.api";
 
 export default function VendorSupplierManageSection() {
   const { data, isLoading } = useGetVendorStatsQuery(undefined);
+  const {
+    data: userData,
+  } = useGetUserProfileQuery();
   const stats = data?.data;
-
+  const firstName = userData?.data?.vendorProfile?.firstName || "User";
   return (
     <div className="space-y-8 sm:space-y-12 lg:space-y-20">
       {/* Header Section */}
       <div className="px-4 sm:px-6 lg:px-0">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground text-center sm:text-left">
-          Welcome Back, Arwen
+          Welcome Back, {firstName}
         </h1>
         <p className="text-muted-foreground mt-2 text-sm sm:text-base text-center sm:text-left">
           Monitor all suppliers and their compliance status
@@ -28,7 +32,7 @@ export default function VendorSupplierManageSection() {
 
       {/* Supplier Table Section */}
       <div className="px-4 sm:px-6 lg:px-0">
-        <SupplierTable  />
+        <SupplierTable />
       </div>
     </div>
   );

@@ -46,6 +46,24 @@ const getRiskLabel = (criticality: string) => {
     case "LOW": default: return "Low Risk";
   }
 };
+const getContractStatus = (contractEndDate?: string) => {
+  if (!contractEndDate) return null;
+
+  const endDate = new Date(contractEndDate);
+  const today = new Date();
+  const in30Days = new Date();
+  in30Days.setDate(today.getDate() + 30);
+
+  if (endDate < today) {
+    return { label: "Expired", className: "text-red-600" };
+  }
+
+  if (endDate <= in30Days) {
+    return { label: "Expiring soon", className: "text-amber-600" };
+  }
+
+  return { label: "Active", className: "text-emerald-600" };
+};
 
 export default function SupplierTable() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -53,13 +71,12 @@ export default function SupplierTable() {
   const [riskFilter, setRiskFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  const { data, isLoading, error } = useGetMySuppliersQuery(undefined);
+  const { data, isLoading, error ,refetch} = useGetMySuppliersQuery(undefined);
   const suppliers = data?.data || [];
   const [resendInvitation, { isLoading: isResending }] =
     useResendSupplierInvitationMutation();
-  const [deleteSupplier, { isLoading: isDeleting }] =
+  const [deleteSupplier, { isLoading: isDeleting  }] =
     useDeleteSupplierMutation();
-
   // Filter suppliers
   const filteredSuppliers = suppliers.filter((s: any) => {
     const matchesSearch =
@@ -78,6 +95,7 @@ export default function SupplierTable() {
   const handleResendInvitation = async (supplierId: string) => {
     try {
       await resendInvitation({ supplierId }).unwrap();
+      refetch();
       alert("Invitation resent successfully");
     } catch (err) {
       alert("Failed to resend invitation");
@@ -92,6 +110,7 @@ export default function SupplierTable() {
 
     try {
       await deleteSupplier(supplierId).unwrap();
+      refetch();
       alert("Supplier deleted successfully");
     } catch (error: any) {
       alert(
@@ -131,7 +150,7 @@ export default function SupplierTable() {
   return (
     <>
       <Card className="border-0  overflow-hidden">
-        <CardHeader className="pb-4 bg-gradient-to-r from-gray-50 to-white ">
+        <CardHeader className="pb-4 bg-linear-to-r from-gray-50 to-white ">
           <div className="flex flex-col gap-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
@@ -146,7 +165,7 @@ export default function SupplierTable() {
                 <Button
                   onClick={() => setIsModalOpen(true)}
                   size="sm"
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                  className="bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                 >
                   Import Suppliers
                 </Button>
@@ -292,19 +311,18 @@ export default function SupplierTable() {
                               ? format(new Date(s.contractEndDate), "MMM dd, yyyy")
                               : "-"}
                           </span>
-                          {s.contractEndDate && (
-                            <span className={`text-xs ${new Date(s.contractEndDate) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-                              ? "text-amber-600"
-                              : "text-gray-500"
-                              }`}>
-                              {new Date(s.contractEndDate) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-                                ? "Expiring soon"
-                                : "Active"
-                              }
-                            </span>
-                          )}
+
+                          {s.contractEndDate && (() => {
+                            const status = getContractStatus(s.contractEndDate);
+                            return (
+                              <span className={`text-xs font-medium ${status?.className}`}>
+                                {status?.label}
+                              </span>
+                            );
+                          })()}
                         </div>
                       </td>
+
                       <td className="px-6 py-5">
                         <Badge
                           variant={s.isActive ? "default" : "secondary"}
@@ -318,7 +336,7 @@ export default function SupplierTable() {
                       </td>
                       <td className="px-6 py-5">
                         <Badge className={getRiskBadgeVariant(s.criticality)}>
-                          {getRiskLabel(s.criticality)}
+                          {getRiskLabel(s.riskLevel)}
                         </Badge>
                       </td>
                       <td className="px-6 py-5">
@@ -341,7 +359,7 @@ export default function SupplierTable() {
                               >
                                 Resend Invitation
                               </DropdownMenuItem>
-                            
+
                               <DropdownMenuItem
                                 onClick={() => handleDeleteSupplier(s.id)}
                                 disabled={isResending && isDeleting}

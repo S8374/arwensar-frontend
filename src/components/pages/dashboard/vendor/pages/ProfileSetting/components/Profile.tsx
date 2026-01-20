@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,14 +7,33 @@ import { User } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { useGetUserProfileQuery } from "@/redux/features/user/user.api";
 import { useMinioUpload } from "@/lib/useMinioUpload";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type ProfileProps = {
   isVendor: boolean;
 };
 
 export default function Profile({ isVendor }: ProfileProps) {
-  const { data: userData } = useGetUserProfileQuery();
+  const {
+    data: userData,
+    isLoading: isProfileLoading,
+  } = useGetUserProfileQuery();
+
   const { uploadFile, isUploading } = useMinioUpload();
+
+  // ---------- Show loading skeleton ----------
+  if (isProfileLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-6 w-48" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <Skeleton key={i} className="h-10 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   // ---------- Prepare profile data ----------
   const profileData = isVendor
@@ -47,7 +67,6 @@ export default function Profile({ isVendor }: ProfileProps) {
     isSuccess,
     isError,
   } = useProfile(profileData, isVendor);
-
 
   // ---------- Image upload ----------
   const handleImageUpload = async (file: File) => {
@@ -84,10 +103,9 @@ export default function Profile({ isVendor }: ProfileProps) {
       {/* FORM */}
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* First Name */}
           <div>
             <Label>First Name</Label>
-            <Input {...register("firstName")} />
+            <Input {...register("firstName")} disabled={isLoading} />
             {errors.firstName && (
               <p className="text-red-500 text-sm">
                 {errors.firstName.message as string}
@@ -95,44 +113,34 @@ export default function Profile({ isVendor }: ProfileProps) {
             )}
           </div>
 
-          {/* Last Name (Vendor only) */}
           {isVendor && (
             <div>
               <Label>Last Name</Label>
-              <Input {...register("lastName")} />
-              {errors.lastName && (
-                <p className="text-red-500 text-sm">
-                  {errors.lastName.message as string}
-                </p>
-              )}
+              <Input {...register("lastName")} disabled={isLoading} />
             </div>
           )}
 
-          {/* Email */}
           <div>
             <Label>Email</Label>
             <Input value={profileData.email} disabled />
           </div>
 
-          {/* Company */}
           <div>
             <Label>Company Name</Label>
-            <Input {...register("companyName")} disabled={!isVendor} />
+            <Input {...register("companyName")} disabled />
           </div>
 
-          {/* Phone */}
           <div>
             <Label>Phone Number</Label>
-            <Input {...register("contactNumber")} />
+            <Input {...register("contactNumber")} disabled={isLoading} />
           </div>
 
-          {/* Industry */}
           <div>
             <Label>Industry Type</Label>
-            <Input {...register("industryType")} disabled={!isVendor} />
+            <Input {...register("industryType")} disabled />
           </div>
 
-          {/* Profile Image Upload */}
+          {/* Image */}
           <div className="md:col-span-2">
             <Label>Profile Image</Label>
             <div className="flex items-center gap-4">
@@ -143,6 +151,7 @@ export default function Profile({ isVendor }: ProfileProps) {
                   className="w-16 h-16 rounded-full object-cover"
                 />
               )}
+
               <Input
                 type="file"
                 accept="image/*"
@@ -151,6 +160,12 @@ export default function Profile({ isVendor }: ProfileProps) {
                 }
                 disabled={isUploading}
               />
+
+              {isUploading && (
+                <span className="text-sm text-muted-foreground">
+                  Uploading...
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -158,7 +173,7 @@ export default function Profile({ isVendor }: ProfileProps) {
         {/* SAVE */}
         <Button
           type="submit"
-          disabled={!isDirty || isLoading}
+          disabled={!isDirty || isLoading || isUploading}
           className="bg-chart-6 px-8"
         >
           {isLoading ? "Saving..." : "Save Changes"}

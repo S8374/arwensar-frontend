@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -33,6 +34,7 @@ import { useAddSupplierMutation } from "@/redux/features/vendor/vendor.api";
 import { useMinioUpload } from "@/lib/useMinioUpload";
 import { useUserInfoQuery } from "@/redux/features/auth/auth.api";
 import { getPlanFeatures } from "@/lib/planFeatures";
+import { useGetMyUsageQuery } from "@/redux/features/myUsesLimit/my.uses.limit";
 
 // Zod Schema – Strong Validation
 const supplierSchema = z.object({
@@ -59,6 +61,7 @@ export default function AddSupplierModal({ open, onOpenChange }: AddSupplierModa
   const [files, setFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [addSupplier, { isLoading: isSubmitting }] = useAddSupplierMutation();
+  const { refetch} = useGetMyUsageQuery(undefined);
 
   // ✅ useMinioUpload hook called at top level
   const minioUpload = useMinioUpload();
@@ -111,6 +114,7 @@ export default function AddSupplierModal({ open, onOpenChange }: AddSupplierModa
       await addSupplier(payload).unwrap();
 
       toast.success("Supplier invited successfully!");
+      refetch();
       onOpenChange(false);
       reset();
       setFiles([]);
@@ -131,6 +135,7 @@ export default function AddSupplierModal({ open, onOpenChange }: AddSupplierModa
   };
   const { data: userData } = useUserInfoQuery(undefined);
   const plan = userData?.data?.subscription;
+
   const limit = getPlanFeatures(plan);
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {

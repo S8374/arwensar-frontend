@@ -309,35 +309,7 @@ const Header = () => {
                       </motion.div>
                     )}
 
-                    {/* Logged-in user info in mobile menu */}
-                    {!isLoading && data && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="mt-8 px-6 py-5 bg-accent/30 rounded-2xl"
-                      >
-                        <p className="text-sm text-muted-foreground mb-3">Logged in as:</p>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-semibold text-lg">
-                              {data?.name || data?.email || "User"}
-                            </p>
-                            <p className="text-sm text-muted-foreground">{data?.email}</p>
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              handleNavigation("/dashboard");
-                              setIsMobileMenuOpen(false);
-                            }}
-                            className="rounded-full px-5"
-                          >
-                            Dashboard
-                          </Button>
-                        </div>
-                      </motion.div>
-                    )}
+               
                   </SheetContent>
                 </Sheet>
               </div>

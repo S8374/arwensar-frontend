@@ -56,7 +56,6 @@ export const useLoginForm = () => {
         }, 800);
       }
     } catch (err: any) {
-  console.log("LOGIN ERROR 👉", err);
 
   const message =
     err?.data?.message ||

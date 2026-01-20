@@ -76,22 +76,28 @@ export default function UserManagement() {
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
     const { data: usersData, isLoading, refetch } = useGetAllUsersQuery();
-    const [deleteUser] = useDeleteUserMutation();
+    const [deleteUser ] = useDeleteUserMutation();
     const [toggleBlock] = useToggleUserBlockMutation();
     const [exportCSV] = useExportUsersToCSVMutation();
-    console.log("usersData", usersData);
     const users = usersData?.data || [];
 
     // Filter users
-    const filteredUsers = users.filter((user: any) => {
-        const matchesSearch =
-            user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            user.phoneNumber?.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesStatus =
-            statusFilter === "all" || user.status === statusFilter;
-        const matchesRole = roleFilter === "all" || user.role === roleFilter;
-        return matchesSearch && matchesStatus && matchesRole;
-    });
+const filteredUsers = users
+  .filter((user: any) => user.role !== "ADMIN") // ❌ hide admins
+  .filter((user: any) => {
+    const matchesSearch =
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.phoneNumber?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStatus =
+      statusFilter === "all" || user.status === statusFilter;
+
+    const matchesRole =
+      roleFilter === "all" || user.role === roleFilter;
+
+    return matchesSearch && matchesStatus && matchesRole;
+  });
+
 
 
 

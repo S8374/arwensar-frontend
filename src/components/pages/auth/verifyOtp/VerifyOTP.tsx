@@ -158,7 +158,7 @@ export default function VerifyOTP() {
     <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
       <div className="max-w-md w-full p-8 bg-white rounded-xl shadow-lg space-y-8">
         <div className="text-center space-y-3">
-          <h1 className="text-3xl font-bold">Verify Your Emailsssss</h1>
+          <h1 className="text-3xl font-bold">Verify Your Email</h1>
           <p className="text-muted-foreground">
             Enter the 6-digit code sent to
             <br />

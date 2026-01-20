@@ -2,11 +2,10 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { FileText, FileDown, Download } from "lucide-react";
+import { FileText, Eye } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useGetReportsQuery } from "@/redux/features/report/report.api";
 import { format } from "date-fns"; // Add this import for nice date formatting
-import { saveAs } from "file-saver"; // You'll need to install: npm install file-saver
 
 interface Report {
   id: string;
@@ -50,29 +49,15 @@ export default function ReportsPage() {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
-  // Function to download a single PDF report
-  const downloadReport = async (report: Report) => {
-    try {
-      const response = await fetch(report.documentUrl);
-      const blob = await response.blob();
-      saveAs(blob, `${report.title || "Report"}_${report.id}.pdf`);
-    } catch (error) {
-      console.error("Download failed:", error);
-      // You could add a toast notification here for error
-    }
-  };
 
-  // Export All: Download all PDFs as a ZIP or individually (here we download one by one)
-  const exportAllReports = async () => {
-    if (reports.length === 0) return;
 
-    for (const report of reports) {
-      if (report.documentUrl && report.documentType === "application/pdf") {
-        await downloadReport(report);
-      }
-    }
-    // Optional: Add a toast "All reports downloaded!"
-  };
+const viewReport = (report: Report) => {
+  if (!report.documentUrl) return;
+
+  // Open in new tab
+  window.open(report.documentUrl, "_blank", "noopener,noreferrer");
+};
+
 
   if (isLoading) {
     return <div className="p-8 text-center">Loading reports...</div>;
@@ -89,15 +74,6 @@ export default function ReportsPage() {
               View compliance reports and export audit documentation
             </p>
           </div>
-
-          <Button
-            onClick={exportAllReports}
-            disabled={reports.length === 0}
-            className="bg-chart-6 hover:bg-chart-6/90 text-white font-medium"
-          >
-            <FileDown className="w-4 h-4 mr-2" />
-            Export All
-          </Button>
         </div>
       </div>
 
@@ -154,15 +130,17 @@ export default function ReportsPage() {
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-2">
                             {/* PDF Download Button */}
-                            <Button
-                              onClick={() => downloadReport(report)}
-                              variant="outline"
-                              size="sm"
-                              className="h-9 px-3 border-red-200 hover:bg-red-50 hover:border-red-300 transition-all"
-                            >
-                              <Download className="w-4 h-4 text-red-600 mr-1.5" />
-                              <span className="text-red-600 font-medium text-xs sm:text-sm">PDF</span>
-                            </Button>
+                           <Button
+  onClick={() => viewReport(report)}
+  variant="outline"
+  size="sm"
+  className="h-9 px-3 border-red-200 hover:bg-red-50 hover:border-red-300 transition-all"
+>
+  <Eye className="w-4 h-4 text-red-600 mr-1.5" />
+  <span className="text-red-600 font-medium text-xs sm:text-sm">
+    See Report
+  </span>
+</Button>
 
                             {/* Placeholder for Excel if available in future */}
                             {/* <Button variant="outline" size="sm" disabled>...</Button> */}

@@ -50,12 +50,6 @@ export default function PerformanceTab({  }: Props) {
 
   return (
     <div className="space-y-8">
-      {/* Performance Stats */}
-      <div>
-        <h3 className="text-xl font-semibold mb-4">Performance Overview</h3>
-        
-      </div>
-
       {/* Activity Log */}
       <div>
         <h3 className="text-xl font-semibold mb-4">Recent Activity</h3>

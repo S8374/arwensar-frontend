@@ -19,6 +19,7 @@ import VideoModal from "../component/OverViewComponent/VideoModal";
 import { useUserInfoQuery } from "@/redux/features/auth/auth.api";
 import { getPlanFeatures } from "@/lib/planFeatures";
 import toast from "react-hot-toast";
+import { useGetMyUsageQuery } from "@/redux/features/myUsesLimit/my.uses.limit";
 
 interface ImportSuppliersModalProps {
   open: boolean;
@@ -46,6 +47,8 @@ export default function ImportSuppliersModal({
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [isPreview, setIsPreview] = useState(false);
   const [bulkImportSuppliers, { isLoading }] = useBulkImportSuppliersMutation();
+    const { refetch} = useGetMyUsageQuery(undefined);
+
   const parseExcelFile = async (file: File) => {
     try {
       const buffer = await file.arrayBuffer();
@@ -272,9 +275,9 @@ export default function ImportSuppliersModal({
 
       // Show success summary
       if (result.successful > 0) {
-        alert(`Successfully imported ${result.successful} suppliers! ${result.failed > 0 ? `${result.failed} failed.` : ''}`);
+        toast.success(`Successfully imported ${result.successful} suppliers! ${result.failed > 0 ? `${result.failed} failed.` : ''}`);
       }
-
+       refetch();
       // Reset and close
       setUploadedFile(null);
       setParsedSuppliers([]);
@@ -300,6 +303,7 @@ export default function ImportSuppliersModal({
     setValidationErrors([]);
     setIsPreview(false);
     onOpenChange(false);
+    refetch()
   };
 
   const getCriticalityColor = (criticality: string) => {

@@ -212,12 +212,12 @@ export const adminApi = baseApi.injectEndpoints({
     }),
 
     // ================= REPORTS =================
-    generateReport: builder.mutation<any, string>({
-      query: (type) => ({
-        url: `/admin/reports/${type}`,
-        method: "POST",
-      }),
-    }),
+    // generateReport: builder.mutation<any, string>({
+    //   query: (type) => ({
+    //     url: `/admin/reports/${type}`,
+    //     method: "POST",
+    //   }),
+    // }),
     getUserById: builder.query<any, string>({
       query: (userId) => ({
         url: `/admin/${userId}`,
@@ -257,6 +257,4 @@ export const {
   useGetAllSuppliersQuery,
   useDeleteSupplierMutation,
   useGetAllVendorsQuery,
-
-  useGenerateReportMutation,
 } = adminApi;

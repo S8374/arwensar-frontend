@@ -22,17 +22,13 @@ import {
     Trash2,
     FileText,
     RefreshCw,
-
     Users,
     FileBarChart,
-
     Database,
     TrendingUp,
     AlertCircle,
     Clock,
-
     Send,
-
     Shield,
     Zap,
     FileCheck,
@@ -51,6 +47,7 @@ import { useUserInfoQuery } from '@/redux/features/auth/auth.api';
 import { getPlanFeatures } from '@/lib/planFeatures';
 import FeatureRestricted from '@/components/upgrade/FeatureRestricted';
 import toast from 'react-hot-toast';
+import { useGetMyUsageQuery } from '@/redux/features/myUsesLimit/my.uses.limit';
 
 export default function VendorReportsPage() {
     const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
@@ -60,22 +57,24 @@ export default function VendorReportsPage() {
     const [emailToSend, setEmailToSend] = useState('');
     const [activeTab, setActiveTab] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
-
-    // Fetch data
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    
+    // Fetch data with refetch functions
     const { data: reportsData, refetch: refetchReports, isLoading: reportsLoading } = useGetReportsQuery(undefined);
-    const { data: suppliersData, isLoading: suppliersLoading } = useGetMySuppliersQuery(undefined);
-    const { data: reportOptions, isLoading: optionsLoading } = useGetVendorReportOptionsQuery();
-    const { data: statistics, isLoading: statsLoading } = useGetReportStatisticsQuery();
+    const { data: suppliersData, isLoading: suppliersLoading, refetch: refetchMySuppliers } = useGetMySuppliersQuery(undefined);
+    const { data: reportOptions, isLoading: optionsLoading, refetch: refetchReportOptions } = useGetVendorReportOptionsQuery();
+    const { data: statistics, isLoading: statsLoading, refetch: refetchStatistics } = useGetReportStatisticsQuery();
     const { data: reportDetails } = useGetReportByIdQuery(selectedReportId || '', {
         skip: !selectedReportId
     });
+    
     // Mutations
     const [generateReport, { isLoading: generating }] = useGenerateReportMutation();
     const [bulkGenerate, { isLoading: bulkGenerating }] = useBulkGenerateReportsMutation();
     const [deleteReport, { isLoading: deleting }] = useDeleteReportMutation();
     const [sendReport, { isLoading: sending }] = useSendReportMutation();
     const [, { isLoading: downloading }] = useGetReportDocumentMutation();
-
+    const { refetch: refetchUsage } = useGetMyUsageQuery(undefined);
     const [updateReport, { isLoading: updating }] = useUpdateReportMutation();
 
     // Process data
@@ -83,6 +82,7 @@ export default function VendorReportsPage() {
     const suppliers = suppliersData?.data || [];
     const stats = statistics?.data || {};
     const options = reportOptions?.data || {};
+    
     // Filter reports based on active tab and search
     const filteredReports = reports.filter((report: any) => {
         const matchesTab = activeTab === 'all' || report.reportType === activeTab;
@@ -100,10 +100,11 @@ export default function VendorReportsPage() {
     const highRiskSuppliers = options?.highRiskSuppliers || 0;
     const overdueAssessments = options?.overdueAssessments || 0;
     const totalSuppliers = options?.totalSuppliers || suppliers.length || 0;
+    
     const { data: userData } = useUserInfoQuery(undefined);
     const plan = userData?.data?.subscription;
     const permissions = getPlanFeatures(plan);
-   console.log(permissions)
+    
     // Report type icons
     const getReportTypeIcon = (type: string) => {
         switch (type) {
@@ -128,8 +129,27 @@ export default function VendorReportsPage() {
         }
     };
 
-    // ========== OPERATIONS ==========
+    // ========== REFRESH FUNCTION ==========
+    const handleRefreshAll = async () => {
+        setIsRefreshing(true);
+        try {
+            await Promise.all([
+                refetchReports(),
+                refetchMySuppliers(),
+                refetchStatistics(),
+                refetchReportOptions(),
+                refetchUsage(),
+            ]);
+          //  toast.success('Data refreshed successfully!');
+        } catch (error) {
+            console.error('Refresh failed:', error);
+            toast.error('Failed to refresh data');
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
 
+    // ========== OPERATIONS ==========
     const handleGenerateReport = async () => {
         if (!reportTitle.trim()) {
             toast.error('Please enter a report title');
@@ -149,9 +169,12 @@ export default function VendorReportsPage() {
             };
             const result = await generateReport(payload).unwrap();
             toast.success(`Report "${result.data?.title}" generated successfully!`);
+            
+            // REFETCH ALL DATA
+            await handleRefreshAll();
+            
             setReportTitle('');
             setSelectedSupplierId('');
-            refetchReports();
         } catch (error: any) {
             toast.error(error?.data?.message || 'Failed to generate report');
             console.error(error);
@@ -171,16 +194,14 @@ export default function VendorReportsPage() {
             toast.success(
                 `Vendor summary report "${result.data?.title}" generated successfully.`
             );
-
-            refetchReports();
+            
+            // REFETCH ALL DATA
+            await handleRefreshAll();
+            
         } catch (error: any) {
-            console.log("error", error);
-
             const status = error?.status;
-
             let parsedMessage = "Failed to generate vendor summary.";
 
-            // ✅ Parse JSON-string message safely
             if (typeof error?.data?.message === "string") {
                 try {
                     const parsed = JSON.parse(error.data.message);
@@ -190,15 +211,14 @@ export default function VendorReportsPage() {
                 }
             }
 
-
             if (status === 402) {
                 toast.error(
-                    "You’ve reached your report generation limit. Please upgrade your plan to continue.",
+                    "You've reached your report generation limit. Please upgrade your plan to continue.",
                     { duration: 5000 }
                 );
+            } else {
+                toast.error(parsedMessage);
             }
-
-            toast.error(parsedMessage, { duration: 4000 });
         }
     };
 
@@ -216,15 +236,16 @@ export default function VendorReportsPage() {
 
             const result = await bulkGenerate(payload).unwrap();
             toast.success(`Generated ${result.data?.reports?.length || 0} reports`);
-            refetchReports();
+            
+            // REFETCH ALL DATA
+            await handleRefreshAll();
+            
         } catch (error: any) {
             if (error?.status === 402) {
                 toast.error("Limit Expired");
                 return;
-            }
-            else {
+            } else {
                 toast.error(error?.data?.message || 'Failed to bulk generate reports');
-
             }
         }
     };
@@ -242,17 +263,25 @@ export default function VendorReportsPage() {
             const link = document.createElement('a');
             link.href = report.documentUrl;
             link.download = `${report.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
-            link.target = '_blank'; // Optional: opens in new tab if browser blocks download
+            link.target = '_blank';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
 
             toast.success('Report downloaded successfully!');
+            
+            // Update report status to VIEWED
+            await updateReport({
+                reportId,
+                body: { status: 'VIEWED' as any }
+            });
+            
+            // REFETCH REPORTS TO UPDATE STATUS
+            refetchReports();
+            
         } catch (error) {
             console.error('Download failed:', error);
             toast.error('Failed to download report');
-
-            // Fallback: open in new tab (in case download is blocked)
             window.open(report.documentUrl, '_blank');
         }
     };
@@ -266,6 +295,10 @@ export default function VendorReportsPage() {
         try {
             await sendReport({ reportId, recipientEmail: emailToSend }).unwrap();
             toast.success('Report sent successfully!');
+            
+            // REFETCH REPORTS TO UPDATE STATUS
+            refetchReports();
+            
             setEmailToSend('');
             setSelectedReportId(null);
         } catch (error: any) {
@@ -279,7 +312,14 @@ export default function VendorReportsPage() {
         try {
             await deleteReport(reportId).unwrap();
             toast.success('Report deleted successfully');
-            refetchReports();
+            
+            // REFETCH ALL DATA
+            await Promise.all([
+                refetchReports(),
+                refetchStatistics(),
+                refetchReportOptions(),
+            ]);
+            
         } catch (error: any) {
             toast.error(error?.data?.message || 'Failed to delete report');
         }
@@ -292,7 +332,10 @@ export default function VendorReportsPage() {
                 body: { status: newStatus as any }
             }).unwrap();
             toast.success('Report status updated');
+            
+            // REFETCH REPORTS
             refetchReports();
+            
         } catch (error: any) {
             toast.error(error?.data?.message || 'Failed to update status');
         }
@@ -300,6 +343,7 @@ export default function VendorReportsPage() {
 
     // Format file size
     const formatFileSize = (bytes: number) => {
+        if (!bytes) return '0 B';
         if (bytes < 1024) return bytes + ' B';
         if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
         return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
@@ -326,7 +370,7 @@ export default function VendorReportsPage() {
                         <div>
                             <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Report Management </h1>
                             <p className="text-sm text-muted-foreground">
-                                Your reportsGeneratedPerMonth   limit :{" "}
+                                Your reportsGeneratedPerMonth limit :{" "}
                                 <span className="font-medium">
                                     {permissions.reportsGeneratedPerMonth === null ? (
                                         <span className="text-emerald-600">Unlimited</span>
@@ -343,17 +387,17 @@ export default function VendorReportsPage() {
                             <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => refetchReports()}
-                                disabled={reportsLoading}
+                                onClick={handleRefreshAll}
+                                disabled={isRefreshing}
                             >
-                                <RefreshCw className={`h-4 w-4 mr-2 ${reportsLoading ? 'animate-spin' : ''}`} />
-                                Refresh
+                                <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                                {isRefreshing ? 'Refreshing...' : 'Refresh'}
                             </Button>
                             <Button
                                 variant="default"
                                 size="sm"
                                 onClick={handleGenerateVendorSummary}
-                                disabled={generating}
+                                disabled={generating || isRefreshing}
                             >
                                 <FileBarChart className="h-4 w-4 mr-2" />
                                 Quick Summary
@@ -423,7 +467,6 @@ export default function VendorReportsPage() {
                             </div>
                         </CardContent>
                     </Card>
-
 
                     <Card className="bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200">
                         <CardHeader className="pb-3">
@@ -503,20 +546,18 @@ export default function VendorReportsPage() {
                                     </SelectTrigger>
                                     <SelectContent>
                                         {suppliers.map((supplier: any) => (
-
                                             <SelectItem key={supplier.id} value={supplier.id}>
                                                 {supplier.name}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
-
                             </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 <Button
                                     onClick={handleGenerateReport}
-                                    disabled={generating || !reportTitle.trim()}
+                                    disabled={generating || !reportTitle.trim() || isRefreshing}
                                     className="w-full"
                                 >
                                     {generating ? (
@@ -534,7 +575,7 @@ export default function VendorReportsPage() {
 
                                 <Button
                                     onClick={handleGenerateVendorSummary}
-                                    disabled={generating}
+                                    disabled={generating || isRefreshing}
                                     className="w-full"
                                     variant="secondary"
                                 >
@@ -544,7 +585,7 @@ export default function VendorReportsPage() {
 
                                 <Button
                                     onClick={handleBulkGenerate}
-                                    disabled={bulkGenerating}
+                                    disabled={bulkGenerating || isRefreshing}
                                     className="w-full"
                                     variant="outline"
                                 >
@@ -565,9 +606,8 @@ export default function VendorReportsPage() {
                     </Card>
 
                     {/* Quick Actions Card */}
-
-                    {
-                        permissions?.emailSupport ? <Card>
+                    {permissions?.emailSupport ? (
+                        <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <Send className="h-5 w-5 text-green-600" />
@@ -616,7 +656,7 @@ export default function VendorReportsPage() {
                                 <div className="grid grid-cols-2 gap-3">
                                     <Button
                                         onClick={() => selectedReportId && handleSendReport(selectedReportId)}
-                                        disabled={!selectedReportId || !emailToSend || sending}
+                                        disabled={!selectedReportId || !emailToSend || sending || isRefreshing}
                                         className="w-full"
                                     >
                                         {sending ? (
@@ -634,7 +674,7 @@ export default function VendorReportsPage() {
 
                                     <Button
                                         onClick={() => selectedReportId && handleViewReport(selectedReportId)}
-                                        disabled={!selectedReportId || downloading}
+                                        disabled={!selectedReportId || downloading || isRefreshing}
                                         variant="outline"
                                         className="w-full"
                                     >
@@ -676,16 +716,16 @@ export default function VendorReportsPage() {
                                     </div>
                                 )}
                             </CardContent>
-                        </Card> :
-                            <FeatureRestricted
-                                title=" Email Support Premium"
-                                description="Buy A plan to find It"
-                                requiredPlan="premium"
-                                feature="compliance_dashboard"
-                                className="h-full"
-                            />
-                    }
-
+                        </Card>
+                    ) : (
+                        <FeatureRestricted
+                            title="Email Support Premium"
+                            description="Buy A plan to find It"
+                            requiredPlan="premium"
+                            feature="compliance_dashboard"
+                            className="h-full"
+                        />
+                    )}
                 </div>
 
                 {/* Reports Table */}
@@ -771,7 +811,7 @@ export default function VendorReportsPage() {
                                                     <Select
                                                         value={report.status}
                                                         onValueChange={(value) => handleUpdateStatus(report.id, value)}
-                                                        disabled={updating}
+                                                        disabled={updating || isRefreshing}
                                                     >
                                                         <SelectTrigger className="h-8 w-32">
                                                             <div className="flex items-center gap-2">
@@ -826,6 +866,7 @@ export default function VendorReportsPage() {
                                                             size="sm"
                                                             onClick={() => handleViewReport(report.id)}
                                                             title="Download"
+                                                            disabled={isRefreshing}
                                                         >
                                                             <Download className="h-4 w-4" />
                                                         </Button>
@@ -837,6 +878,7 @@ export default function VendorReportsPage() {
                                                                 setEmailToSend('');
                                                             }}
                                                             title="Send"
+                                                            disabled={isRefreshing}
                                                         >
                                                             <Mail className="h-4 w-4" />
                                                         </Button>
@@ -845,7 +887,7 @@ export default function VendorReportsPage() {
                                                             size="sm"
                                                             onClick={() => handleDeleteReport(report.id, report.title)}
                                                             title="Delete"
-                                                            disabled={deleting}
+                                                            disabled={deleting || isRefreshing}
                                                             className="text-red-600 hover:text-red-700 hover:bg-red-50"
                                                         >
                                                             {deleting ? (
@@ -874,9 +916,14 @@ export default function VendorReportsPage() {
                                         <span className="font-medium text-green-600">{byStatus.SENT || 0}</span> sent,
                                         <span className="font-medium text-blue-600 ml-2">{byStatus.VIEWED || 0}</span> viewed
                                     </span>
-                                    <Button variant="ghost" size="sm" onClick={() => refetchReports()}>
-                                        <RefreshCw className="h-3 w-3 mr-1" />
-                                        Refresh
+                                    <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        onClick={handleRefreshAll}
+                                        disabled={isRefreshing}
+                                    >
+                                        <RefreshCw className={`h-3 w-3 mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
+                                        {isRefreshing ? 'Refreshing...' : 'Refresh'}
                                     </Button>
                                 </div>
                             </div>

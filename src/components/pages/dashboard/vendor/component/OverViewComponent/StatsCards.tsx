@@ -14,7 +14,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -42,12 +41,22 @@ interface ContractDetail {
   invitationStatus?: string;
 }
 
+interface PendingAssessment {
+  id: string;
+  supplierName: string;
+  assessmentTitle: string;
+  submittedAt: string;
+  score: number | null;
+}
+
 export default function StatsCards({ stats }: StatsProps) {
   const s = stats || {};
   const [activeDialog, setActiveDialog] = useState<'expiring' | 'expired' | null>(null);
-  
+  const [pendingModalOpen, setPendingModalOpen] = useState(false);
+
   const expiringContracts: ContractDetail[] = s.contractStats?.recentExpirations || [];
   const expiredContracts: ContractDetail[] = s.contractStats?.expiredContractsDetails || [];
+  const pendingAssessments: PendingAssessment[] = s.assessmentStats?.recentSubmissions || [];
 
   const statsData = [
     {
@@ -56,7 +65,7 @@ export default function StatsCards({ stats }: StatsProps) {
       change: s.supplierStats?.recentAdditions ?? 0,
       changeText: `${s.supplierStats?.recentAdditions ?? 0} new this month`,
       changeType: (s.supplierStats?.recentAdditions ?? 0) > 0 ? "positive" : "neutral",
-      icon: "users",
+      icon: "Users",
       colors: {
         gradient: "from-blue-400/20 to-cyan-400/20",
         border: "border-blue-200 dark:border-blue-700",
@@ -68,11 +77,11 @@ export default function StatsCards({ stats }: StatsProps) {
       title: "NIS2 Compliance",
       value: (s.nis2Compliance?.overallScore ?? 0).toFixed(1),
       change: s.nis2Compliance?.todayImprovement ?? 0,
-      changeText: s.nis2Compliance?.trend === "UP" 
+      changeText: s.nis2Compliance?.trend === "UP"
         ? `+${Math.abs(s.nis2Compliance?.todayImprovement ?? 0).toFixed(1)}% today`
         : `-${Math.abs(s.nis2Compliance?.todayImprovement ?? 0).toFixed(1)}% today`,
       changeType: s.nis2Compliance?.trend === "UP" ? "positive" : "negative",
-      icon: "shield-check",
+      icon: "ShieldCheck",
       colors: {
         gradient: "from-emerald-400/20 to-teal-400/20",
         border: "border-emerald-200 dark:border-emerald-700",
@@ -84,9 +93,7 @@ export default function StatsCards({ stats }: StatsProps) {
       title: "Pending Assessments",
       value: s.assessmentStats?.pendingAssessments ?? 0,
       change: s.assessmentStats?.overdueAssessments ?? 0,
-      changeText: `${s.assessmentStats?.overdueAssessments ?? 0} overdue`,
-      changeType: (s.assessmentStats?.overdueAssessments ?? 0) > 0 ? "negative" : "neutral",
-      icon: "clock",
+      icon: "Clock",
       colors: {
         gradient: "from-amber-400/20 to-orange-400/20",
         border: "border-amber-200 dark:border-amber-700",
@@ -100,7 +107,7 @@ export default function StatsCards({ stats }: StatsProps) {
       change: s.problemStats?.problemsByPriority?.urgent ?? 0,
       changeText: `${s.problemStats?.problemsByPriority?.urgent ?? 0} urgent`,
       changeType: (s.problemStats?.criticalProblems ?? 0) > 0 ? "negative" : "neutral",
-      icon: "alert-triangle",
+      icon: "AlertTriangle",
       colors: {
         gradient: "from-red-400/20 to-rose-400/20",
         border: "border-red-200 dark:border-red-700",
@@ -113,53 +120,14 @@ export default function StatsCards({ stats }: StatsProps) {
       value: s.contractStats?.totalContract ?? 0,
       change: s.contractStats?.expiringContracts ?? 0,
       changeType: (s.contractStats?.expiringContracts ?? 0) > 0 ? "negative" : "neutral",
-      icon: "file-check",
+      icon: "FileCheck",
       colors: {
         gradient: "from-purple-400/20 to-pink-400/20",
         border: "border-purple-200 dark:border-purple-700",
         icon: "text-purple-600 dark:text-purple-400",
         ring: "ring-purple-500/20"
       }
-    },
-    {
-      title: "On-Time Delivery",
-      value: s.additionalStats?.performanceStats?.onTimeDeliveryRate ?? 0,
-      changeText: "Last 30 days average",
-      changeType: "positive",
-      icon: "trending-up",
-      colors: {
-        gradient: "from-indigo-400/20 to-blue-400/20",
-        border: "border-indigo-200 dark:border-indigo-700",
-        icon: "text-indigo-600 dark:text-indigo-400",
-        ring: "ring-indigo-500/20"
-      }
-    },
-    {
-      title: "Satisfaction Score",
-      value: (s.additionalStats?.performanceStats?.satisfactionScore ?? 0).toFixed(1),
-      changeText: "Out of 10.0",
-      changeType: "positive",
-      icon: "star",
-      colors: {
-        gradient: "from-yellow-400/20 to-amber-400/20",
-        border: "border-yellow-200 dark:border-yellow-700",
-        icon: "text-yellow-600 dark:text-yellow-400",
-        ring: "ring-yellow-500/20"
-      }
-    },
-    {
-      title: "Recent Activities",
-      value: s.additionalStats?.activityStats?.recentActivities ?? 0,
-      changeText: "Last 7 days",
-      changeType: "neutral",
-      icon: "activity",
-      colors: {
-        gradient: "from-cyan-400/20 to-teal-400/20",
-        border: "border-cyan-200 dark:border-cyan-700",
-        icon: "text-cyan-600 dark:text-cyan-400",
-        ring: "ring-cyan-500/20"
-      }
-    },
+    }
   ];
 
   const getChangeIcon = (type: string) => {
@@ -195,29 +163,15 @@ export default function StatsCards({ stats }: StatsProps) {
     );
   };
 
+  // ---------------- Contracts Modal ----------------
   const ContractDetailsModal = ({ type }: { type: 'expiring' | 'expired' }) => {
     const contracts = type === 'expiring' ? expiringContracts : expiredContracts;
     const title = type === 'expiring' ? 'Expiring Contracts' : 'Expired Contracts';
-    const count = type === 'expiring' 
+    const count = type === 'expiring'
       ? (s.contractStats?.expiringContracts ?? 0)
       : (s.contractStats?.expiredContracts ?? 0);
 
-    const formatDate = (dateString: string) => {
-      return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      });
-    };
-
-    const formatCurrency = (value: number) => {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'EUR',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-      }).format(value);
-    };
+    const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 
     return (
       <Dialog open={activeDialog === type} onOpenChange={(open) => !open && setActiveDialog(null)}>
@@ -227,17 +181,16 @@ export default function StatsCards({ stats }: StatsProps) {
               {title} <span className="text-purple-600">({count})</span>
             </DialogTitle>
             <DialogDescription>
-              {type === 'expiring' 
+              {type === 'expiring'
                 ? "Contracts that will expire within the next 30 days"
                 : "Contracts that have already expired"}
             </DialogDescription>
           </DialogHeader>
-          
+
           <Tabs defaultValue="list" className="w-full">
             <TabsList className="grid w-full grid-cols-1">
               <TabsTrigger value="list">List View</TabsTrigger>
             </TabsList>
-            
             <TabsContent value="list" className="space-y-4">
               <ScrollArea className="h-[400px] pr-4">
                 {contracts.length === 0 ? (
@@ -264,40 +217,25 @@ export default function StatsCards({ stats }: StatsProps) {
                                 </Badge>
                               )}
                             </div>
-                            
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm text-gray-600 dark:text-gray-400">
-                              <div className="space-y-1">
-                                <p className="font-medium">Contact</p>
-                                <p>{contract.contactPerson || 'Not specified'}</p>
-                                <p>{contract.supplierEmail || 'No email'}</p>
-                              </div>
-                              
                               <div className="space-y-1">
                                 <p className="font-medium">Contract Period</p>
                                 <p>Start: {formatDate(contract.contractStartDate)}</p>
                                 <p>End: {formatDate(contract.endDate)}</p>
                               </div>
-                              
-                              <div className="space-y-1">
-                                <p className="font-medium">Financials</p>
-                                <p>Value: {formatCurrency(contract.contractValue)}</p>
-                                <p>Outstanding: {formatCurrency(contract.outstandingPayments)}</p>
-                              </div>
                             </div>
-                            
                             <div className="flex items-center gap-4 pt-2">
                               {type === 'expiring' && contract.daysRemaining !== undefined && (
                                 <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                  contract.daysRemaining < 7 
+                                  contract.daysRemaining < 7
                                     ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
                                     : contract.daysRemaining < 15
-                                    ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300'
-                                    : 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
+                                      ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300'
+                                      : 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
                                 }`}>
                                   {contract.daysRemaining} days remaining
                                 </div>
                               )}
-                              
                               {type === 'expired' && contract.daysExpired !== undefined && (
                                 <div className="px-3 py-1 rounded-full bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 text-sm font-medium">
                                   Expired {contract.daysExpired} days ago
@@ -305,8 +243,6 @@ export default function StatsCards({ stats }: StatsProps) {
                               )}
                             </div>
                           </div>
-                          
-                          
                         </div>
                       </Card>
                     ))}
@@ -314,123 +250,108 @@ export default function StatsCards({ stats }: StatsProps) {
                 )}
               </ScrollArea>
             </TabsContent>
-            
-           
           </Tabs>
-          
+
           <div className="flex justify-end gap-2 pt-4 border-t">
-            <Button 
-              variant="outline" 
-              onClick={() => setActiveDialog(null)}
-            >
-              Close
-            </Button>
+            <Button variant="outline" onClick={() => setActiveDialog(null)}>Close</Button>
           </div>
         </DialogContent>
       </Dialog>
     );
   };
 
+  // ---------------- Pending Assessments Modal ----------------
+  const PendingAssessmentModal = () => (
+    <Dialog open={pendingModalOpen} onOpenChange={(open) => !open && setPendingModalOpen(false)}>
+      <DialogContent className="max-w-3xl max-h-[80vh]">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold">Pending Assessments</DialogTitle>
+          <DialogDescription>Details of suppliers with pending assessments</DialogDescription>
+        </DialogHeader>
+        <ScrollArea className="h-[400px] mt-4 pr-2 space-y-3">
+          {pendingAssessments.length === 0 ? (
+            <p className="text-center text-gray-500 dark:text-gray-400">No pending assessments found</p>
+          ) : (
+            pendingAssessments.map((a) => (
+              <Card key={a.id} className="p-4 border border-amber-200 dark:border-amber-800 bg-amber-50/40 dark:bg-amber-900/20">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                  <div className="space-y-1">
+                    <p className="font-medium text-gray-900 dark:text-white">{a.assessmentTitle}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Supplier: <span className="font-medium">{a.supplierName}</span>
+                    </p>
+                    <p className="text-xs text-gray-500">Submitted: {new Date(a.submittedAt).toLocaleDateString()}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">Pending</Badge>
+                    {a.score !== null && <Badge variant="outline">Score: {a.score}</Badge>}
+                  </div>
+                </div>
+              </Card>
+            ))
+          )}
+        </ScrollArea>
+        <div className="flex justify-end gap-2 pt-4 border-t">
+          <Button variant="outline" onClick={() => setPendingModalOpen(false)}>Close</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+
   return (
     <>
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
         {statsData.map((item, index) => {
           const Icon = getIconComponent(item.icon);
           const isContractCard = item.title === "Total Contracts";
-          
+          const isAssessmentCard = item.title === "Pending Assessments";
+
           return (
-            <Card
-              key={index}
-              className={`
-                relative overflow-hidden group
-                bg-linear-to-br ${item.colors.gradient}
-                border ${item.colors.border}
-                hover:shadow-2xl hover:shadow-${item.colors.icon.split('-')[1]}-500/20
-                transition-all duration-500 hover:scale-105 hover:-translate-y-2
-                backdrop-blur-sm
-              `}
-            >
-              {/* Subtle ring effect on hover */}
+            <Card key={index} className={`relative overflow-hidden group bg-linear-to-br ${item.colors.gradient} border ${item.colors.border} hover:shadow-2xl hover:shadow-${item.colors.icon.split('-')[1]}-500/20 transition-all duration-500 hover:scale-105 hover:-translate-y-2 backdrop-blur-sm`}>
               <div className={`absolute inset-0 ring-4 ring-transparent group-hover:ring-${item.colors.ring} transition-all duration-500 opacity-0 group-hover:opacity-100`} />
-              
               <div className="relative p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div className="space-y-1">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">
-                      {item.title}
-                    </p>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">{item.title}</p>
                     <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                      {item.value}{item.title.includes("Score") || item.title.includes("Delivery") ? "" : ""}
-                      {item.title.includes("Compliance") || item.title.includes("Delivery") ? "%" : ""}
+                      {item.value}{item.title.includes("Compliance") ? "%" : ""}
                     </p>
                   </div>
-                  
-                  <div className={`
-                    p-3 rounded-2xl ${item.colors.icon}
-                    bg-white/70 dark:bg-gray-800/60
-                    backdrop-blur-md ring-1 ring-white/20
-                    group-hover:scale-110 transition-transform duration-300
-                  `}>
+                  <div className={`p-3 rounded-2xl ${item.colors.icon} bg-white/70 dark:bg-gray-800/60 backdrop-blur-md ring-1 ring-white/20 group-hover:scale-110 transition-transform duration-300`}>
                     <Icon className="w-6 h-6" />
                   </div>
                 </div>
 
                 {item.changeText && (
-                  <div className={`
-                    flex items-center gap-2 text-xs font-medium
-                    px-3 py-2 rounded-xl w-fit
-                    ${getChangeBadgeStyle(item.changeType)}
-                    backdrop-blur-sm
-                  `}>
+                  <div className={`flex items-center gap-2 text-xs font-medium px-3 py-2 rounded-xl w-fit ${getChangeBadgeStyle(item.changeType)} backdrop-blur-sm`}>
                     {getChangeIcon(item.changeType)}
                     <span>{item.changeText}</span>
                   </div>
                 )}
 
-                {/* Contract-specific buttons */}
+                {/* Contract Buttons */}
                 {isContractCard && (
                   <div className="flex flex-col gap-2 mt-4">
                     {s.contractStats?.expiringContracts > 0 && (
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            className="w-full justify-between hover:bg-purple-50 hover:text-purple-700 dark:hover:bg-purple-900/30"
-                            onClick={() => setActiveDialog('expiring')}
-                          >
-                            <span>Expiring Contracts</span>
-                            <Badge variant="secondary" className="ml-2">
-                              {s.contractStats.expiringContracts}
-                            </Badge>
-                          </Button>
-                        </DialogTrigger>
-                      </Dialog>
+                      <Button variant="outline" size="sm" className="w-full justify-between" onClick={() => setActiveDialog('expiring')}>
+                        Expiring Contracts <Badge variant="secondary">{s.contractStats.expiringContracts}</Badge>
+                      </Button>
                     )}
-                    
                     {s.contractStats?.expiredContracts > 0 && (
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            className="w-full justify-between hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/30"
-                            onClick={() => setActiveDialog('expired')}
-                          >
-                            <span>Expired Contracts</span>
-                            <Badge variant="destructive" className="ml-2">
-                              {s.contractStats.expiredContracts}
-                            </Badge>
-                          </Button>
-                        </DialogTrigger>
-                      </Dialog>
+                      <Button variant="outline" size="sm" className="w-full justify-between" onClick={() => setActiveDialog('expired')}>
+                        Expired Contracts <Badge variant="destructive">{s.contractStats.expiredContracts}</Badge>
+                      </Button>
                     )}
                   </div>
                 )}
+
+                {/* Pending Assessment Button */}
+                {isAssessmentCard && pendingAssessments.length > 0 && (
+                  <Button variant="outline" size="sm" className="mt-4 w-full" onClick={() => setPendingModalOpen(true)}>
+                    View Details ({pendingAssessments.length})
+                  </Button>
+                )}
               </div>
-              
-              {/* Bottom shine effect */}
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-linear-to-r from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
             </Card>
           );
         })}
@@ -439,6 +360,7 @@ export default function StatsCards({ stats }: StatsProps) {
       {/* Modals */}
       {activeDialog === 'expiring' && <ContractDetailsModal type="expiring" />}
       {activeDialog === 'expired' && <ContractDetailsModal type="expired" />}
+      <PendingAssessmentModal />
     </>
   );
 }

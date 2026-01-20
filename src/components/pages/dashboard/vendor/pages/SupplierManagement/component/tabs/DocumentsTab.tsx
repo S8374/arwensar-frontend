@@ -62,8 +62,7 @@ export default function DocumentsTab({ supplierId }: Props) {
   const [deleteDocument] = useDeleteDocumentMutation();
   const { data: userData } = useUserInfoQuery(undefined);
   const plan = userData?.data?.subscription;
-
-  const permissions = getPlanFeatures(plan);
+  const limit = getPlanFeatures(plan);
   const documents = docsResponse?.data || [];
 
   const handleReview = async (status: "APPROVED" | "REJECTED") => {
@@ -168,8 +167,17 @@ export default function DocumentsTab({ supplierId }: Props) {
                     <DialogContent>
                       <DialogHeader>
                         <DialogTitle>Review Document</DialogTitle>
-                        <p>Limit To review : {permissions.documentReviewsPerMonth}</p>
-                        </DialogHeader>
+                        <span className="font-medium">
+                          Limit To review :
+                          {limit?.documentReviewsPerMonth === null ? (
+                            <span className="text-emerald-600">Unlimited</span>
+                          ) : (
+                            <span className="text-destructive">
+                              {limit?.documentReviewsPerMonth}
+                            </span>
+                          )}
+                        </span>
+                      </DialogHeader>
                       <div className="space-y-4 py-4">
                         <div><h4 className="font-medium mb-2">{doc.name}</h4></div>
                         <div className="space-y-2">

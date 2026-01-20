@@ -1,11 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 // WorkflowDetailsPage.tsx - Detailed workflow explanation page
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
-    PlayCircle,
     Mail,
     FileText,
     CheckCircle,
@@ -217,9 +215,8 @@ const WorkflowDetailsPage = () => {
                     <div className="container mx-auto p-6 ">
                         {/* Header */}
                         <div className=" mb-10">
-                            <h1 className="text-4xl font-bold tracking-tight mb-3">Vendor Workflow System      <Button>
-                                <PlayCircle className="h-8 w-8 " />
-                            </Button></h1>
+                            <h1 className="text-4xl font-bold tracking-tight mb-3 "> Workflow System     
+                            </h1>
                             <p className="text-xl text-muted-foreground  mx-auto">
                                 Complete visual guide to understanding how the supplier management system works
                             </p>
@@ -264,7 +261,6 @@ const WorkflowDetailsPage = () => {
                         {/* Main Workflow Steps */}
                         <div className="mb-10">
                             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                                <PlayCircle className="h-6 w-6" />
                                 Complete Workflow Process
                             </h2>
 

@@ -29,7 +29,7 @@ export const adminSidebarItems: ISidebarItem[] = [
         component: PlanManagement,
       },
       {
-        title: "Asainment ",
+        title: "Assignment ",
         url: "/admin/assainment",
         icon: "CreditCard",
         component: AssessmentManagement,

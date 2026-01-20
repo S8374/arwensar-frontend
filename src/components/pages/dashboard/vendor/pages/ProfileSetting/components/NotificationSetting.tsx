@@ -83,27 +83,6 @@ export default function NotificationSetting() {
 
   return (
     <div className="w-full mx-auto space-y-8 py-8">
-      {/* Save Button */}
-      <div className="flex justify-start pt-8">
-        <Button
-          type="submit"
-          size="lg"
-          disabled={isSaving}
-          className="px-10 bg-chart-6 hover:bg-chart-6/90 shadow-lg"
-        >
-          {isSaving ? (
-            <>
-              <Loader2 className="w-5 h-5 mr-3 animate-spin" />
-              Saving Changes...
-            </>
-          ) : (
-            <>
-              <CheckCircle2 className="w-5 h-5 mr-3" />
-              Save Preferences
-            </>
-          )}
-        </Button>
-      </div>
 
       {/* Loading State */}
       {isLoadingPrefs ? (
@@ -120,6 +99,27 @@ export default function NotificationSetting() {
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Save Button */}
+          <div className="flex justify-left pt-8">
+            <Button
+              type="submit"
+              size="lg"
+              disabled={isSaving}
+              className="px-10 bg-chart-6 hover:bg-chart-6/90 shadow-lg"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-3 animate-spin" />
+                  Saving Changes...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-5 h-5 mr-3" />
+                  Save Preferences
+                </>
+              )}
+            </Button>
+          </div>
           {fields.map((field) => {
             const Icon = field.icon;
             return (
@@ -155,29 +155,13 @@ export default function NotificationSetting() {
             );
           })}
 
-          {/* Save Button */}
-          <div className="flex justify-center pt-8">
-            <Button
-              type="submit"
-              size="lg"
-              disabled={isSaving}
-              className="px-10 bg-chart-6 hover:bg-chart-6/90 shadow-lg"
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-3 animate-spin" />
-                  Saving Changes...
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="w-5 h-5 mr-3" />
-                  Save Preferences
-                </>
-              )}
-            </Button>
-          </div>
+
         </form>
       )}
+
+
+
+
     </div>
   );
 }

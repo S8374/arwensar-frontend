@@ -30,7 +30,6 @@ export default function ProfileMenu() {
   const isVerified = user?.isVerified || user?.emailVerified;
   const userEmail = user?.email || user?.vendor?.businessEmail || user?.supplier?.email;
   const vendor = user?.vendor;
-
   // Generate initials for Avatar
   const getInitials = () => {
     if (vendor?.firstName && vendor?.lastName) {
@@ -66,7 +65,7 @@ export default function ProfileMenu() {
         return (
           <Badge variant="default" className="bg-emerald-500 hover:bg-emerald-600 text-white">
             <Shield className="w-3 h-3 mr-1" />
-            Supplyer
+            Supplier
           </Badge>
         );
       case "ADMIN":
@@ -139,7 +138,7 @@ export default function ProfileMenu() {
           className="relative z-50  h-10 w-10 rounded-full ring-2 ring-transparent hover:ring-primary/20 transition-all p-0"
         >
           <Avatar className="h-10 w-10">
-            <AvatarImage src={vendor?.companyLogo || undefined} />
+            <AvatarImage src={vendor?.profileImage || user.profileImage} />
             <AvatarFallback className="text-lg font-bold bg-primary text-white">
               {getInitials()}
             </AvatarFallback>
@@ -154,7 +153,7 @@ export default function ProfileMenu() {
         {/* Header */}
         <div className="flex items-center gap-4 px-2 py-3">
           <Avatar className="h-14 w-14 ring-4 ring-background">
-            <AvatarImage src={vendor?.companyLogo || undefined} />
+            <AvatarImage src={vendor?.profileImage || undefined} />
             <AvatarFallback className="text-lg font-bold bg-primary text-white">
               {getInitials()}
             </AvatarFallback>
