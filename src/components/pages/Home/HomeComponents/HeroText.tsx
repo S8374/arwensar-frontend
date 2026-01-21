@@ -41,7 +41,7 @@ export const HeroText = () => {
           {/* CTA Buttons */}
           <AnimatedItem className="flex flex-col sm:flex-row gap-3 sm:gap-4 lg:gap-6 mt-2 sm:mt-4">
             <NavLink to={"/"} />
-            
+
             <AnimatedButton
               onClick={() => {
                 document.getElementById("hero-video")?.scrollIntoView({ behavior: "smooth" });
@@ -75,14 +75,14 @@ export const HeroText = () => {
             id="hero-video"
             className="relative rounded-xl sm:rounded-2xl lg:rounded-3xl overflow-hidden shadow-2xl sm:shadow-3xl border-2 border-border/50 group aspect-video"
           >
-           <iframe
-  src="https://drive.google.com/file/d/1ezl_U1W1Wefjmlz-BaHlfCN4sW2KjwOK/preview"
-  title="Supplier Risk Management Dashboard Demo"
-  frameBorder="0"
-  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-  allowFullScreen
-  className="absolute inset-0 w-full h-full"
-/>
+            <iframe
+              src=""
+              title="Supplier Risk Management Dashboard Demo"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="absolute inset-0 w-full h-full"
+            />
 
             <div className="absolute inset-0 bg-linear-to-t from-background/20 via-transparent to-transparent pointer-events-none" />
           </div>

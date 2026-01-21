@@ -1,6 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useParams } from "react-router-dom";
 import { useEffect, useRef } from "react";
@@ -17,8 +15,7 @@ import {
   type CreateMessagePayload,
 } from "@/redux/features/problem/problem.api";
 import { useForm } from "react-hook-form";
-import { Send, Paperclip } from "lucide-react";
-import { useMinioUpload } from "@/lib/useMinioUpload";
+import { Send } from "lucide-react";
 
 const statusColors: Record<string, string> = {
   OPEN: "bg-green-100 text-green-800",
@@ -37,8 +34,8 @@ const priorityColors: Record<string, string> = {
 export default function ProblemDetail() {
   const { problemId } = useParams<{ problemId: string }>();
   const scrollRef = useRef<HTMLDivElement>(null);
-const [, setSending] = useState(false);
-const [optimisticMessages, setOptimisticMessages] = useState<any[]>([]);
+  const [, setSending] = useState(false);
+  const [optimisticMessages, setOptimisticMessages] = useState<any[]>([]);
 
   const { data, isLoading } = useGetProblemByIdQuery(problemId!, {
     pollingInterval: 1000,
@@ -48,8 +45,6 @@ const [optimisticMessages, setOptimisticMessages] = useState<any[]>([]);
   const problem = data?.data;
 
   const { register, handleSubmit, reset } = useForm();
-  const { uploadFile, isUploading, uploadProgress, resetUpload } =
-    useMinioUpload();
 
   // 🔽 Auto scroll to bottom
   useEffect(() => {
@@ -57,61 +52,52 @@ const [optimisticMessages, setOptimisticMessages] = useState<any[]>([]);
   }, [problem?.messages]);
 
   // 📩 Send message
-const onSendMessage = async (formData: any) => {
-  if (!formData.message?.trim() && !formData.file?.length) return;
+  const onSendMessage = async (formData: any) => {
+    if (!formData.message?.trim()) return;
 
-  setSending(true);
+    setSending(true);
 
-  const tempId = `temp-${Date.now()}`;
-  const attachments: string[] = [];
+    const tempId = `temp-${Date.now()}`;
 
-  // ⏳ Upload file first
-  if (formData.file?.length > 0) {
-    const fileUrl = await uploadFile(formData.file[0]);
-    if (fileUrl) attachments.push(fileUrl);
-  }
+    // ⚡ Optimistic message
+    const optimisticMsg = {
+      id: tempId,
+      content: formData.message?.trim() || "",
+      attachments: [],
+      createdAt: new Date().toISOString(),
+      sender: {
+        email: "You",
+        role: "VENDOR",
+      },
+      optimistic: true,
+    };
 
-  // ⚡ Optimistic message
-  const optimisticMsg = {
-    id: tempId,
-    content: formData.message?.trim() || "",
-    attachments,
-    createdAt: new Date().toISOString(),
-    sender: {
-      email: "You",
-      role: "VENDOR",
-    },
-    optimistic: true,
+    setOptimisticMessages((prev) => [...prev, optimisticMsg]);
+    reset();
+
+    try {
+      await createMessage({
+        problemId: problemId!,
+        body: {
+          content: optimisticMsg.content,
+          attachments: [],
+        } as unknown as CreateMessagePayload,
+      }).unwrap();
+
+      // ✅ Remove optimistic message after success
+      setOptimisticMessages((prev) =>
+        prev.filter((msg) => msg.id !== tempId)
+      );
+    } catch (err) {
+      // ❌ Remove optimistic message on error
+      setOptimisticMessages((prev) =>
+        prev.filter((msg) => msg.id !== tempId)
+      );
+      console.error("Failed to send message:", err);
+    } finally {
+      setSending(false);
+    }
   };
-
-  setOptimisticMessages((prev) => [...prev, optimisticMsg]);
-  reset();
-
-  try {
-    await createMessage({
-      problemId: problemId!,
-      body: {
-        content: optimisticMsg.content,
-        attachments,
-      } as unknown as CreateMessagePayload,
-    }).unwrap();
-
-    // ✅ Remove optimistic message after success
-    setOptimisticMessages((prev) =>
-      prev.filter((msg) => msg.id !== tempId)
-    );
-
-    resetUpload();
-  } catch (err) {
-    // ❌ Remove optimistic message on error
-    setOptimisticMessages((prev) =>
-      prev.filter((msg) => msg.id !== tempId)
-    );
-    console.error("Failed to send message:", err);
-  } finally {
-    setSending(false);
-  }
-};
 
   if (isLoading) return <div>Loading...</div>;
   if (!problem) return <div>Problem not found</div>;
@@ -131,8 +117,7 @@ const onSendMessage = async (formData: any) => {
                 {problem.status.replace("_", " ")}
               </Badge>
               <span className="text-sm text-muted-foreground">
-                Reported{" "}
-                {format(new Date(problem.createdAt), "MMM dd, yyyy")}
+                Reported {format(new Date(problem.createdAt), "MMM dd, yyyy")}
               </span>
             </div>
           </div>
@@ -160,60 +145,41 @@ const onSendMessage = async (formData: any) => {
 
         <CardContent className="flex flex-col gap-4">
           <div className="max-h-[500px] overflow-y-auto space-y-4 px-2">
-          {[...(problem.messages || []), ...optimisticMessages].map((msg: any) => {
+            {[...(problem.messages || []), ...optimisticMessages].map(
+              (msg: any) => {
+                const isVendor = msg.sender.role === "VENDOR";
 
-              const isVendor = msg.sender.role === "VENDOR";
-
-              return (
-                <div
-                  key={msg.id}
-                  className={`flex ${
-                    isVendor ? "justify-end" : "justify-start"
-                  }`}
-                >
+                return (
                   <div
-                    className={`flex flex-col max-w-lg ${
-                      isVendor ? "items-end" : "items-start"
+                    key={msg.id}
+                    className={`flex ${
+                      isVendor ? "justify-end" : "justify-start"
                     }`}
                   >
-                    <span className="text-xs text-muted-foreground mb-1">
-                      {msg.sender.email} •{" "}
-                      {format(new Date(msg.createdAt), "MMM dd, HH:mm")}
-                    </span>
-
                     <div
-                      className={`p-4 rounded-xl ${
-                        isVendor
-                          ? "bg-blue-50 text-blue-900 rounded-br-none"
-                          : "bg-gray-100 text-gray-900 rounded-bl-none"
+                      className={`flex flex-col max-w-lg ${
+                        isVendor ? "items-end" : "items-start"
                       }`}
                     >
-                      <p className="whitespace-pre-wrap">{msg.content}</p>
+                      <span className="text-xs text-muted-foreground mb-1">
+                        {msg.sender.email} •{" "}
+                        {format(new Date(msg.createdAt), "MMM dd, HH:mm")}
+                      </span>
 
-                      {/* 📎 Attachments */}
-                      {msg.attachments?.length > 0 && (
-                        <div className="mt-2 space-y-1">
-                          {msg.attachments.map(
-                            (url: string, index: number) => (
-                              <a
-                                key={index}
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center text-blue-600 hover:underline text-sm"
-                              >
-                                <Paperclip className="w-4 h-4 mr-1" />
-                                View Attachment {index + 1}
-                              </a>
-                            )
-                          )}
-                        </div>
-                      )}
+                      <div
+                        className={`p-4 rounded-xl ${
+                          isVendor
+                            ? "bg-blue-50 text-blue-900 rounded-br-none"
+                            : "bg-gray-100 text-gray-900 rounded-bl-none"
+                        }`}
+                      >
+                        <p className="whitespace-pre-wrap">{msg.content}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              }
+            )}
             <div ref={scrollRef} />
           </div>
 
@@ -228,31 +194,11 @@ const onSendMessage = async (formData: any) => {
               className="flex-1 min-h-[80px]"
             />
 
-            <div className="flex gap-2">
-              <input
-                type="file"
-                {...register("file")}
-                className="file-input file-input-bordered"
-              />
-
-              <Button
-                type="submit"
-                disabled={isUploading}
-                className="flex gap-2"
-              >
-                <Send className="w-4 h-4" />
-                Send
-              </Button>
-            </div>
+            <Button type="submit" className="flex gap-2">
+              <Send className="w-4 h-4" />
+              Send
+            </Button>
           </form>
-
-          {isUploading && (
-            <progress
-              value={uploadProgress}
-              max={100}
-              className="w-full h-2"
-            />
-          )}
         </CardContent>
       </Card>
     </div>

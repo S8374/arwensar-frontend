@@ -78,7 +78,8 @@ export const vendorApi = baseApi.injectEndpoints({
         url: "/vendor/dashboard",
         method: "GET",
       }),
-      providesTags: ["vendor"],
+      providesTags: ['VendorDashboard', 'VendorOverview'],
+
     }),
     bulkImportSuppliers: builder.mutation({
       query: (suppliersData) => ({

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/types/dashboard.types.ts
 export interface NIS2Compliance {
   currentScore: number;

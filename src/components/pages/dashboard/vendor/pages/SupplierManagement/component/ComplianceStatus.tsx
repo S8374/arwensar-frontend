@@ -84,7 +84,7 @@ export default function ComplianceStatus({ supplier, progress, permissions }: Co
 
         <CardContent className="pt-6 space-y-6">
           {
-            permissions.fullAssessments ?
+            permissions.fullAssessments || permissions.isAllFeaturesAccessible ?
 
               < div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center p-4 bg-green-50 dark:bg-green-950/20 border border-green-200 rounded-xl">

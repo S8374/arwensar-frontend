@@ -28,6 +28,7 @@ import CreateNotificationDialog from "../Alerts/CreateNotificationDialog";
 import EditSupplierModal from "./model/EditSupplierModal";
 import { useUserInfoQuery } from "@/redux/features/auth/auth.api";
 import { getPlanFeatures } from "@/lib/planFeatures";
+import FeatureRestricted from "@/components/upgrade/FeatureRestricted";
 
 
 
@@ -161,17 +162,20 @@ export default function SupplierDetailPage() {
 
           <div className="flex flex-wrap gap-3">
             <CreateNotificationDialog />
-            <Button
-              onClick={() => permissions.editSupplier && setIsEditOpen(true)}
-                disabled={!permissions.editSupplier}
+            {
+              permissions.editSupplier || permissions.isAllFeaturesAccessible ? <Button
+                onClick={() =>  setIsEditOpen(true)}
+                variant={permissions.editSupplier ? "default" : "outline"}
+                className="flex items-center gap-2"
+                title={!permissions.editSupplier ? "This feature Features is not in this plans" : undefined}
+              >
+                <Edit2 className="w-4 h-4" />
+                Edit Supplier
+              </Button> :
+                <FeatureRestricted
+                  title="Premium to edit" description={""} requiredPlan={"premium"} feature={""}                />
+            }
 
-              variant={permissions.editSupplier ? "default" : "outline"}
-              className="flex items-center gap-2"
-              title={!permissions.editSupplier ? "This feature Features is not in this plans" : undefined}
-            >
-              <Edit2 className="w-4 h-4" />
-              {permissions.editSupplier ? "Edit Supplier" : "Edit Supplier (Premium)"}
-            </Button>
 
 
           </div>

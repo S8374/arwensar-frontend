@@ -1,8 +1,6 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // src/lib/planFeatures.ts
-
-import { useUserInfoQuery } from "@/redux/features/auth/auth.api";
 import { useGetMyUsageQuery } from "@/redux/features/myUsesLimit/my.uses.limit";
 
 export type PlanFeatures = {
@@ -13,7 +11,7 @@ export type PlanFeatures = {
   emailSupport: boolean;
   prioritySupport: boolean;
   standardAlertsAndReminders: boolean;
-
+  isAllFeaturesAccessible: boolean;
   apiAccess?: boolean;
   customWorkflows?: boolean;
   enterpriseSecurity?: boolean;
@@ -30,8 +28,7 @@ export type PlanFeatures = {
 
 export function getPlanFeatures(subscription: any): PlanFeatures {
   const { data: Limit } = useGetMyUsageQuery(undefined);
-  const { data: userInfo } = useUserInfoQuery(undefined);
-  console.log("userInfo in plan features", userInfo);
+  console.log("Limit Data in plan feature", Limit);
   const LimitData = Limit?.data?.limits;
   const features =
     subscription?.features ||
@@ -39,6 +36,7 @@ export function getPlanFeatures(subscription: any): PlanFeatures {
     {};
 
   return {
+    isAllFeaturesAccessible: !features.isAllFeaturesAccessible,
     editSupplier: !!features.editSupplier,
     fullAssessments: !!features.fullAssessments,
     complianceDashboard: !!features.complianceDashboard,

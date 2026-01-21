@@ -21,10 +21,16 @@ export default function VendorDashboard() {
   const plan = userData?.data?.subscription;
 
   const permissions = getPlanFeatures(plan);
-  const { data, isLoading, isError } = useGetVendorStatsQuery(undefined);
+// src/pages/vendor/VendorDashboard.tsx
+const { data, isLoading, isError } = useGetVendorStatsQuery(undefined, {
+  refetchOnFocus: true,
+  refetchOnReconnect: true,
+  // NO pollingInterval here
+});
+
   const stats = data?.data;
 
-
+ console.log("Vendor Dashboard Stats:", permissions.isAllFeaturesAccessible);
 
 
   if (isLoading) {
@@ -72,7 +78,7 @@ export default function VendorDashboard() {
         {/* Donut Chart */}
         <div className="lg:col-span-8">
           {
-            permissions.complianceDashboard ? <ComplianceDonutChart data={complianceDonutData} /> : <FeatureRestricted
+            permissions.complianceDashboard || permissions.isAllFeaturesAccessible ? <ComplianceDonutChart data={complianceDonutData} /> : <FeatureRestricted
               title="Compliance Dashboard"
               description="Visualize compliance distribution with interactive charts"
               requiredPlan="premium"
@@ -87,7 +93,7 @@ export default function VendorDashboard() {
         <div className="lg:col-span-4 space-y-6">
           <div className="transform hover:scale-[1.02] transition-transform duration-200">
             {
-              permissions.overallCompliance ? <ComplianceGaugeCard
+              permissions.overallCompliance || permissions.isAllFeaturesAccessible ? <ComplianceGaugeCard
                 compliancePercentage={stats.complianceGauge.compliancePercentage}
                 compliant={stats.complianceGauge.compliantSuppliers}
                 nonCompliant={stats.complianceGauge.nonCompliantSuppliers}

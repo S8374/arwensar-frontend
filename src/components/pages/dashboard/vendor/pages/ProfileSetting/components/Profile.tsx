@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { User } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { useGetUserProfileQuery } from "@/redux/features/user/user.api";
-import { useMinioUpload } from "@/lib/useMinioUpload";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type ProfileProps = {
@@ -19,7 +18,6 @@ export default function Profile({ isVendor }: ProfileProps) {
     isLoading: isProfileLoading,
   } = useGetUserProfileQuery();
 
-  const { uploadFile, isUploading } = useMinioUpload();
 
   // ---------- Show loading skeleton ----------
   if (isProfileLoading) {
@@ -61,7 +59,6 @@ export default function Profile({ isVendor }: ProfileProps) {
   const {
     register,
     handleSubmit,
-    setValue,
     formState: { errors, isDirty },
     isLoading,
     isSuccess,
@@ -69,10 +66,10 @@ export default function Profile({ isVendor }: ProfileProps) {
   } = useProfile(profileData, isVendor);
 
   // ---------- Image upload ----------
-  const handleImageUpload = async (file: File) => {
-    const url = await uploadFile(file);
-    setValue("profileImage", url, { shouldDirty: true });
-  };
+  // const handleImageUpload = async (file: File) => {
+  //   const url = await uploadFile(file);
+  //   setValue("profileImage", url, { shouldDirty: true });
+  // };
 
   return (
     <div className="space-y-8">
@@ -140,7 +137,7 @@ export default function Profile({ isVendor }: ProfileProps) {
             <Input {...register("industryType")} disabled />
           </div>
 
-          {/* Image */}
+          {/* Image
           <div className="md:col-span-2">
             <Label>Profile Image</Label>
             <div className="flex items-center gap-4">
@@ -167,13 +164,13 @@ export default function Profile({ isVendor }: ProfileProps) {
                 </span>
               )}
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* SAVE */}
         <Button
           type="submit"
-          disabled={!isDirty || isLoading || isUploading}
+          disabled={!isDirty || isLoading }
           className="bg-chart-6 px-8"
         >
           {isLoading ? "Saving..." : "Save Changes"}

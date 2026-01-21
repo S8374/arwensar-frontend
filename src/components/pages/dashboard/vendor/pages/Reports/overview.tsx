@@ -606,7 +606,7 @@ export default function VendorReportsPage() {
                     </Card>
 
                     {/* Quick Actions Card */}
-                    {permissions?.emailSupport ? (
+                    {permissions?.emailSupport || permissions?.isAllFeaturesAccessible ? (
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">

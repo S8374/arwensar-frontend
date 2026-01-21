@@ -66,7 +66,13 @@ export const useVendorFormSignin = () => {
 
       reset();
     } catch (error : any) {
+      if(error?.status === 409){
+        toast.error("Vendor with this email already exists.")
+      }
+      else{
       toast.error("Failed to create vendor:",error.massage)
+
+      }
     }
   };
 

@@ -273,7 +273,7 @@ export default function StatsCards({ stats }: StatsProps) {
             <p className="text-center text-gray-500 dark:text-gray-400">No pending assessments found</p>
           ) : (
             pendingAssessments.map((a) => (
-              <Card key={a.id} className="p-4 border border-amber-200 dark:border-amber-800 bg-amber-50/40 dark:bg-amber-900/20">
+              <Card key={a.id} className="p-4 border mt-4 border-amber-200 dark:border-amber-800 bg-amber-50/40 dark:bg-amber-900/20">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
                   <div className="space-y-1">
                     <p className="font-medium text-gray-900 dark:text-white">{a.assessmentTitle}</p>

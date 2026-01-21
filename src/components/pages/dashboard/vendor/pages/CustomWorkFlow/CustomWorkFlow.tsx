@@ -211,7 +211,7 @@ const WorkflowDetailsPage = () => {
 
         <div>
             {
-                permissions.customWorkflows ?
+                permissions.customWorkflows || permissions.isAllFeaturesAccessible ?
                     <div className="container mx-auto p-6 ">
                         {/* Header */}
                         <div className=" mb-10">

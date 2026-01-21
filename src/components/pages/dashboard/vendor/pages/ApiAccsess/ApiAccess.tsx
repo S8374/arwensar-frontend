@@ -38,7 +38,7 @@ export default function ApiAccess() {
       </div>
 
       {/* Conditional Rendering based on API Access */}
-      {permissions.apiAccess ? (
+      {permissions.apiAccess || permissions.isAllFeaturesAccessible ? (
         <>
           {/* API Link Card */}
           <Card>
