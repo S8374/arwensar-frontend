@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { baseApi } from "@/redux/baseApi";
+import type { Plan } from "../public/public.api";
 
 
 /* ===================== ADMIN API ===================== */
@@ -48,7 +49,13 @@ export const adminApi = baseApi.injectEndpoints({
         method: "GET",
       }),
     }),
-
+    getAdminAllPlans: builder.query<{ data: Plan[] }, void>({
+      query: () => ({
+        url: "/admin/plans/admin",
+        method: "GET",
+      }),
+      providesTags: ["plan"],
+    }),
     // ================= ASSESSMENTS =================
     createAssessment: builder.mutation<any, any>({
       query: (body) => ({
@@ -257,4 +264,7 @@ export const {
   useGetAllSuppliersQuery,
   useDeleteSupplierMutation,
   useGetAllVendorsQuery,
+
+
+  useGetAdminAllPlansQuery
 } = adminApi;

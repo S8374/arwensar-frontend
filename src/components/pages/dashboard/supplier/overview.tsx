@@ -154,7 +154,7 @@ export default function SupplierDashboard() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-3 gap-4">
-            <div className="p-2 bg-blue-50 rounded text-center"><div className="font-bold">{assessmentStats.totalAssessments || 0}</div><div className="text-xs">Total</div></div>
+            <div className="p-2 bg-blue-50 rounded text-center"><div className="font-bold">{assessmentStats.totalAssessments || 0}</div><div className="text-xs">Start Assignment</div></div>
             <div className="p-2 bg-amber-50 rounded text-center"><div className="font-bold">{assessmentStats.pendingAssessments || 0}</div><div className="text-xs">Pending</div></div>
             <div className="p-2 bg-green-50 rounded text-center"><div className="font-bold">{assessmentStats.completedAssessments || 0}</div><div className="text-xs">Completed</div></div>
           </div>

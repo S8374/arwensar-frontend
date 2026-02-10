@@ -24,33 +24,29 @@ export default function Homepage() {
       <div className="bg-primary/10 py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8">
         <ReusableComponent
           imageSrc={image1}
-          title="NIS2 Supplier Risk Tool"
+          title="Why Current Messaging Feels Generic"
           description1="Our comprehensive platform helps you manage all aspects of vendor risk management in accordance with NIS2 requirements."
-          description2="Get instant insights into your supplier security posture, automate compliance checks, and receive real-time alerts when risks emerge."
           features={[
-            { text: "Automated security assessments" },
-            { text: "CIA/BIV risk classification" },
-            { text: "Compliance tracking and reporting" },
-            { text: "Vendor communication portal" }
+            { text: "Focus on features instead of consequences" },
+            { text: "Uses abstract SaaS language (platform, manage, overview)" },
+            { text: "No clear trigger event (audit, incident, board pressure)" },
           ]}
           buttonText="Learn More"
           buttonVariant="outline"
           onButtonClick={() => {
             document.getElementById("features-section2")?.scrollIntoView({ behavior: "smooth" });
-          }}
-        />
+          } } description2={""}        />
         <ReusableComponent
           id="features-section2"
           imageSrc={image2}
           reverse={true}
-          title="Data Security & Compliance Dashboard"
+          title="Who Feels This as a Painkiller (Not a Vitamin)"
           description1="Show how your platform gives real-time visibility into data protection."
-          description2="Get instant insights into your supplier security posture, automate compliance checks, and receive real-time alerts when risks emerge."
+          description2=""
           features={[
-            { text: "GDPR compliance tools" },
-            { text: "API-first architecture" },
-            { text: "Webhook integrations" },
-            { text: "Session management" }
+            { text: "CISOS under audit pressure\nCompliance Managers preparing NIS2 evidence" },
+            { text: " Risk Managers responsible for third-party failures" },
+            { text: "MSSPS managing multiple client suppliers" },
           ]}
           buttonText="Learn More"
           buttonVariant="outline"

@@ -42,7 +42,6 @@ const clientAvatars = [
   "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face",
   "https://images.unsplash.com/photo-1507101105822-7472b28e22ac?w=100&h=100&fit=crop&crop=face",
   "https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?w=100&h=100&fit=crop&crop=face",
-  "https://images.unsplash.com/photo-1507591064344-4c6ce005-128?w=100&h=100&fit=crop&crop=face"
 ];
 
 export default function Partnerpage() {

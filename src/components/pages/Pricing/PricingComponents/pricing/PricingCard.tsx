@@ -73,14 +73,14 @@ export default function PricingCard({ plan, onSelect }: PricingCardProps) {
     isLoading: isCheckingAuth,
     isError: isAuthError,
   } = useUserInfoQuery(undefined);
-
+  console.log("userInfo",userInfo)
   const subscription = userInfo?.data?.subscription;
   const subscriptionStatus = subscription?.status;
   const currentPlanId = subscription?.plan?.id;
   const role = userInfo?.data?.role;
   const isAuthenticated = !!userInfo && !isAuthError;
   const isCurrentPlan = currentPlanId === plan.id;
-  const isActivePlan = isCurrentPlan && subscriptionStatus === "ACTIVE";
+  const isActivePlan = isCurrentPlan && subscriptionStatus === "ACTIVE" || isCurrentPlan && subscriptionStatus === "TRIALING";
 
   /* ---------- STRIPE ---------- */
   const [createCheckoutSession, { isLoading: isCreatingSession }] =

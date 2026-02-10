@@ -19,19 +19,19 @@ export const suppliersSidebarItems: ISidebarItem[] = [
       {
         title: "Uplade Evidence",
         url: "/supplier/evidence",
-        icon: "LayoutDashboard",
+        icon: "File",
         component: UploadeEvidencePage,
       },
       {
         title: "Notification Alerts",
         url: "/supplier/notification-alerts",
-        icon: "LayoutDashboard",
+        icon: "Bell",
         component: NotificationsPage,
       },
       {
         title: "Reports",
         url: "/supplier/Reports",
-        icon: "LayoutDashboard",
+        icon: "Warehouse",
         component: ReportsPage,
       },
       
@@ -44,7 +44,7 @@ export const suppliersSidebarItems: ISidebarItem[] = [
       {
         title: "Problems & Issues",
         url: "/supplier/problem",
-        icon: "Settings",
+        icon: "Bug",
         component: ProblemsPage,
       }
     ]

@@ -5,7 +5,6 @@ import { vendorSidebarItems } from "@/routes/VendorSidebarItems";
 import type { TRole } from "@/types";
 
 export const getSidebarItems = (userRole: TRole) => {
-  console.log("getSidebarItems Debug: userRole =", userRole);
   switch (userRole) {
     case role.vendor || role.admin :
       return [...vendorSidebarItems];

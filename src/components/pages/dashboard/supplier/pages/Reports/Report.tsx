@@ -65,18 +65,6 @@ const viewReport = (report: Report) => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-card">
-        <div className="mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Reports</h1>
-            <p className="text-sm sm:text-base text-muted-foreground mt-1">
-              View compliance reports and export audit documentation
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Main Content */}
       <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">

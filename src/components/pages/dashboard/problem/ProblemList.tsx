@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { format } from "date-fns";
-import { AlertCircle, MessageSquare, Plus, Filter, Trash, Edit2 } from "lucide-react";
+import { AlertCircle, MessageSquare, Filter, Trash, Edit2 } from "lucide-react";
 import { useGetProblemsQuery, useUpdateProblemMutation, useDeleteProblemMutation } from "@/redux/features/problem/problem.api";
 import CreateProblemForm from "./CreateProblemForm";
 import { useNavigate } from "react-router-dom";
@@ -126,8 +126,8 @@ export default function ProblemsList() {
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
             <Button size="lg" className="gap-2">
-              <Plus className="w-5 h-5" />
-              Create Discussion Massage
+              <MessageSquare className="w-5 h-5" />
+              Create Discussion Message
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">

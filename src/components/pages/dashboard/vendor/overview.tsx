@@ -29,10 +29,6 @@ const { data, isLoading, isError } = useGetVendorStatsQuery(undefined, {
 });
 
   const stats = data?.data;
-
- console.log("Vendor Dashboard Stats:", permissions.isAllFeaturesAccessible);
-
-
   if (isLoading) {
     return <DashboardSkeleton />;
   }

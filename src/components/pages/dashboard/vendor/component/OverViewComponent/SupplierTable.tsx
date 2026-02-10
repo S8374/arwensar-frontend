@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // components/dashboard/SupplierTable.tsx
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,27 +26,48 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useDeleteSupplierMutation } from "@/redux/features/admin/admin.api";
 
-const getRiskBadgeVariant = (criticality: string) => {
-  switch (criticality?.toUpperCase()) {
-    case "HIGH":
-      return "bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 border border-red-200 dark:border-red-800";
-    case "MEDIUM":
-      return "bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-200 dark:border-amber-800";
-    case "LOW":
-    default:
-      return "bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800";
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+const getEffectiveRiskValue = (supplier: any): string => {
+  const rl = supplier?.riskLevel;
+  if (rl != null && rl !== "" && rl !== "null" && typeof rl === "string" && rl.trim()) {
+    return rl.trim();
   }
+
+  const crit = supplier?.criticality;
+  if (typeof crit === "string" && crit.trim()) {
+    return crit.trim();
+  }
+
+  return "LOW"; // safest default
 };
 
-const getRiskLabel = (criticality: string) => {
-  switch (criticality?.toUpperCase()) {
-    case "HIGH": return "High Risk";
-    case "MEDIUM": return "Medium Risk";
-    case "LOW": default: return "Low Risk";
+const getRiskLabel = (value: any): string => {
+  if (!value || typeof value !== "string") {
+    return "Low Risk";
   }
+
+  const upper = value.toUpperCase().replace(/[^A-Z\s]/g, "").trim();
+
+  if (upper.includes("HIGH")) return "High Risk";
+  if (upper.includes("MEDIUM")) return "Medium Risk";
+  return "Low Risk";
 };
+
+const getRiskBadgeVariant = (value: any): string => {
+  const label = getRiskLabel(value);
+
+  if (label === "High Risk") {
+    return "bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 border border-red-200 dark:border-red-800";
+  }
+  if (label === "Medium Risk") {
+    return "bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-200 dark:border-amber-800";
+  }
+  // Low Risk (always green)
+  return "bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800";
+};
+
 const getContractStatus = (contractEndDate?: string) => {
   if (!contractEndDate) return null;
 
@@ -57,13 +79,13 @@ const getContractStatus = (contractEndDate?: string) => {
   if (endDate < today) {
     return { label: "Expired", className: "text-red-600" };
   }
-
   if (endDate <= in30Days) {
     return { label: "Expiring soon", className: "text-amber-600" };
   }
-
   return { label: "Active", className: "text-emerald-600" };
 };
+
+// ─── Component ──────────────────────────────────────────────────────────────
 
 export default function SupplierTable() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -71,12 +93,12 @@ export default function SupplierTable() {
   const [riskFilter, setRiskFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  const { data, isLoading, error ,refetch} = useGetMySuppliersQuery(undefined);
+  const { data, isLoading, error, refetch } = useGetMySuppliersQuery(undefined);
   const suppliers = data?.data || [];
+
   const [resendInvitation, { isLoading: isResending }] =
     useResendSupplierInvitationMutation();
-  const [deleteSupplier, { isLoading: isDeleting  }] =
-    useDeleteSupplierMutation();
+
   // Filter suppliers
   const filteredSuppliers = suppliers.filter((s: any) => {
     const matchesSearch =
@@ -84,7 +106,12 @@ export default function SupplierTable() {
       s.contactPerson?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       s.category?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesRisk = riskFilter === "all" || s.criticality?.toUpperCase() === riskFilter.toUpperCase();
+    const effectiveRisk = getEffectiveRiskValue(s);
+    const riskLabel = getRiskLabel(effectiveRisk);
+    const matchesRisk =
+      riskFilter === "all" ||
+      riskLabel.toLowerCase().includes(riskFilter.toLowerCase());
+
     const matchesStatus =
       statusFilter === "all" ||
       (statusFilter === "active" && s.isActive) ||
@@ -92,6 +119,7 @@ export default function SupplierTable() {
 
     return matchesSearch && matchesRisk && matchesStatus;
   });
+
   const handleResendInvitation = async (supplierId: string) => {
     try {
       await resendInvitation({ supplierId }).unwrap();
@@ -101,24 +129,6 @@ export default function SupplierTable() {
       alert("Failed to resend invitation");
     }
   };
-  const handleDeleteSupplier = async (supplierId: string) => {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this supplier? This action cannot be undone."
-    );
-
-    if (!confirmed) return;
-
-    try {
-      await deleteSupplier(supplierId).unwrap();
-      refetch();
-      alert("Supplier deleted successfully");
-    } catch (error: any) {
-      alert(
-        error?.data?.message || "Failed to delete supplier. Please try again."
-      );
-    }
-  };
-
 
   if (isLoading) {
     return (
@@ -149,8 +159,8 @@ export default function SupplierTable() {
 
   return (
     <>
-      <Card className="border-0  overflow-hidden">
-        <CardHeader className="pb-4 bg-linear-to-r from-gray-50 to-white ">
+      <Card className="border-0 overflow-hidden">
+        <CardHeader className="pb-4 bg-gradient-to-r from-gray-50 to-white">
           <div className="flex flex-col gap-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
@@ -165,7 +175,7 @@ export default function SupplierTable() {
                 <Button
                   onClick={() => setIsModalOpen(true)}
                   size="sm"
-                  className="bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                 >
                   Import Suppliers
                 </Button>
@@ -174,7 +184,6 @@ export default function SupplierTable() {
 
             {/* Filters */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Search */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
@@ -185,7 +194,6 @@ export default function SupplierTable() {
                 />
               </div>
 
-              {/* Risk Filter */}
               <Select value={riskFilter} onValueChange={setRiskFilter}>
                 <SelectTrigger className="border-gray-300 dark:border-gray-700">
                   <div className="flex items-center gap-2">
@@ -216,7 +224,6 @@ export default function SupplierTable() {
                 </SelectContent>
               </Select>
 
-              {/* Status Filter */}
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="border-gray-300 dark:border-gray-700">
                   <SelectValue placeholder="Status" />
@@ -228,7 +235,6 @@ export default function SupplierTable() {
                 </SelectContent>
               </Select>
 
-              {/* Results Count */}
               <div className="flex items-center justify-between sm:justify-end">
                 <span className="text-sm text-gray-600 dark:text-gray-400">
                   Showing <span className="font-semibold">{filteredSuppliers.length}</span> of{" "}
@@ -243,19 +249,19 @@ export default function SupplierTable() {
           {/* Desktop Table */}
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50  border-b border-gray-200 ">
+              <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   {["Supplier Name", "Contact", "Category", "Contract End", "Status", "Risk Level", "Actions"].map((header) => (
                     <th
                       key={header}
-                      className="text-left px-6 py-4 font-medium text-gray-700  text-sm uppercase tracking-wider"
+                      className="text-left px-6 py-4 font-medium text-gray-700 text-sm uppercase tracking-wider"
                     >
                       {header}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 ">
+              <tbody className="divide-y divide-gray-200">
                 {filteredSuppliers.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="text-center py-12">
@@ -271,108 +277,102 @@ export default function SupplierTable() {
                     </td>
                   </tr>
                 ) : (
-                  filteredSuppliers.map((s: any) => (
-                    <tr
-                      key={s.id}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors"
-                    >
-                      <td className="px-6 py-5">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                            <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                              {s.name?.[0]?.toUpperCase() || "S"}
-                            </span>
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-900 dark:text-white">
-                              {s.name || "Unnamed Supplier"}
-                            </p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                              ID: {s.id.slice(0, 8)}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-5">
-                        <p className="text-gray-900 dark:text-white">{s.contactPerson || "-"}</p>
-                        {s.email && (
-                          <p className="text-sm text-gray-500 dark:text-gray-400">{s.email}</p>
-                        )}
-                      </td>
-                      <td className="px-6 py-5">
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
-                          {s.category || "-"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-5">
-                        <div className="flex flex-col">
-                          <span className="text-gray-900 dark:text-white">
-                            {s.contractEndDate
-                              ? format(new Date(s.contractEndDate), "MMM dd, yyyy")
-                              : "-"}
-                          </span>
-
-                          {s.contractEndDate && (() => {
-                            const status = getContractStatus(s.contractEndDate);
-                            return (
-                              <span className={`text-xs font-medium ${status?.className}`}>
-                                {status?.label}
+                  filteredSuppliers.map((s: any) => {
+                    const effectiveRisk = getEffectiveRiskValue(s);
+                    return (
+                      <tr
+                        key={s.id}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors"
+                      >
+                        <td className="px-6 py-5">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                              <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                                {s.name?.[0]?.toUpperCase() || "S"}
                               </span>
-                            );
-                          })()}
-                        </div>
-                      </td>
-
-                      <td className="px-6 py-5">
-                        <Badge
-                          variant={s.isActive ? "default" : "secondary"}
-                          className={s.isActive
-                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
-                            : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400"
-                          }
-                        >
-                          {s.isActive ? "Active" : "Pending"}
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-5">
-                        <Badge className={getRiskBadgeVariant(s.criticality)}>
-                          {getRiskLabel(s.riskLevel)}
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-5">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button asChild variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
-                            <Link to={`/vendor/suppliers/${s.id}`}>
-                              View Details
-                            </Link>
-                          </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() => handleResendInvitation(s.id)}
-                                disabled={isResending}
-                              >
-                                Resend Invitation
-                              </DropdownMenuItem>
-
-                              <DropdownMenuItem
-                                onClick={() => handleDeleteSupplier(s.id)}
-                                disabled={isResending && isDeleting}
-                              >
-                                Delete Supplier
-                              </DropdownMenuItem>
-
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900 dark:text-white">
+                                {s.name || "Unnamed Supplier"}
+                              </p>
+                              <p className="text-sm text-gray-500 dark:text-gray-400">
+                                ID: {s.id.slice(0, 8)}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-5">
+                          <p className="text-gray-900 dark:text-white">{s.contactPerson || "-"}</p>
+                          {s.email && (
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{s.email}</p>
+                          )}
+                        </td>
+                        <td className="px-6 py-5">
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+                            {s.category || "-"}
+                          </span>
+                        </td>
+                        <td className="px-6 py-5">
+                          <div className="flex flex-col">
+                            <span className="text-gray-900 dark:text-white">
+                              {s.contractEndDate
+                                ? format(new Date(s.contractEndDate), "MMM dd, yyyy")
+                                : "-"}
+                            </span>
+                            {s.contractEndDate && (() => {
+                              const status = getContractStatus(s.contractEndDate);
+                              return status ? (
+                                <span className={`text-xs font-medium ${status.className}`}>
+                                  {status.label}
+                                </span>
+                              ) : null;
+                            })()}
+                          </div>
+                        </td>
+                        <td className="px-6 py-5">
+                          <Badge
+                            variant={s.isActive ? "default" : "secondary"}
+                            className={
+                              s.isActive
+                                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
+                                : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400"
+                            }
+                          >
+                            {s.isActive ? "Active" : "Pending"}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-5">
+                          <Badge className={getRiskBadgeVariant(effectiveRisk)}>
+                            {getRiskLabel(effectiveRisk)}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-5">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button asChild variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
+                              <Link to={`/vendor/suppliers/${s.id}`}>
+                                View Details
+                              </Link>
+                            </Button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => handleResendInvitation(s.id)}
+                                  disabled={isResending}
+                                >
+                                  Resend Invitation
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -391,76 +391,80 @@ export default function SupplierTable() {
                 </p>
               </div>
             ) : (
-              filteredSuppliers.map((s: any) => (
-                <Card key={s.id} className="p-5  border border-gray-200 dark:border-gray-700">
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                        <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                          {s.name?.[0]?.toUpperCase() || "S"}
-                        </span>
+              filteredSuppliers.map((s: any) => {
+                const effectiveRisk = getEffectiveRiskValue(s);
+                return (
+                  <Card key={s.id} className="p-5 border border-gray-200 dark:border-gray-700">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                          <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                            {s.name?.[0]?.toUpperCase() || "S"}
+                          </span>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-gray-900 dark:text-white">
+                            {s.name || "Unnamed Supplier"}
+                          </h4>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {s.category || "No category"}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="font-semibold text-gray-900 dark:text-white">
-                          {s.name || "Unnamed Supplier"}
-                        </h4>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {s.category || "No category"}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>Edit</DropdownMenuItem>
+                          <DropdownMenuItem>View Details</DropdownMenuItem>
+                          <DropdownMenuItem className="text-red-600">Remove</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div className="space-y-1">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Contact</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                          {s.contactPerson || "No contact"}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Contract Ends</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                          {s.contractEndDate
+                            ? format(new Date(s.contractEndDate), "MMM dd, yyyy")
+                            : "-"}
                         </p>
                       </div>
                     </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
-                        <DropdownMenuItem>View Details</DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600">Remove</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
 
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div className="space-y-1">
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Contact</p>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {s.contactPerson || "No contact"}
-                      </p>
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
+                      <div className="flex gap-2 flex-wrap">
+                        <Badge
+                          variant={s.isActive ? "default" : "secondary"}
+                          className={
+                            s.isActive
+                              ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
+                              : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400"
+                          }
+                        >
+                          {s.isActive ? "Active" : "Pending"}
+                        </Badge>
+                        <Badge className={getRiskBadgeVariant(effectiveRisk)}>
+                          {getRiskLabel(effectiveRisk)}
+                        </Badge>
+                      </div>
+                      <Button asChild variant="link" size="sm" className="text-blue-600 hover:text-blue-700 p-0">
+                        <Link to={`/vendor/suppliers/${s.id}`}>View →</Link>
+                      </Button>
                     </div>
-                    <div className="space-y-1">
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Contract Ends</p>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {s.contractEndDate
-                          ? format(new Date(s.contractEndDate), "MMM dd, yyyy")
-                          : "-"}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <div className="flex gap-2">
-                      <Badge
-                        variant={s.isActive ? "default" : "secondary"}
-                        className={s.isActive
-                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
-                          : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400"
-                        }
-                      >
-                        {s.isActive ? "Active" : "Pending"}
-                      </Badge>
-                      <Badge className={getRiskBadgeVariant(s.criticality)}>
-                        {getRiskLabel(s.criticality)}
-                      </Badge>
-                    </div>
-                    <Button asChild variant="link" size="sm" className="text-blue-600 hover:text-blue-700 p-0">
-                      <Link to={`/vendor/suppliers/${s.id}`}>View →</Link>
-                    </Button>
-                  </div>
-                </Card>
-              ))
+                  </Card>
+                );
+              })
             )}
           </div>
         </CardContent>

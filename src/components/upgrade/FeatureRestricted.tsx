@@ -4,6 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Lock, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"; // assuming you have shadcn tooltip
 
 interface FeatureRestrictedProps {
   title: string;
@@ -11,6 +17,12 @@ interface FeatureRestrictedProps {
   requiredPlan: 'premium' | 'enterprise';
   feature: string;
   className?: string;
+  /** Controls appearance: full card or compact button-like */
+  variant?: 'card' | 'button';
+  /** When variant='button', custom button text (default: "Edit Supplier") */
+  buttonText?: string;
+  /** When variant='button', size of the button */
+  size?: 'default' | 'sm' | 'lg' | 'icon';
 }
 
 export default function FeatureRestricted({
@@ -18,10 +30,55 @@ export default function FeatureRestricted({
   description,
   requiredPlan,
   feature,
-  className
+  className,
+  variant = 'card',
+  buttonText = "Edit Supplier",
+  size = 'default',
 }: FeatureRestrictedProps) {
   const navigate = useNavigate();
 
+  if (variant === 'button') {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size={size}
+              disabled
+              className={cn(
+                "flex items-center gap-2 opacity-70 cursor-not-allowed border-dashed",
+                "hover:bg-transparent hover:text-muted-foreground",
+                className
+              )}
+            >
+              <Lock className="w-4 h-4" />
+              {buttonText}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-xs text-center">
+            <p className="font-medium mb-1">{title}</p>
+            <p className="text-sm text-muted-foreground mb-3">{description || `Requires ${requiredPlan} plan`}</p>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-yellow-50 dark:bg-yellow-950/30 text-yellow-700 dark:text-yellow-300 text-xs">
+              <Sparkles className="w-3.5 h-3.5" />
+              {requiredPlan.charAt(0).toUpperCase() + requiredPlan.slice(1)} Feature
+            </div>
+            <div className="mt-3">
+              <Button
+                size="sm"
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                onClick={() => navigate('/pricing')}
+              >
+                Upgrade to {requiredPlan}
+              </Button>
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
+  // Default: full card style
   return (
     <Card className={cn(
       "border-dashed border-2 bg-gradient-to-br from-gray-50 to-white dark:from-gray-900/50 dark:to-gray-800/50",
@@ -52,7 +109,7 @@ export default function FeatureRestricted({
 
           <Button
             onClick={() => navigate('/pricing')}
-            className="bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 w-full"
+            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 w-full"
           >
             Upgrade to {requiredPlan}
           </Button>

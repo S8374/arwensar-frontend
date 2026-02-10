@@ -119,12 +119,12 @@ export default function Profile({ isVendor }: ProfileProps) {
 
           <div>
             <Label>Email</Label>
-            <Input value={profileData.email} disabled />
+            <Input value={profileData.email} disabled ={!isVendor} />
           </div>
 
           <div>
             <Label>Company Name</Label>
-            <Input {...register("companyName")} disabled />
+            <Input {...register("companyName")} disabled={!isVendor} />
           </div>
 
           <div>
@@ -134,9 +134,9 @@ export default function Profile({ isVendor }: ProfileProps) {
 
           <div>
             <Label>Industry Type</Label>
-            <Input {...register("industryType")} disabled />
+            <Input {...register("industryType")} disabled={!isVendor} />
           </div>
-
+       
           {/* Image
           <div className="md:col-span-2">
             <Label>Profile Image</Label>

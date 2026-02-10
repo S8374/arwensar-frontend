@@ -223,33 +223,38 @@ export default function PlanManagement() {
     setEditingPlan(null);
   };
 
-  const openEditDialog = (plan: any) => {
-    setEditingPlan(plan);
-    // Ensure all features are included in the form
-    const allFeatures: Record<string, any> = {};
-    ALL_FEATURES.forEach(feature => {
-      allFeatures[feature.key] = plan.features?.[feature.key] ??
-        (feature.type === "boolean" ? false : null);
-    });
-
-    setFormData({
-      name: plan.name,
-      description: plan.description,
-      type: plan.type,
-      billingCycle: plan.billingCycle,
-      price: parseFloat(plan.price),
-      currency: plan.currency,
-      supplierLimit: plan.supplierLimit || 0,
-      assessmentLimit: plan.assessmentLimit || 0,
-      storageLimit: plan.storageLimit || 0,
-      userLimit: plan.userLimit || 0,
-      trialDays: plan.trialDays,
-      isActive: plan.isActive,
-      isPopular: plan.isPopular,
-      features: allFeatures,
-    });
-    setDialogOpen(true);
-  };
+const openEditDialog = (plan: any) => {
+  setEditingPlan(plan);
+  
+  // ✅ Initialize with ALL existing features first (including custom ones)
+  const allFeatures: Record<string, any> = { ...plan.features };
+  
+  // ✅ Then ensure ALL_FEATURES are present with defaults if missing
+  ALL_FEATURES.forEach(feature => {
+    if (!(feature.key in allFeatures)) {
+      allFeatures[feature.key] = feature.type === "boolean" ? false : null;
+    }
+  });
+  
+  setFormData({
+    name: plan.name,
+    description: plan.description,
+    type: plan.type,
+    billingCycle: plan.billingCycle,
+    price: parseFloat(plan.price),
+    currency: plan.currency,
+    supplierLimit: plan.supplierLimit || 0,
+    assessmentLimit: plan.assessmentLimit || 0,
+    storageLimit: plan.storageLimit || 0,
+    userLimit: plan.userLimit || 0,
+    trialDays: plan.trialDays,
+    isActive: plan.isActive,
+    isPopular: plan.isPopular,
+    features: allFeatures, // ✅ Now includes custom_1 and other custom features
+  });
+  
+  setDialogOpen(true);
+};
 
   const openCreateDialog = () => {
     resetForm();
@@ -307,7 +312,7 @@ export default function PlanManagement() {
             Create and manage subscription plans for vendors
           </p>
         </div>
-        
+
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={openCreateDialog} className="w-full sm:w-auto">
@@ -448,11 +453,11 @@ function PlanFormDialog({
       </DialogHeader>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
-        <TabsList className="grid grid-cols-2 sm:grid-cols-4">
+        <TabsList className="grid grid-cols-2 sm:grid-cols-3">
           <TabsTrigger value="basic" className="text-xs sm:text-sm">Basic Info</TabsTrigger>
           <TabsTrigger value="limits" className="text-xs sm:text-sm">Limits</TabsTrigger>
           <TabsTrigger value="features" className="text-xs sm:text-sm">Features</TabsTrigger>
-          <TabsTrigger value="custom" className="text-xs sm:text-sm">Custom</TabsTrigger>
+          {/* <TabsTrigger value="custom" className="text-xs sm:text-sm">Custom</TabsTrigger> */}
         </TabsList>
 
         <TabsContent value="basic" className="space-y-4">
@@ -821,7 +826,7 @@ function PlanFormDialog({
         </TabsContent>
       </Tabs>
 
-      <DialogFooter className="mt-6 flex flex-col sm:flex-row gap-2 sm:gap-0">
+      <DialogFooter className="mt-6 space-x-4 flex flex-col sm:flex-row gap-2 sm:gap-0">
         <Button variant="outline" onClick={onClose} className="w-full sm:w-auto order-2 sm:order-1">
           Cancel
         </Button>

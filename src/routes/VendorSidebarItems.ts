@@ -48,7 +48,7 @@ export const vendorSidebarItems: ISidebarItem[] = [
       {
         title: "Problems & Issues",
         url: "/vendor/problem",
-        icon: "Settings",
+        icon: "Bug",
         component: ProblemsPage,
       },
       {
@@ -61,7 +61,7 @@ export const vendorSidebarItems: ISidebarItem[] = [
       {
         title: "Custom Work Flow",
         url: "/vendor/customWorkFlow",
-        icon: "Work",
+        icon: "Workflow",
         component: CustomWorkflows,
       }
     ],

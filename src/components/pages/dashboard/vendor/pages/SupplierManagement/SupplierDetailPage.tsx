@@ -77,7 +77,8 @@ export default function SupplierDetailPage() {
   const {
     data: supplierResponse,
     isLoading: loadingSupplier,
-    error: supplierError
+    error: supplierError,
+    refetch
   } = useGetSupplierByIdQuery(id!, { skip: !id });
 
   const [getProgress, { data: progressData, isLoading: loadingProgress }] = useLazyGetSingelSupplyerProgressQuery();
@@ -163,19 +164,29 @@ export default function SupplierDetailPage() {
           <div className="flex flex-wrap gap-3">
             <CreateNotificationDialog />
             {
-              permissions.editSupplier || permissions.isAllFeaturesAccessible ? <Button
-                onClick={() =>  setIsEditOpen(true)}
-                variant={permissions.editSupplier ? "default" : "outline"}
-                className="flex items-center gap-2"
-                title={!permissions.editSupplier ? "This feature Features is not in this plans" : undefined}
-              >
-                <Edit2 className="w-4 h-4" />
-                Edit Supplier
-              </Button> :
+              permissions.editSupplier || permissions.isAllFeaturesAccessible ? (
+                <Button
+                  onClick={() => setIsEditOpen(true)}
+                  variant={permissions.editSupplier ? "default" : "outline"}
+                  className="flex items-center gap-2"
+                  title={!permissions.editSupplier ? "This feature is not in this plan" : undefined}
+                >
+                  <Edit2 className="w-4 h-4" />
+                  Edit Supplier
+                </Button>
+              ) : (
                 <FeatureRestricted
-                  title="Premium to edit" description={""} requiredPlan={"premium"} feature={""}                />
+                  variant="button"                    // ← important
+                  title="Premium Feature"
+                  description="Editing suppliers is available on Premium and Enterprise plans."
+                  requiredPlan="premium"
+                  feature="edit_supplier"
+                  buttonText="Edit Supplier"          // matches your original button text
+                  size="default"                      // or "sm" if you want smaller
+                  className="w-full sm:w-auto"        // optional styling
+                />
+              )
             }
-
 
 
           </div>
@@ -198,7 +209,7 @@ export default function SupplierDetailPage() {
       </div>
 
       {/* Modals */}
-      <EditSupplierModal open={isEditOpen} onOpenChange={setIsEditOpen} supplier={supplier} />
+      <EditSupplierModal refetch={refetch} open={isEditOpen} onOpenChange={setIsEditOpen} supplier={supplier} />
       <SendAlertModal open={isAlertOpen} onOpenChange={setIsAlertOpen} supplierId={id!} supplierName={supplier.name} />
     </div>
   );

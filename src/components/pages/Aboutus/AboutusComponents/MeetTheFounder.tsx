@@ -1,4 +1,4 @@
-import sampleImage from "../../../../assets/bgImage.png";
+import sampleImage from "../../../../assets/ownerImage/owner-Image.jpg";
 import { AnimatedContainer, AnimatedItem, AnimatedSection } from "@/lib/animation/AnimatedContainer";
 import { AnimatedCard } from "@/lib/animation/AnimatedCard";
 

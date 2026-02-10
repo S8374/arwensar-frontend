@@ -35,11 +35,6 @@ export const withAuth = (Component: ComponentType, requiredRole?: TRole) => {
     if (!userEmail) {
       return <Navigate to="/loginvendor" replace />;
     }
-   console.log("withAuth Debug:", {
-      userRole,
-      requiredRole,
-      isVerified,
-   },);
     // ✅ NOT VERIFIED → BLOCK DASHBOARD
     if (!isVerified) {
       toast.error("Please verify your email first!");

@@ -33,6 +33,7 @@ import PaymentCancel from "@/components/pages/Pricing/PricingComponents/pricing/
 import QuickSecurityAssessment from "@/components/pages/dashboard/supplier/components/QuickSecurityAssessment";
 import PrivacyPolicy from "@/components/pages/PrivacyPolicy/PrivacyPolicy";
 import { adminSidebarItems } from "./AdminSidebarItems";
+import NotFound from "@/components/NotFound";
 
 export const router = createBrowserRouter([
     {
@@ -66,7 +67,7 @@ export const router = createBrowserRouter([
         ]
     },
     {
-        Component: withAuth(DashboardLayout, role.vendor  as TRole),
+        Component: withAuth(DashboardLayout, role.vendor as TRole),
         path: "/vendor",
         children: [
             {
@@ -173,7 +174,6 @@ export const router = createBrowserRouter([
         Component: Unauthorized,
         path: "unauthorized"
     },
-    // Add this to your router configuration
     {
         path: "/payment/success",
         Component: PaymentSuccess,
@@ -182,5 +182,12 @@ export const router = createBrowserRouter([
         path: "/payment/cancel",
         Component: PaymentCancel,
     },
+    {
+        path: "*",
+        Component: NotFound,
+    },
+    {
+        path: "/sitemap.xml"
+    }
 
 ]);

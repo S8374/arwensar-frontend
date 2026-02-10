@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {  useEffect } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -45,6 +45,7 @@ interface EditSupplierModalProps {
   onOpenChange: (open: boolean) => void;
   supplier: any; // Your full supplier object
   onSuccess?: () => void; // Callback to refetch or update UI
+  refetch: any
 }
 
 export default function EditSupplierModal({
@@ -52,6 +53,7 @@ export default function EditSupplierModal({
   onOpenChange,
   supplier,
   onSuccess,
+  refetch
 }: EditSupplierModalProps) {
   const [updateSupplier, { isLoading: isSaving }] = useUpdateSupplierProfileMutation();
 
@@ -107,7 +109,7 @@ export default function EditSupplierModal({
         supplierId: supplier.id,
         data: updatePayload,
       }).unwrap();
-
+      refetch();
       toast.success("Supplier profile updated successfully");
       onSuccess?.();
       onOpenChange(false);

@@ -13,7 +13,7 @@ export default function SignInSupplyer() {
                         <div className="space-y-10">
                             <div className="space-y-4">
                                 <h1 className="text-4xl lg:text-5xl font-bold text-foreground">
-                                    Create Supplyer Account
+                                    Create Supplier Account
                                 </h1>
                                 <p className="text-lg text-muted-foreground">
                                     To get access to your CyberNark NIS2 Supplier Risk Dashboard,

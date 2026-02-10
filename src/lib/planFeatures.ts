@@ -28,15 +28,14 @@ export type PlanFeatures = {
 
 export function getPlanFeatures(subscription: any): PlanFeatures {
   const { data: Limit } = useGetMyUsageQuery(undefined);
-  console.log("Limit Data in plan feature", Limit);
   const LimitData = Limit?.data?.limits;
   const features =
     subscription?.features ||
     subscription?.plan?.features ||
     {};
-
+  console.log(Limit)
   return {
-    isAllFeaturesAccessible: !features.isAllFeaturesAccessible,
+    isAllFeaturesAccessible: !!features.isAllFeaturesAccessible,
     editSupplier: !!features.editSupplier,
     fullAssessments: !!features.fullAssessments,
     complianceDashboard: !!features.complianceDashboard,

@@ -47,6 +47,7 @@ interface PendingAssessment {
   assessmentTitle: string;
   submittedAt: string;
   score: number | null;
+  status: string;
 }
 
 export default function StatsCards({ stats }: StatsProps) {
@@ -226,13 +227,12 @@ export default function StatsCards({ stats }: StatsProps) {
                             </div>
                             <div className="flex items-center gap-4 pt-2">
                               {type === 'expiring' && contract.daysRemaining !== undefined && (
-                                <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                  contract.daysRemaining < 7
-                                    ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
-                                    : contract.daysRemaining < 15
-                                      ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300'
-                                      : 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
-                                }`}>
+                                <div className={`px-3 py-1 rounded-full text-sm font-medium ${contract.daysRemaining < 7
+                                  ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
+                                  : contract.daysRemaining < 15
+                                    ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300'
+                                    : 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
+                                  }`}>
                                   {contract.daysRemaining} days remaining
                                 </div>
                               )}
@@ -262,41 +262,74 @@ export default function StatsCards({ stats }: StatsProps) {
 
   // ---------------- Pending Assessments Modal ----------------
   const PendingAssessmentModal = () => (
-    <Dialog open={pendingModalOpen} onOpenChange={(open) => !open && setPendingModalOpen(false)}>
+    <Dialog
+      open={pendingModalOpen}
+      onOpenChange={(open) => !open && setPendingModalOpen(false)}
+    >
       <DialogContent className="max-w-3xl max-h-[80vh]">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">Pending Assessments</DialogTitle>
-          <DialogDescription>Details of suppliers with pending assessments</DialogDescription>
+          <DialogTitle className="text-2xl font-bold">
+            Pending Assessments
+          </DialogTitle>
+          <DialogDescription>
+            Details of suppliers with pending assessments
+          </DialogDescription>
         </DialogHeader>
+
         <ScrollArea className="h-[400px] mt-4 pr-2 space-y-3">
-          {pendingAssessments.length === 0 ? (
-            <p className="text-center text-gray-500 dark:text-gray-400">No pending assessments found</p>
+          {pendingAssessments.filter(a => a.status === "pending").length === 0 ? (
+            <p className="text-center text-gray-500 dark:text-gray-400">
+              No pending assessments found
+            </p>
           ) : (
-            pendingAssessments.map((a) => (
-              <Card key={a.id} className="p-4 border mt-4 border-amber-200 dark:border-amber-800 bg-amber-50/40 dark:bg-amber-900/20">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                  <div className="space-y-1">
-                    <p className="font-medium text-gray-900 dark:text-white">{a.assessmentTitle}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Supplier: <span className="font-medium">{a.supplierName}</span>
-                    </p>
-                    <p className="text-xs text-gray-500">Submitted: {new Date(a.submittedAt).toLocaleDateString()}</p>
+            pendingAssessments
+              .filter(a => a.status === "pending")
+              .map((a) => (
+                <Card
+                  key={a.id}
+                  className="p-4 mt-4 border border-amber-200 dark:border-amber-800 bg-amber-50/40 dark:bg-amber-900/20"
+                >
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div className="space-y-1">
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {a.assessmentTitle}
+                      </p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Supplier:{" "}
+                        <span className="font-medium">{a.supplierName}</span>
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Submitted:{" "}
+                        {new Date(a.submittedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                        {a.status}
+                      </Badge>
+
+                      {a.score !== null && (
+                        <Badge variant="outline">
+                          Score: {a.score}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">Pending</Badge>
-                    {a.score !== null && <Badge variant="outline">Score: {a.score}</Badge>}
-                  </div>
-                </div>
-              </Card>
-            ))
+                </Card>
+              ))
           )}
         </ScrollArea>
+
         <div className="flex justify-end gap-2 pt-4 border-t">
-          <Button variant="outline" onClick={() => setPendingModalOpen(false)}>Close</Button>
+          <Button variant="outline" onClick={() => setPendingModalOpen(false)}>
+            Close
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
   );
+
 
   return (
     <>
@@ -346,11 +379,20 @@ export default function StatsCards({ stats }: StatsProps) {
                 )}
 
                 {/* Pending Assessment Button */}
-                {isAssessmentCard && pendingAssessments.length > 0 && (
-                  <Button variant="outline" size="sm" className="mt-4 w-full" onClick={() => setPendingModalOpen(true)}>
-                    View Details ({pendingAssessments.length})
-                  </Button>
-                )}
+                {isAssessmentCard &&
+                  pendingAssessments.some(a => a.status === "pending") && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-4 w-full"
+                      onClick={() => setPendingModalOpen(true)}
+                    >
+                      View Details (
+                      {pendingAssessments.filter(a => a.status === "pending").length}
+                      )
+                    </Button>
+                  )}
+
               </div>
             </Card>
           );

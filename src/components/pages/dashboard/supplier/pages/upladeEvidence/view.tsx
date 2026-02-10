@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // src/components/pages/dashboard/supplier/components/ViewDocumentModal.tsx
-import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -16,8 +15,6 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import {
   FileText,
-  Download,
-  ExternalLink,
   CalendarIcon,
   User,
   Shield,
@@ -28,10 +25,8 @@ import {
   XCircle,
   AlertCircle,
   FileType,
-  Loader2,
 } from "lucide-react";
 import { format } from "date-fns";
-import toast from "react-hot-toast";
 
 interface Document {
   [x: string]: any;
@@ -70,8 +65,6 @@ export function ViewDocumentModal({
   isOpen,
   onClose,
 }: ViewDocumentModalProps) {
-  const [isDownloading, setIsDownloading] = useState(false);
-  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
 
   if (!document) return null;
 
@@ -81,14 +74,6 @@ export function ViewDocumentModal({
     const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-  };
-
-  const getFileIcon = (fileType: string) => {
-    if (fileType.includes("pdf")) return "📄";
-    if (fileType.includes("word") || fileType.includes("doc")) return "📝";
-    if (fileType.includes("excel") || fileType.includes("xls")) return "📊";
-    if (fileType.includes("image")) return "🖼️";
-    return "📎";
   };
 
   const getStatusBadge = (status: string) => {
@@ -127,58 +112,11 @@ export function ViewDocumentModal({
     }
   };
 
-  const handleDownload = async () => {
-    if (!document.url) {
-      toast.error("No file available for download");
-      return;
-    }
 
-    setIsDownloading(true);
-    try {
-      const response = await fetch(document.url);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = document.name || "document";
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      toast.success("Document downloaded successfully!");
-    } catch (error) {
-      console.error("Download failed:", error);
-      toast.error("Failed to download document");
-    } finally {
-      setIsDownloading(false);
-    }
-  };
 
-  const handleViewInNewTab = () => {
-    if (!document.url) {
-      toast.error("No file available to view");
-      return;
-    }
-
-    // For PDFs, open directly in new tab
-    if (document.mimeType?.includes("pdf") || document.type?.includes("PDF")) {
-      window.open(document.url, "_blank");
-    } else {
-      // For images, open in new tab
-      if (document.mimeType?.startsWith("image/")) {
-        window.open(document.url, "_blank");
-      } else {
-        // For other files, try to download first
-        handleDownload();
-      }
-    }
-  };
 
   const formatCategory = (cat: string) =>
     cat.charAt(0) + cat.slice(1).toLowerCase().replace(/_/g, " ");
-
-  const isImage = document.mimeType?.startsWith("image/");
-  const isPDF = document.mimeType?.includes("pdf") || document.type?.includes("PDF");
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -194,87 +132,7 @@ export function ViewDocumentModal({
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Document Preview */}
-          <div className="border rounded-lg p-4 bg-gray-50">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-medium">Document Preview</h3>
-              <div className="flex items-center gap-2">
-                {getStatusBadge(document.status)}
-              </div>
-            </div>
-
-            {isImage ? (
-              <div className="flex justify-center">
-                <img
-                  src={document.url}
-                  alt={document.name}
-                  className="max-h-96 rounded-lg border shadow-sm"
-                  onLoad={() => setIsLoadingPreview(false)}
-                  onError={() => setIsLoadingPreview(false)}
-                />
-                {isLoadingPreview && (
-                  <div className="flex items-center justify-center h-96">
-                    <Loader2 className="h-8 w-8 animate-spin" />
-                  </div>
-                )}
-              </div>
-            ) : isPDF ? (
-              <div className="h-96 border rounded-lg bg-white">
-                <iframe
-                  src={document.url}
-                  title={document.name}
-                  className="w-full h-full rounded-lg"
-                  onLoad={() => setIsLoadingPreview(false)}
-                />
-                {isLoadingPreview && (
-                  <div className="flex items-center justify-center h-96">
-                    <Loader2 className="h-8 w-8 animate-spin" />
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-64 border rounded-lg bg-white">
-                <div className="text-6xl mb-4">{getFileIcon(document.mimeType || document.type)}</div>
-                <p className="text-lg font-medium">{document.name}</p>
-                <p className="text-sm text-gray-500 mt-2">
-                  This file type cannot be previewed. Please download to view.
-                </p>
-              </div>
-            )}
-
-            <div className="mt-4 flex justify-between items-center">
-              <div className="text-sm text-gray-500">
-                <p>File Type: {document.type || document.mimeType}</p>
-                {document.fileSize && (
-                  <p>Size: {formatFileSize(document.fileSize)}</p>
-                )}
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleViewInNewTab}
-                  disabled={isDownloading}
-                >
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  {isPDF || isImage ? "Open" : "Download"}
-                </Button>
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={handleDownload}
-                  disabled={isDownloading}
-                >
-                  {isDownloading ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Download className="w-4 h-4 mr-2" />
-                  )}
-                  Download
-                </Button>
-              </div>
-            </div>
-          </div>
+  
 
           {/* Document Details */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -506,19 +364,6 @@ export function ViewDocumentModal({
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
             Close
-          </Button>
-          <Button onClick={handleDownload} disabled={isDownloading}>
-            {isDownloading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Downloading...
-              </>
-            ) : (
-              <>
-                <Download className="mr-2 h-4 w-4" />
-                Download Document
-              </>
-            )}
           </Button>
         </DialogFooter>
       </DialogContent>

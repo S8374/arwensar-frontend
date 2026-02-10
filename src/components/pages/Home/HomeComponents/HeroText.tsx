@@ -24,17 +24,17 @@ export const HeroText = () => {
           {/* Main Heading */}
           <h1 className="text-center text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-tight tracking-tight">
             <AnimatedItem className="text-primary block">
-              Simplify Supplier Risk.
+              Prevent Supplier-Caused 
             </AnimatedItem>
             <AnimatedItem className="text-chart-3 block mt-2 sm:mt-4">
-              Strengthen Compliance.
+              Incidents Before Audits Catch You
             </AnimatedItem>
           </h1>
 
           {/* Subheading */}
           <AnimatedItem>
             <p className="max-w-4xl text-center text-base sm:text-lg md:text-xl lg:text-2xl text-muted-foreground font-light leading-relaxed px-4">
-              A smarter way to manage and document supplier security under NIS2.
+             CyberNark replaces spreadsheets with auditable, real-time supplier risk evidence —- so you can prove control, not explain failure.
             </p>
           </AnimatedItem>
 
